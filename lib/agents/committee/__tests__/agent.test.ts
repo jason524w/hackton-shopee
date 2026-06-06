@@ -69,6 +69,36 @@ describe("committeeAgent (fixture mode)", () => {
   });
 });
 
+describe("risk evidence source (finding #2)", () => {
+  it("surfaces compliance from checkpoints + selected_listing, not the risk AgentResult", async () => {
+    // In the documented pipeline, committee runs BEFORE the risk aggregation,
+    // so ctx.results.agents has NO risk entry yet. Compliance must come from the
+    // checkpoints (already recorded) + selected_listing.compliance.
+    const sup = createRiskSupervisor();
+    await sup.checkpoint("listing", {
+      title: "Mini Desk Vacuum",
+      description: "cordless USB desk cleaner with super suction",
+      category: "home_appliances_small",
+      brand: "",
+    });
+    const opps = mock.opportunities.map((o) => ({ ...o })) as unknown as Opportunity[];
+    const ctx: AgentContext = {
+      brief: mock.brief as AgentContext["brief"],
+      results: {
+        currency: "SGD",
+        opportunities: opps,
+        selected_listing: mock.selected_listing as unknown as SelectedListing,
+        agents: [], // risk AgentResult does not exist yet
+      },
+      providers: {} as never,
+      risk: sup,
+    };
+    const slice = await committeeAgent(ctx);
+    const reason = slice.opportunities!.find((o) => o.id === "opp_desk_vacuum")!.decision_reason;
+    expect(reason).toMatch(/夸大|电器|复核|USB|安全|认证/);
+  });
+});
+
 describe("degraded fallback (live LLM fails)", () => {
   it("falls back to deterministic decision and surfaces the degradation", async () => {
     // force a live call with no client/key so runAgent fails

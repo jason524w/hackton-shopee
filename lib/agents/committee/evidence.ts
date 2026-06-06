@@ -11,8 +11,15 @@ import { computeOverall } from "./weights";
 
 const SEVERITY: Record<Decision, number> = { Go: 2, Watch: 1, Reject: 0 };
 
+// Compliance/risk warnings as seen WHEN committee runs. The risk AgentResult is
+// aggregated AFTER committee in the pipeline, so it usually does not exist yet —
+// take warnings from the recorded checkpoints + selected_listing.compliance (both
+// populated upstream), folding in the risk AgentResult only if it happens to exist.
 function riskWarnings(ctx: AgentContext): string[] {
-  return ctx.results.agents?.find((a) => a.key === "risk")?.warnings ?? [];
+  const fromCheckpoints = ctx.risk.getCheckpoints().flatMap((c) => c.warnings);
+  const fromListing = ctx.results.selected_listing?.compliance.warnings ?? [];
+  const fromAgent = ctx.results.agents?.find((a) => a.key === "risk")?.warnings ?? [];
+  return Array.from(new Set([...fromCheckpoints, ...fromListing, ...fromAgent]));
 }
 
 /** Primary-only signals come from the selected listing + risk checkpoints. */
