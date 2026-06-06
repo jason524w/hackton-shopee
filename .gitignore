@@ -35,3 +35,9 @@ public/generated/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local agent tooling (superpowers skills, per-machine installs)
+.agents/
+.claude/skills/
+.claude/settings.local.json
+skills-lock.json
