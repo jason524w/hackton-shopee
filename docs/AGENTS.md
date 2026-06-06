@@ -70,8 +70,9 @@
 - **Demo 关键**:图必须由真实规格驱动,不是漂亮但不可信的广告图。
 
 ## 7. `committee` — Committee Agent
-> **实现规范见 [COMMITTEE.md](COMMITTEE.md)**:确定性合并 + Commerce Gates 封顶,
-> LLM 只做 Devil's Advocate 与 summary;零 contract 改动。
+> **实现权威见 [design/committee.md](design/committee.md)(pure-A)**:**LLM 直接定 Go/Watch/Reject**;
+> 确定性加权/gate 降级为证据 + 失败兜底;硬红线(禁售/高风险不能 Go)由 skill 指令 + eval 保障(**软约束,非代码硬闸**)。
+> COMMITTEE.md §1 的"确定性 gate 决策"已被推翻(见其顶部 banner)。零 contract 改动。
 - **职责**:汇总全部 agent,处理 tradeoff,给最终 Go/Watch/Reject + 排序 + 解释。
 - **输入**:上面 5 个 agent 的输出 + `brief`。
 - **输出**:`committee`(ranked_ids、weights、tradeoffs、summary)+ 写回每个 opportunity 的 decision。
