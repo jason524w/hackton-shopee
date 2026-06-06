@@ -1,4 +1,5 @@
 import { readSeedJson, roundMoney } from "../shared";
+import { createEasyshipShippingProvider } from "./easyship";
 import type { ShippingEstimateInput, ShippingEstimateResult, ShippingProvider, ShippingScenario } from "./types";
 
 interface ShippingSeed {
@@ -59,7 +60,14 @@ export function createSeedShippingProvider(): ShippingProvider {
   };
 }
 
-export const shippingProvider = createSeedShippingProvider();
+export function createShippingProviderFromEnv(): ShippingProvider {
+  return process.env.LOGISTICS_PROVIDER === "easyship"
+    ? createEasyshipShippingProvider()
+    : createSeedShippingProvider();
+}
+
+export const shippingProvider = createShippingProviderFromEnv();
+export { createEasyshipShippingProvider };
 export type * from "./types";
 
 function scenario(method: string, cost: number, daysMin: number, daysMax: number): ShippingScenario {
