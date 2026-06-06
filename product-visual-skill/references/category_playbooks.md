@@ -50,7 +50,7 @@ Default image sequence:
 2. `premium_hero`
 3. `texture_or_detail`
 4. `how_to_use`
-5. `benefit_infographic`
+5. `feature_infographic`
 6. `routine_lifestyle`
 7. `ingredients_or_specs`
 8. `package_contents`

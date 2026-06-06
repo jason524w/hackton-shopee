@@ -79,13 +79,13 @@ Shows usage, scale, fit, or handling. Use hands-only for small gadgets unless a 
 }
 ```
 
-### feature_callout
+### feature_infographic
 
 Shows 2-3 product benefits with clean visual hierarchy.
 
 ```json
 {
-  "block_type": "feature_callout",
+  "block_type": "feature_infographic",
   "goal": "Explain why the product is useful",
   "layout": "product on one side, simple feature badges on the other",
   "text_overlay": true,
@@ -116,13 +116,13 @@ Shows dimensions, material, weight, power/charging, compatibility, or care facts
 }
 ```
 
-### bundle_preview
+### package_contents
 
 Shows a bundle, gift, or kit only when those items are included or explicitly planned.
 
 ```json
 {
-  "block_type": "bundle_preview",
+  "block_type": "package_contents",
   "goal": "Increase perceived value through a clear kit visual",
   "layout": "main product plus included accessories",
   "text_overlay": true,

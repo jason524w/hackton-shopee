@@ -34,7 +34,7 @@ Each panel should look like a final listing asset, not a storyboard sketch.
 - Use consistent product identity, color, and lighting language.
 - Make the cover image conservative and text-free.
 - Keep generated text out of images when exact wording matters and the model text quality is unknown.
-- If using GPT Image 2 or another high text-fidelity model, short confirmed labels may be rendered directly into secondary images.
+- If using gpt-image-1 or another high text-fidelity model, short confirmed labels may be rendered directly into secondary images.
 - For infographic/spec panels, either render short confirmed labels directly or create clean empty areas for editable labels, depending on `text_rendering_mode`.
 - Do not add panel numbers or labels inside the image unless the user asks.
 - Do not use a mood-board collage style; each panel must be a plausible Shopee gallery image.
@@ -79,7 +79,7 @@ Return:
     {
       "slot": 1,
       "image_type": "cover_main",
-      "status": "preview_ready | upload_ready | needs_text_overlay | needs_individual_export | needs_specs_confirmation",
+      "status": "preview_ready | upload_ready | needs_text_overlay | needs_text_review | needs_individual_export | needs_specs_confirmation",
       "next_step": ""
     }
   ],

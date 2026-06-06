@@ -6,7 +6,7 @@ Use this file when creating listing images with market-localized words, labels, 
 
 For reliable ecommerce output, choose the text rendering mode based on image model capability.
 
-- If the user uses a high text-fidelity model such as GPT Image 2, short text may be rendered directly in the image.
+- If the user uses a high text-fidelity model such as gpt-image-1, short text may be rendered directly in the image.
 - If the model is unknown or weak at text, generate clean space and return design-layer overlay copy.
 - For exact prices, dimensions, legal claims, package contents, warranty, and certification text, prefer editable design-layer text unless the user explicitly wants direct rendering.
 
@@ -15,7 +15,7 @@ For reliable ecommerce output, choose the text rendering mode based on image mod
 | Mode | Use when | Behavior |
 |---|---|---|
 | `design_layer` | Model text quality is unknown, text must be exact, or specs may change | Generate image with clean text areas; return overlay copy separately. |
-| `direct_image_text` | User says GPT Image 2 or another strong text model will be used | Render short captions and labels directly into image. |
+| `direct_image_text` | User says gpt-image-1 or another strong text model will be used | Render short captions and labels directly into image. |
 | `hybrid` | Some text is stable, some needs exact editing | Render hero/lifestyle captions and stable feature labels directly; leave specs/prices as design-layer text. |
 
 Default:
@@ -111,6 +111,7 @@ Suggested bilingual labels:
 | 60% Compact Layout | Susun Atur Kompak 60% |
 | USB-C Wired | USB-C Berwayar |
 | Magnetic Switch | Suis Magnetik |
+| Rapid Trigger | Picu Pantas |
 | 16.8M RGB | RGB 16.8 Juta |
 
 ## Copy Length

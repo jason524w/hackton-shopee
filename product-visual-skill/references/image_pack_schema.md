@@ -42,7 +42,7 @@ Each image should return:
   "goal": "Make the product clear and click-worthy in search results.",
   "layout": "Centered product, full product visible, clean white or solid warm-light background.",
   "aspect_ratio": "1:1",
-  "recommended_size": "1024x1024 or higher",
+  "recommended_size": "1024x1024",
   "text_overlay": {
     "enabled": false,
     "copy": [],
@@ -72,6 +72,7 @@ Each image should return:
   "visual_strategy": "",
   "target_platform": "Shopee",
   "target_market": "Singapore",
+  "product_category": "",
   "pack_mode": "balanced",
   "regional_style": {
     "target_market": "Singapore",
@@ -84,13 +85,17 @@ Each image should return:
   },
   "size_plan": {
     "individual_image_size": "1024x1024",
-    "premium_text_image_size": "2048x2048",
     "contact_sheet_grid": "2x3",
-    "contact_sheet_size": "2048x3072",
-    "aspect_ratio": "1:1",
+    "contact_sheet_output_size": "1024x1536",
+    "individual_aspect_ratio": "1:1",
+    "contact_sheet_aspect_ratio": "2:3",
     "text_safe_area": "central 80%; keep text 6% away from edges"
   },
   "image_pack_plan": [],
+  "one_shot_generation": false,
+  "one_shot_generation_prompt": "",
+  "generated_or_planned_images": [],
+  "asset_manifest": [],
   "product_description_modules": [],
   "model_requirements": [],
   "localized_copy": {
@@ -114,7 +119,12 @@ Each image should return:
     "first_render_order": ["cover_main", "premium_hero"],
     "generation_notes": []
   },
-  "visual_compliance_notes": [],
+  "visual_compliance_notes": [
+    {
+      "severity": "low | medium | high",
+      "note": ""
+    }
+  ],
   "missing_inputs": [],
   "editable_json": {}
 }

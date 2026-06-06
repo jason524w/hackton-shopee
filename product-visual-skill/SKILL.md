@@ -34,7 +34,7 @@ When the user says "generate", "生成", "one shot", "直接出图", or asks for
 5. Choose one pack mode:
    - `fast`: 3 images, fastest demo path.
    - `balanced`: 6 images, recommended default.
-   - `premium`: 8-9 images plus product description modules.
+   - `premium`: 9 images plus product description modules.
 6. Build an image pack plan using the module library.
 7. Build a localized text overlay plan:
    - Decide market language mode: English, local language, or bilingual.
@@ -181,7 +181,7 @@ For listing image packs:
 - Cover images should be clean and minimally styled; secondary images can use text overlays, callouts, scenes, and models.
 - Text inside generated images may be unreliable. Prefer short overlay text and note when text should be added in a design layer after generation.
 - For localized text, return the exact copy as structured overlay data even if the generated image itself is text-free.
-- If `image_model_capability` is `high_text_fidelity` and the user uses GPT Image 2 or similar, allow short confirmed captions and labels to be rendered directly into the image.
+- If `image_model_capability` is `high_text_fidelity` and the user uses gpt-image-1 or similar, allow short confirmed captions and labels to be rendered directly into the image.
 - Use `text_rendering_mode: hybrid` by default for high text-fidelity models: direct-render stable hero, lifestyle, and feature labels, but keep exact prices, dimensions, package contents, and legal claims editable.
 - Use `text_rendering_mode: direct_image_text` only when the user explicitly wants the generated images to contain the text.
 - Never show accessories, bundles, colors, sizes, or certifications unless present in the input or clearly marked as a proposed bundle requiring seller confirmation.
@@ -243,7 +243,7 @@ For Shopee Malaysia gaming/electronics products:
 - Default language mode: English.
 - Optional local mode: Malay.
 - Strong demo mode: English + Malay bilingual labels, but keep each label short.
-- If using GPT Image 2 or another high text-fidelity model, use `hybrid` text rendering by default.
+- If using gpt-image-1 or another high text-fidelity model, use `hybrid` text rendering by default.
 - Cover image: no text.
 - Feature images: direct-render short confirmed labels when text fidelity is high.
 - Spec images: direct-render stable confirmed specs, but leave unknown dimensions/weight as editable fields.

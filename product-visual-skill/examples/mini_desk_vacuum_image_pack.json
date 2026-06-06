@@ -4,6 +4,33 @@
   "target_market": "Singapore",
   "product_category": "Small home gadget / desk cleaning",
   "pack_mode": "balanced",
+  "one_shot_generation": false,
+  "regional_style": {
+    "target_market": "Singapore",
+    "scene_direction": "Clean HDB or condo home-office desk",
+    "lighting": "bright natural daylight with soft shadows",
+    "buyer_angle": "compact daily cleaning for small desks and study corners",
+    "text_language": "English",
+    "props": [
+      "keyboard",
+      "notebook",
+      "minimal stationery",
+      "tidy compact desk"
+    ],
+    "avoid": [
+      "overly messy debris",
+      "luxury mansion scenes",
+      "unsupported cleaning effects"
+    ]
+  },
+  "size_plan": {
+    "individual_image_size": "1024x1024",
+    "contact_sheet_grid": "2x3",
+    "contact_sheet_output_size": "1024x1536",
+    "individual_aspect_ratio": "1:1",
+    "contact_sheet_aspect_ratio": "2:3",
+    "text_safe_area": "central 80%; keep text 6% away from edges"
+  },
   "image_pack_plan": [
     {
       "slot": 1,
@@ -13,7 +40,7 @@
       "goal": "Show the mini desk vacuum clearly for search and listing thumbnail use.",
       "layout": "Full product centered on white or very light neutral solid background, realistic soft shadow, no props.",
       "aspect_ratio": "1:1",
-      "recommended_size": "1024x1024 or higher",
+      "recommended_size": "1024x1024",
       "text_overlay": {
         "enabled": false,
         "copy": [],
@@ -42,7 +69,7 @@
       "goal": "Increase perceived value while keeping the product realistic.",
       "layout": "Product centered on refined warm-gray studio surface with soft directional lighting and subtle reflection.",
       "aspect_ratio": "1:1",
-      "recommended_size": "1024x1024 or higher",
+      "recommended_size": "1024x1024",
       "text_overlay": {
         "enabled": false,
         "copy": [],
@@ -71,7 +98,7 @@
       "goal": "Show the product in a realistic Singapore compact desk environment.",
       "layout": "Mini desk vacuum on tidy HDB or condo home-office desk near keyboard and notebooks, product remains focal point.",
       "aspect_ratio": "1:1",
-      "recommended_size": "1024x1024 or higher",
+      "recommended_size": "1024x1024",
       "text_overlay": {
         "enabled": true,
         "copy": ["For compact desk mess"],
@@ -100,7 +127,7 @@
       "goal": "Show hand scale and simple desk-cleaning action.",
       "layout": "Hands holding or moving the mini vacuum near keyboard crumbs on a compact desk.",
       "aspect_ratio": "1:1",
-      "recommended_size": "1024x1024 or higher",
+      "recommended_size": "1024x1024",
       "text_overlay": {
         "enabled": true,
         "copy": ["Easy handheld cleaning"],
@@ -136,7 +163,7 @@
       "goal": "Explain the top practical benefits with short factual callouts.",
       "layout": "Product cutout on one side with 3 simple icon callouts and clean orange-accent labels.",
       "aspect_ratio": "1:1",
-      "recommended_size": "1024x1024 or higher",
+      "recommended_size": "1024x1024",
       "text_overlay": {
         "enabled": true,
         "copy": ["Keyboard dust", "Desk crumbs", "Compact storage"],
@@ -154,7 +181,7 @@
       "generation_prompt": "Create a square Shopee secondary image for a compact white mini desk vacuum cleaner with a clean ecommerce infographic layout. Show the product clearly and leave space for 3 short factual callouts: Keyboard dust, Desk crumbs, Compact storage. Use simple icon-style visual areas or leader lines, generous spacing, bright clean home-office styling, and mobile-readable composition. Preserve the compact round white product. Do not add unsupported specs, certification marks, brand logos, fake accessories, exaggerated suction effects, or long text.",
       "negative_prompt": "unsupported suction claim, certification, brand logo, long unreadable text, extra accessories, medical claim, waterproof claim",
       "source_assets_needed": ["source product photo"],
-      "compliance_note": "needs_seller_confirmation: exact overlay text should be added in design layer for readability.",
+      "compliance_note": "ready: feature labels are suggested design-layer overlays and do not require seller confirmation.",
       "ready_to_generate": true
     },
     {
@@ -165,7 +192,7 @@
       "goal": "Reduce uncertainty with dimensions and package facts.",
       "layout": "Product cutout with measurement lines and a small specs table.",
       "aspect_ratio": "1:1",
-      "recommended_size": "1024x1024 or higher",
+      "recommended_size": "1024x1024",
       "text_overlay": {
         "enabled": true,
         "copy": ["Dimensions: confirm before final", "USB rechargeable", "Material: plastic"],
@@ -226,6 +253,78 @@
       "avoid": ["visible face", "celebrity likeness", "brand logos", "unsafe or exaggerated usage"]
     }
   ],
+  "localized_text_overlay_plan": {
+    "language_mode": "english",
+    "primary_language": "English",
+    "secondary_language": "",
+    "render_strategy": "design_layer",
+    "text_rendering_mode": "design_layer",
+    "image_model_capability": "unknown",
+    "language_reasoning": "Shopee Singapore small home-gadget listings should use short, practical English labels."
+  },
+  "overlay_copy_by_image": [
+    {
+      "slot": 1,
+      "image_type": "cover_main",
+      "language_mode": "none",
+      "render_strategy": "none",
+      "copy": []
+    },
+    {
+      "slot": 3,
+      "image_type": "localized_lifestyle",
+      "language_mode": "english",
+      "render_strategy": "design_layer",
+      "copy": [
+        {
+          "text": "For compact desk mess",
+          "local_text": "",
+          "placement": "top-right caption",
+          "priority": 1
+        }
+      ]
+    },
+    {
+      "slot": 4,
+      "image_type": "in_use_model_or_hand",
+      "language_mode": "english",
+      "render_strategy": "design_layer",
+      "copy": [
+        {
+          "text": "Easy handheld cleaning",
+          "local_text": "",
+          "placement": "bottom strip",
+          "priority": 1
+        }
+      ]
+    },
+    {
+      "slot": 5,
+      "image_type": "feature_infographic",
+      "language_mode": "english",
+      "render_strategy": "design_layer",
+      "copy": [
+        {
+          "text": "Keyboard dust",
+          "local_text": "",
+          "placement": "callout 1",
+          "priority": 1
+        },
+        {
+          "text": "Desk crumbs",
+          "local_text": "",
+          "placement": "callout 2",
+          "priority": 2
+        },
+        {
+          "text": "Compact storage",
+          "local_text": "",
+          "placement": "callout 3",
+          "priority": 3
+        }
+      ]
+    }
+  ],
   "localized_copy": {
     "listing_title": "Portable Mini Desk Vacuum Cleaner for Keyboard & Study Desk",
     "hero_caption": "Compact cleaning for everyday desk mess",
@@ -249,6 +348,46 @@
       }
     ]
   },
+  "one_shot_generation_prompt": "",
+  "generated_or_planned_images": [],
+  "asset_manifest": [
+    {
+      "slot": 1,
+      "image_type": "cover_main",
+      "status": "preview_ready",
+      "next_step": "Generate or edit as standalone 1024x1024 cover image."
+    },
+    {
+      "slot": 2,
+      "image_type": "premium_hero",
+      "status": "preview_ready",
+      "next_step": "Generate from source product photo."
+    },
+    {
+      "slot": 3,
+      "image_type": "localized_lifestyle",
+      "status": "needs_text_overlay",
+      "next_step": "Add the short lifestyle caption as design-layer text."
+    },
+    {
+      "slot": 4,
+      "image_type": "in_use_model_or_hand",
+      "status": "needs_text_overlay",
+      "next_step": "Add the short use caption as design-layer text."
+    },
+    {
+      "slot": 5,
+      "image_type": "feature_infographic",
+      "status": "needs_text_overlay",
+      "next_step": "Add feature labels as design-layer text."
+    },
+    {
+      "slot": 6,
+      "image_type": "specification_size",
+      "status": "needs_specs_confirmation",
+      "next_step": "Confirm exact dimensions, package weight, and included items before generation."
+    }
+  ],
   "estimated_generation_plan": {
     "image_count": 6,
     "first_render_order": ["cover_main", "premium_hero"],

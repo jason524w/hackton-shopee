@@ -104,12 +104,12 @@
 | `selling_points` | Short benefits to guide the visual angle |
 | `brand_tone` | Visual taste, such as premium, cute, minimal, tech, homey |
 | `regional_style_override` | Optional user-provided regional visual direction |
-| `individual_image_size` | Default `1024x1024`; use `2048x2048` for text-heavy infographics |
+| `individual_image_size` | Default `1024x1024`, aligned to `gpt-image-1` square output |
 | `contact_sheet_grid` | Default by pack mode: `3x1`, `2x3`, or `3x3` |
 | `local_context` | Market-specific settings or buyer habits |
 | `must_avoid` | Things the image/copy should not claim or show |
 | `language_mode` | `english`, `local`, or `bilingual` overlay copy mode |
-| `image_model_capability` | `unknown` or `high_text_fidelity`; use high when using GPT Image 2 or similar |
+| `image_model_capability` | `unknown` or `high_text_fidelity`; use high when using gpt-image-1 or similar |
 | `text_rendering_mode` | `design_layer`, `direct_image_text`, or `hybrid` |
 
 ## Output Fields
