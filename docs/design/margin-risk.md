@@ -150,11 +150,51 @@ LLM(`llm-review.ts`)只**追加** soft 发现;它挂了,确定性层仍单独产
 - margin checkpoint 跑过并对敏感性记 warning
 - 吸尘器 risk:medium / human_review=true / 两条 warning;夸大词命中走确定性层(LLM mock 关掉也成立)
 
-## 6. 依赖与并行
+## 5.5 下游 checkpoint 约定(#12/#13/#15 必读)
 
-- `index.ts` / `checkpoints.ts` 的 ctx 注入依赖 [#23 接缝](https://github.com/jason524w/hackton-shopee/issues/23)(`Agent`/`AgentContext`/`RiskCheckpoint`)—— 等 #23 落地。
-- **现在就能 TDD 的 seam-free 纯核心**:`calculator.ts` + `assumptions.ts`、`deterministic.ts` + `claims.ts` + `merge.ts` + 全部 `__tests__`。
-- #23 一合,套上 Agent 包装即接通。
+#10 实现了 `createRiskSupervisor()`(`lib/agents/risk`)+ 全部 stage 的确定性规则。
+下游**不需要写任何风险逻辑**,只要按下面的约定调用 / 注入。接口本体是 #23 的 `lib/agents/contracts.ts`。
+
+### #15 API 注入(否则风险引擎不生效)
+
+```ts
+import { createRiskSupervisor, riskAgent } from "@/lib/agents/risk";
+import { marginAgent } from "@/lib/agents/margin";
+
+const ctx: AgentContext = { brief, results, providers, risk: createRiskSupervisor() };
+// pipeline 顺序:market → sourcing → margin → listing → packaging → committee → risk(末位聚合)
+await runPipeline([market, sourcing, marginAgent, listing, packaging, committee, riskAgent], ctx);
+```
+
+- `riskAgent` 必须排在**最后**:它读 `ctx.risk.getCheckpoints()` 聚合,不重新扫描。
+- 可选:`createRiskSupervisor({ llmReviewer })` 接 LLM 模糊判断;不传 = 纯确定性(demo 安全网)。
+
+### #12 Listing → `await ctx.risk.checkpoint("listing", payload)`
+
+| payload 字段 | 类型 | 规则读它做什么 |
+|---|---|---|
+| `title` / `description` | string | 扫夸大词(super suction / industrial-grade / certified…)|
+| `bullet_points` | string[] | 同上 |
+| `category` | string | 含 `home_appliances_small`/`usb`/`cordless` → `human_review_required=true` |
+| `brand` | string | 命中受保护品牌(dyson/xiaomi…)→ `hard_block=true` |
+
+返回的 `RiskCheckpoint.{warnings, human_review_required, hard_block}` 回填到
+`selected_listing.compliance`(human_review / warnings)。
+
+### #13 Packaging → `await ctx.risk.checkpoint("packaging", payload)`
+
+| payload 字段 | 类型 | 规则读它做什么 |
+|---|---|---|
+| `prompt` | string | 扫图像 prompt 的夸大词(不暗示安全认证、不画不存在的功能)|
+| `category` | string | 电器 → `human_review_required=true` |
+
+`checkpoint()` 是 **async**,记得 `await`;每次调用都会被 supervisor 记录,最后由 `riskAgent` 聚合进 Risk `AgentResult`。
+
+## 6. 状态与依赖
+
+- ✅ [#23 接缝](https://github.com/jason524w/hackton-shopee/issues/23) 已合(`lib/agents/contracts.ts`);#10 已对真接口接线(PR #28)。
+- #10 产物:`margin/{calculator,assumptions,index}.ts`、`risk/{claims,deterministic,merge,checkpoints,aggregate,index}.ts`,18 vitest 全绿。
+- 下游:#15 注入 supervisor、#12/#13 按 §5.5 调 checkpoint;committee(#14)读 `margin.low` + `human_review`/`hard_block` 封顶。
 
 ## 7. 开源参考(验证科目/区间,无可直接 vendor 的代码)
 
