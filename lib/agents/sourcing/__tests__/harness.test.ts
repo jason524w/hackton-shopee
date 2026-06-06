@@ -72,6 +72,7 @@ describe("sourcing harness", () => {
 
     expect(toolNames).toContain("browser_retrieve_page_snapshot");
     expect(toolNames).toContain("browser_extract_1688_search");
+    expect(toolNames).toContain("browser_extract_taobao_search");
     expect(toolNames).toContain("browser_extract_1688_offer");
     expect(toolNames).toContain("browser_refresh_offer_stock");
     expect(toolNames).toContain("browser_extract_supplier_signals");

@@ -6,6 +6,7 @@ import type {
   BrowserOfferStockInput,
   BrowserRetrievePageSnapshotInput,
   BrowserSupplierSignalsInput,
+  BrowserTaobaoSearchInput,
   FxConvertInput,
   ShippingEstimateInput,
   SourcingOfferDetailInput,
@@ -72,7 +73,7 @@ export function createSourcingTools(providers: AgentProviders): AgentTool[] {
       parameters: makeObjectSchema({
         url: { type: "string" },
         purpose: {
-          enum: ["sourcing_1688_search", "sourcing_1688_offer", "sourcing_supplier_profile"],
+          enum: ["sourcing_1688_search", "sourcing_1688_offer", "sourcing_taobao_search", "sourcing_supplier_profile"],
         },
       }),
       execute(input: unknown) {
@@ -89,6 +90,18 @@ export function createSourcingTools(providers: AgentProviders): AgentTool[] {
       }),
       execute(input: unknown) {
         return providers.browser.extract1688Search(input as Browser1688SearchInput);
+      },
+    },
+    {
+      name: "browser_extract_taobao_search",
+      description:
+        "Use a user-authorized controlled browser session to extract visible Taobao sourcing proxy rows when wholesale APIs or 1688 browser access are unavailable.",
+      parameters: makeObjectSchema({
+        query: { type: "string" },
+        limit: { type: "number", minimum: 1, maximum: 20 },
+      }),
+      execute(input: unknown) {
+        return providers.browser.extractTaobaoSearch(input as BrowserTaobaoSearchInput);
       },
     },
     {

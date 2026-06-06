@@ -7,6 +7,8 @@ export type BrowserRetrievalPurpose =
   | "market_web_trend"
   | "sourcing_1688_search"
   | "sourcing_1688_offer"
+  | "sourcing_taobao_search"
+  | "sourcing_taobao_offer"
   | "sourcing_supplier_profile";
 
 export interface BrowserRetrievalPolicy {
@@ -147,6 +149,18 @@ export interface Browser1688SearchResult extends ProviderResultMeta {
   snapshot: BrowserSnapshotEvidence;
 }
 
+export interface BrowserTaobaoSearchInput {
+  query: string;
+  limit?: number;
+  policy?: Partial<BrowserRetrievalPolicy>;
+}
+
+export interface BrowserTaobaoSearchResult extends ProviderResultMeta {
+  query: string;
+  offers: Browser1688OfferSignal[];
+  snapshot: BrowserSnapshotEvidence;
+}
+
 export interface Browser1688OfferInput {
   offerId?: string;
   url?: string;
@@ -233,6 +247,7 @@ export interface BrowserRetrievalProvider {
   extractShopeeAdsSignals(input: BrowserShopeeAdsSignalsInput): Promise<BrowserShopeeAdsSignalsResult>;
   extractWebTrend(input: BrowserWebTrendInput): Promise<BrowserWebTrendResult>;
   extract1688Search(input: Browser1688SearchInput): Promise<Browser1688SearchResult>;
+  extractTaobaoSearch(input: BrowserTaobaoSearchInput): Promise<BrowserTaobaoSearchResult>;
   extract1688Offer(input: Browser1688OfferInput): Promise<Browser1688OfferResult>;
   refreshOfferStock(input: BrowserOfferStockInput): Promise<BrowserOfferStockResult>;
   extractSupplierSignals(input: BrowserSupplierSignalsInput): Promise<BrowserSupplierSignalsResult>;

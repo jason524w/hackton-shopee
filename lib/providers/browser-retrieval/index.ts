@@ -25,6 +25,8 @@ import type {
   BrowserSupplierSignalsInput,
   BrowserSupplierSignalsResult,
   BrowserSupplierStability,
+  BrowserTaobaoSearchInput,
+  BrowserTaobaoSearchResult,
   BrowserWebTrendInput,
   BrowserWebTrendResult,
 } from "./types";
@@ -84,6 +86,10 @@ const DEFAULT_ALLOWED_DOMAINS = [
   "1688.com",
   "detail.1688.com",
   "s.1688.com",
+  "taobao.com",
+  "s.taobao.com",
+  "tmall.com",
+  "detail.tmall.com",
   "google.com",
   "www.google.com",
 ];
@@ -246,6 +252,33 @@ export function createSeedBrowserRetrievalProvider(): BrowserRetrievalProvider {
           evidence_label: offer.evidence_label,
         })),
         snapshot,
+      };
+    },
+
+    async extractTaobaoSearch(input: BrowserTaobaoSearchInput): Promise<BrowserTaobaoSearchResult> {
+      const capturedAt = nowIso();
+      const snapshot = createSnapshot({
+        url: "https://s.taobao.com/search",
+        capturedAt,
+        text: `No seed Taobao search was performed for ${input.query}.`,
+        method: "seed",
+        confidence: 0.2,
+        selectorNotes: ["taobao live browser search disabled in seed mode"],
+        warnings: ["Seed mode does not fabricate Taobao sourcing rows."],
+      });
+
+      return {
+        source: source("browser-retrieval", "seed", capturedAt, snapshot.url, snapshot),
+        query: input.query,
+        offers: [],
+        snapshot,
+        warnings: [
+          {
+            code: "TAOBAO_SEED_EMPTY",
+            severity: "info",
+            message: "Seed mode returns no Taobao rows; use an authorized Chrome session for real Taobao sourcing.",
+          },
+        ],
       };
     },
 
@@ -416,25 +449,38 @@ export function createChromeBrowserRetrievalProvider(
     },
 
     async extract1688Search(input: Browser1688SearchInput): Promise<Browser1688SearchResult> {
-      const url = `https://s.1688.com/selloffer/offer_search.htm?keywords=${encodeURIComponent(input.query)}`;
+      const url = `https://s.1688.com/selloffer/offer_search.htm?keywords=${encode1688Keyword(input.query)}`;
       const page = await this.retrievePageSnapshot({ url, purpose: "sourcing_1688_search", policy: input.policy });
       assertNoAccessChallenge(page.text_excerpt, page.url);
       const offers = parse1688Offers(page.text_excerpt, input.limit ?? 20);
+      if (offers.length === 0) {
+        throw new Error(
+          `No visible 1688 offer rows were parsed for ${page.url}. Human login/refresh or parser update is required; seed/mock data was not used.`,
+        );
+      }
       return {
         source: page.source,
         query: input.query,
         offers,
         snapshot: page.snapshot,
-        warnings:
-          offers.length === 0
-            ? [
-                {
-                  code: "CHROME_1688_OFFERS_NOT_FOUND",
-                  severity: "warning",
-                  message: "Chrome captured a 1688 page, but no visible offer rows were parsed.",
-                },
-              ]
-            : undefined,
+      };
+    },
+
+    async extractTaobaoSearch(input: BrowserTaobaoSearchInput): Promise<BrowserTaobaoSearchResult> {
+      const url = `https://s.taobao.com/search?q=${encodeURIComponent(input.query)}`;
+      const page = await this.retrievePageSnapshot({ url, purpose: "sourcing_taobao_search", policy: input.policy });
+      assertNoAccessChallenge(page.text_excerpt, page.url);
+      const offers = parseTaobaoOffers(page.text_excerpt, input.limit ?? 20);
+      if (offers.length === 0) {
+        throw new Error(
+          `No visible Taobao product rows were parsed for ${page.url}. Human login/refresh or parser update is required; seed/mock data was not used.`,
+        );
+      }
+      return {
+        source: page.source,
+        query: input.query,
+        offers,
+        snapshot: page.snapshot,
       };
     },
 
@@ -485,7 +531,7 @@ function toPageSnapshot(
     source: source("browser-retrieval", "browser", capturedAt, url, snapshot),
     url,
     title: captured.title,
-    text_excerpt: truncate(captured.text, 2_000),
+    text_excerpt: truncate(captured.text, 12_000),
     links: captured.links ?? [],
     snapshot,
   };
@@ -691,6 +737,63 @@ function parse1688Offers(text: string, limit: number): Browser1688OfferSignal[] 
   return offers;
 }
 
+function encode1688Keyword(query: string): string {
+  const trimmed = query.trim();
+  // 1688 search still expects legacy GBK-encoded Chinese keywords in this route.
+  // Keep this MVP mapping narrow; replace it with official API or a full encoder in the real adapter.
+  const knownGbkQueries: Record<string, string> = {
+    "桌面吸尘器": "%D7%C0%C3%E6%CE%FC%B3%BE%C6%F7",
+    "迷你桌面吸尘器": "%C3%D4%C4%E3%D7%C0%C3%E6%CE%FC%B3%BE%C6%F7",
+  };
+  return knownGbkQueries[trimmed] ?? encodeURIComponent(trimmed);
+}
+
+function parseTaobaoOffers(text: string, limit: number): Browser1688OfferSignal[] {
+  const lines = visibleLines(text);
+  const offers: Browser1688OfferSignal[] = [];
+  const seen = new Set<string>();
+
+  for (let index = 0; index < lines.length && offers.length < limit; index += 1) {
+    const title = lines[index];
+    if (!looksLikeTaobaoOfferTitle(title) || seen.has(title)) {
+      continue;
+    }
+
+    const yenIndex = findNextLine(lines, index + 1, 20, (line) => line === "¥" || line.includes("¥"));
+    if (yenIndex < 0) {
+      continue;
+    }
+
+    const price = parseTaobaoPrice(lines, yenIndex);
+    if (price <= 0) {
+      continue;
+    }
+
+    const paymentLine = findNextLine(lines, yenIndex + 1, 14, (line) => /人付款|人看过/.test(line));
+    const locationStart = findNextLine(lines, yenIndex + 1, 18, (line) => /^[\u4e00-\u9fa5]{2,6}$/.test(line));
+    const supplierName = inferTaobaoSupplier(lines, yenIndex, paymentLine, locationStart);
+    const location = locationStart >= 0 ? [lines[locationStart], lines[locationStart + 1]].filter(Boolean).join(" ") : "Unknown";
+
+    seen.add(title);
+    offers.push({
+      offer_id: `live_taobao_${hashText(`${title}:${price}:${supplierName}`).slice(0, 12)}`,
+      title,
+      source_price_cny: price,
+      currency: "CNY",
+      moq: 1,
+      available_stock: 0,
+      supplier_name: supplierName,
+      supplier_location: location,
+      domestic_dispatch_days: 3,
+      evidence_label: `Chrome visible Taobao row: ${title} at CNY ${price.toFixed(2)}`,
+    });
+
+    index = yenIndex;
+  }
+
+  return offers;
+}
+
 function assertNoAccessChallenge(text: string, url: string): void {
   if (isAccessChallenge(text)) {
     throw new Error(
@@ -730,6 +833,20 @@ function looksLike1688OfferTitle(line: string): boolean {
   return /\b(vacuum|cleaner|desktop|desk|keyboard|handheld|cordless|rechargeable)\b/i.test(line) || /吸尘|清洁|桌面|键盘/.test(line);
 }
 
+function looksLikeTaobaoOfferTitle(line: string): boolean {
+  if (line.length < 10 || line.length > 260) {
+    return false;
+  }
+  if (
+    /^(中国大陆|亲，请登录|免费注册|网页无障碍|搜索|搜同款|所有宝贝|天猫|淘宝|店铺|企业购|发货地|综合|销量|价格|筛选|大家都在搜|上一页|下一页)$/i.test(
+      line,
+    )
+  ) {
+    return false;
+  }
+  return /吸尘|清洁|桌面|键盘|橡皮|手持|充电|迷你|vacuum|cleaner|desktop|desk|keyboard/i.test(line);
+}
+
 function findNextPriceIndex(lines: string[], start: number, windowSize: number): number {
   for (let index = start; index < Math.min(lines.length, start + windowSize); index += 1) {
     if (parsePrice(lines[index]) > 0) {
@@ -751,9 +868,49 @@ function findNextCnyPriceIndex(lines: string[], start: number, windowSize: numbe
   return -1;
 }
 
+function findNextLine(
+  lines: string[],
+  start: number,
+  windowSize: number,
+  predicate: (line: string) => boolean,
+): number {
+  for (let index = start; index < Math.min(lines.length, start + windowSize); index += 1) {
+    if (predicate(lines[index])) {
+      return index;
+    }
+  }
+  return -1;
+}
+
 function parsePrice(value: string): number {
   const match = value.match(/(?:[$¥￥]|SGD|RMB|CNY)?\s*([0-9]+(?:\.[0-9]{1,2})?)/i);
   return match ? Number(match[1]) : 0;
+}
+
+function parseTaobaoPrice(lines: string[], yenIndex: number): number {
+  const inline = parsePrice(lines[yenIndex]);
+  if (inline > 0) {
+    return inline;
+  }
+
+  const whole = lines[yenIndex + 1] ?? "";
+  const fraction = lines[yenIndex + 2] ?? "";
+  if (/^\d+$/.test(whole) && /^\.\d{1,2}$/.test(fraction)) {
+    return Number(`${whole}${fraction}`);
+  }
+  return parsePrice(whole);
+}
+
+function inferTaobaoSupplier(lines: string[], yenIndex: number, paymentLine: number, locationStart: number): string {
+  const searchStart = Math.max(yenIndex + 1, paymentLine >= 0 ? paymentLine + 1 : yenIndex + 1);
+  const searchEnd = locationStart >= 0 ? Math.min(lines.length, locationStart + 8) : Math.min(lines.length, searchStart + 12);
+  for (let index = searchStart; index < searchEnd; index += 1) {
+    const line = lines[index];
+    if (/店|旗舰店|专营店|企业店|官方/.test(line) && line.length <= 40) {
+      return line;
+    }
+  }
+  return "Unknown Taobao seller";
 }
 
 function findNextRating(lines: string[], start: number, windowSize: number): number {
