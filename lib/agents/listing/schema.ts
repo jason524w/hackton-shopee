@@ -92,6 +92,113 @@ export interface ListingOutput {
   agent: AgentResult;
 }
 
+const listingImageSchema: JsonSchema = {
+  type: "object",
+  properties: {
+    type: { enum: ["hero", "lifestyle", "feature"] },
+    url: { type: "string" },
+    prompt: { type: "string" },
+    compliance: { enum: ["ok", "needs_review", "rejected"] },
+  },
+  required: ["type", "url", "prompt", "compliance"],
+  additionalProperties: false,
+};
+
+export const shopeeListingSchema: JsonSchema = {
+  type: "object",
+  properties: {
+    item_name: { type: "string" },
+    category: { type: "string" },
+    category_id: { type: "integer" },
+    brand: { type: "string" },
+    condition: { type: "string" },
+    price: { type: "number" },
+    stock: { type: "integer" },
+    sku: { type: "string" },
+    variations: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          options: { type: "array", items: { type: "string" } },
+        },
+        required: ["name", "options"],
+        additionalProperties: false,
+      },
+    },
+    attributes: { type: "object", additionalProperties: { type: "string" } },
+    description: { type: "string" },
+    bullet_points: { type: "array", items: { type: "string" } },
+    logistics: {
+      type: "object",
+      properties: {
+        weight_g: { type: "integer" },
+        length_cm: { type: "integer" },
+        width_cm: { type: "integer" },
+        height_cm: { type: "integer" },
+      },
+      required: ["weight_g", "length_cm", "width_cm", "height_cm"],
+      additionalProperties: false,
+    },
+    required_fields_total: { type: "integer" },
+    required_fields_filled: { type: "integer" },
+    missing_fields: { type: "array", items: { type: "string" } },
+  },
+  required: [
+    "item_name",
+    "category",
+    "category_id",
+    "brand",
+    "condition",
+    "price",
+    "stock",
+    "sku",
+    "variations",
+    "attributes",
+    "description",
+    "bullet_points",
+    "logistics",
+    "required_fields_total",
+    "required_fields_filled",
+    "missing_fields",
+  ],
+  additionalProperties: false,
+};
+
+export const selectedListingSchema: JsonSchema = {
+  type: "object",
+  properties: {
+    opportunity_id: { type: "string" },
+    platform: { enum: ["Shopee", "Lazada"] },
+    market: { type: "string" },
+    language: { type: "string" },
+    shopee: shopeeListingSchema,
+    images: { type: "array", items: listingImageSchema },
+    compliance: {
+      type: "object",
+      properties: {
+        human_review_required: { type: "boolean" },
+        warnings: { type: "array", items: { type: "string" } },
+      },
+      required: ["human_review_required", "warnings"],
+      additionalProperties: false,
+    },
+    editable_json_ready: { type: "boolean" },
+  },
+  required: [
+    "opportunity_id",
+    "platform",
+    "market",
+    "language",
+    "shopee",
+    "images",
+    "compliance",
+    "editable_json_ready",
+  ],
+  additionalProperties: false,
+};
+
 const factorScoreSchema: JsonSchema = {
   type: "object",
   properties: {
@@ -202,7 +309,7 @@ export const listingOutputSchema: JsonSchema = {
       minItems: 1,
     },
     selection: listingSelectionSchema,
-    selected_listing: { type: "object", additionalProperties: true },
+    selected_listing: selectedListingSchema,
     agent: { type: "object", additionalProperties: true },
   },
   required: ["feature_vectors", "selection", "selected_listing", "agent"],

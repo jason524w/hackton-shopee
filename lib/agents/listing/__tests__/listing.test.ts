@@ -8,9 +8,11 @@ import {
   createSeedShopeeProvider,
   createSeedSourcing1688Provider,
 } from "../../../providers";
+import { validateJsonSchema } from "../../../agent-runtime/schemas";
 import type { RiskCheckpoint, RiskSupervisor } from "../../contracts";
 import { buildListingInput, runListingAgent } from "../index";
 import { assertOutput, replayFixture } from "../harness";
+import { selectedListingSchema } from "../schema";
 
 describe("listing ranker agent", () => {
   it("ranks and filters opportunities before Packaging handoff", async () => {
@@ -70,6 +72,50 @@ describe("listing ranker agent", () => {
     expect(result.opportunities?.find((opportunity) => opportunity.id === "opp_desk_vacuum")?.is_primary).toBe(true);
   });
 
+  it("does not produce a ready handoff when every candidate is hard-filtered", async () => {
+    const risk = createSpyRisk();
+    const result = cloneRunResult(mockResult as RunResult);
+    result.opportunities = result.opportunities.map((opportunity) => ({
+      ...opportunity,
+      decision: "Reject",
+      decision_reason: "Regression fixture rejects every opportunity.",
+      stock_status: "out",
+      is_primary: opportunity.id === "opp_desk_vacuum",
+    }));
+    const ctx = createFixtureContext(risk, result);
+    const slice = await runListingAgent(ctx, { mode: "fixture", runId: "run_listing_all_filtered" });
+
+    expect(slice.selected_listing?.editable_json_ready).toBe(false);
+    expect(slice.selected_listing?.compliance.warnings.join(" ")).toContain("All opportunities were hard-filtered");
+    expect(risk.checkpoint).toHaveBeenCalledWith(
+      "listing",
+      expect.objectContaining({
+        selection: expect.objectContaining({
+          filters: expect.arrayContaining([
+            expect.objectContaining({ opportunity_id: "opp_desk_vacuum", status: "filtered" }),
+          ]),
+        }),
+      }),
+    );
+  });
+
+  it("applies hard-block policy signals and validates selected_listing shape", async () => {
+    const output = await replayFixture();
+    const rejectedVector = output.feature_vectors.find((vector) => vector.opportunity_id === "opp_mini_dehumidifier");
+
+    expect(rejectedVector?.compliance).toBe(0);
+    expect(validateJsonSchema(selectedListingSchema, output.selected_listing).valid).toBe(true);
+    expect(
+      validateJsonSchema(selectedListingSchema, {
+        ...output.selected_listing,
+        shopee: {
+          ...output.selected_listing.shopee,
+          price: "11.9",
+        },
+      }).valid,
+    ).toBe(false);
+  });
+
   it("builds a Singapore-aware input table from local tools", async () => {
     const ctx = createFixtureContext(createSpyRisk());
     const input = await buildListingInput(ctx, { mode: "fixture" });
@@ -83,8 +129,10 @@ describe("listing ranker agent", () => {
   });
 });
 
-function createFixtureContext(risk: RiskSupervisor): Parameters<typeof buildListingInput>[0] {
-  const result = mockResult as RunResult;
+function createFixtureContext(
+  risk: RiskSupervisor,
+  result: RunResult = mockResult as RunResult,
+): Parameters<typeof buildListingInput>[0] {
   return {
     brief: result.brief,
     results: result,
@@ -97,6 +145,10 @@ function createFixtureContext(risk: RiskSupervisor): Parameters<typeof buildList
     },
     risk,
   };
+}
+
+function cloneRunResult(result: RunResult): RunResult {
+  return JSON.parse(JSON.stringify(result)) as RunResult;
 }
 
 function createSpyRisk(): RiskSupervisor {

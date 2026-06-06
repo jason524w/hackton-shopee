@@ -254,11 +254,14 @@ function buildHeuristicSelection(input: ListingInput, vectors: OpportunityFeatur
   const preferred = input.preferred_opportunity_id
     ? vectors.find((vector) => vector.opportunity_id === input.preferred_opportunity_id)
     : undefined;
-  const selected =
+  const viableSelected =
     preferred && preferred.status !== "filtered"
       ? preferred
-      : rankedVectors.find((vector) => vector.status !== "filtered") ?? rankedVectors[0];
+      : rankedVectors.find((vector) => vector.status !== "filtered");
+  const selected =
+    viableSelected ?? rankedVectors[0];
   const selectedId = selected.opportunity_id;
+  const hasViableSelected = selected.status !== "filtered";
 
   return {
     ranked_ids: rankedVectors.map((vector) => vector.opportunity_id),
@@ -266,7 +269,7 @@ function buildHeuristicSelection(input: ListingInput, vectors: OpportunityFeatur
     factor_scores: vectors.map(toFactorScores),
     filters: vectors.map((vector) => ({
       opportunity_id: vector.opportunity_id,
-      status: vector.opportunity_id === selectedId ? "selected" : vector.status,
+      status: vector.opportunity_id === selectedId && hasViableSelected ? "selected" : vector.status,
       reasons: vector.reasons,
     })),
     tradeoffs: buildTradeoffs(input, vectors, selectedId),
@@ -306,6 +309,7 @@ function buildPackagingHandoff(
   const category = input.evidence.category_attributes;
   const offer = input.evidence.offer_detail?.offer;
   const selectedVector = vectors.find((vector) => vector.opportunity_id === opportunity.id);
+  const filteredHandoff = selectedVector?.status === "filtered";
   const attributes = buildHandoffAttributes(input, opportunity);
   const shopee = buildShopeeHandoffDraft(input, opportunity, attributes);
   const missingFields = findMissingRequiredFields(shopee, category);
@@ -325,6 +329,7 @@ function buildPackagingHandoff(
       .map((rule) => rule.guidance),
     ...selection.handoff_notes,
     ...checkpoint.warnings,
+    ...(filteredHandoff ? ["All opportunities were hard-filtered; Packaging handoff is blocked until inputs change."] : []),
     ...(selectedVector?.price_volatility_risk === "high" ? ["Price volatility is high; Packaging should avoid aggressive price claims."] : []),
     ...(offer?.supplier_risk_notes ?? []),
   ]);
@@ -343,7 +348,8 @@ function buildPackagingHandoff(
         complianceWarnings.some((warning) => includesNormalized(warning, "review")),
       warnings: complianceWarnings,
     },
-    editable_json_ready: missingFields.length === 0 && !checkpoint.hard_block && opportunity.decision !== "Reject",
+    editable_json_ready:
+      !filteredHandoff && missingFields.length === 0 && !checkpoint.hard_block && opportunity.decision !== "Reject",
   };
 }
 
@@ -517,8 +523,31 @@ function scoreSourcing(opportunity: Opportunity, input: ListingInput): number {
 
 function scoreCompliance(opportunity: Opportunity, input: ListingInput): number {
   const base = opportunity.risk_level === "low" ? 88 : opportunity.risk_level === "medium" ? 58 : 30;
-  const policyPenalty = input.evidence.policy_rules.some((rule) => rule.severity === "hard_block") ? 0 : 0;
+  const policyPenalty = hasHardBlockSignal(opportunity, input) ? 35 : 0;
   return base - policyPenalty;
+}
+
+function hasHardBlockSignal(opportunity: Opportunity, input: ListingInput): boolean {
+  const hasHardBlockRule = input.evidence.policy_rules.some((rule) => rule.severity === "hard_block");
+  if (!hasHardBlockRule) {
+    return false;
+  }
+
+  const text = normalize(
+    [
+      opportunity.name,
+      opportunity.direction,
+      opportunity.decision,
+      opportunity.decision_reason,
+      ...opportunity.key_reasons,
+      ...input.risk_warnings,
+    ].join(" "),
+  );
+  return (
+    opportunity.risk_level === "high" ||
+    opportunity.decision === "Reject" ||
+    ["counterfeit", "ip", "infring", "prohibited", "禁售", "侵权", "仿冒"].some((token) => text.includes(token))
+  );
 }
 
 function scoreFulfillment(opportunity: Opportunity, maxFulfillmentDays: number): number {
@@ -537,21 +566,29 @@ function scoreMarketTiming(opportunity: Opportunity, marketContext: MarketContex
 }
 
 function priceVolatilityRisk(opportunity: Opportunity, input: ListingInput): PriceVolatilityRisk {
-  const marginSpread = opportunity.margin
-    ? Math.abs(opportunity.margin.high.net_margin - opportunity.margin.low.net_margin)
-    : Math.abs(opportunity.gross_margin - opportunity.minimum_viable_price / Math.max(opportunity.suggested_price, 1));
+  const marginSpread = opportunity.margin ? Math.abs(opportunity.margin.high.net_margin - opportunity.margin.low.net_margin) : undefined;
+  const priceBufferRatio = opportunity.margin
+    ? undefined
+    : Math.max(0, (opportunity.suggested_price - opportunity.minimum_viable_price) / Math.max(opportunity.suggested_price, 1));
   const lowStock = opportunity.stock_status === "low" || input.evidence.offer_detail?.offer.available_stock === 0;
   const shippingHigh = input.evidence.shipping
     ? input.evidence.shipping.scenarios.high.cost_sgd - input.evidence.shipping.scenarios.base.cost_sgd > 0.6
     : false;
+  const fxMismatch = input.evidence.fx
+    ? Math.abs(input.evidence.fx.converted_amount - opportunity.source_price) / Math.max(opportunity.source_price, 1) > 0.18
+    : false;
 
-  if (marginSpread > 0.22 || lowStock || shippingHigh) {
+  if ((marginSpread !== undefined && marginSpread > 0.22) || priceBufferRatioLessThan(priceBufferRatio, 0.1) || lowStock || shippingHigh || fxMismatch) {
     return "high";
   }
-  if (marginSpread > 0.12 || opportunity.risk_level === "medium") {
+  if ((marginSpread !== undefined && marginSpread > 0.12) || priceBufferRatioLessThan(priceBufferRatio, 0.22) || opportunity.risk_level === "medium") {
     return "medium";
   }
   return "low";
+}
+
+function priceBufferRatioLessThan(priceBufferRatio: number | undefined, threshold: number): boolean {
+  return priceBufferRatio !== undefined && priceBufferRatio < threshold;
 }
 
 function initialStatus(opportunity: Opportunity, maxFulfillmentDays: number): ListingFilterStatus {
