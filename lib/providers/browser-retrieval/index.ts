@@ -15,8 +15,10 @@ import type {
   BrowserRetrievalPurpose,
   BrowserRetrievePageSnapshotInput,
   BrowserRetrievePageSnapshotResult,
+  Browser1688OfferSignal,
   BrowserShopeeAdsSignalsInput,
   BrowserShopeeAdsSignalsResult,
+  BrowserShopeeProductSignal,
   BrowserShopeeSearchInput,
   BrowserShopeeSearchResult,
   BrowserSnapshotEvidence,
@@ -343,22 +345,31 @@ export function createChromeBrowserRetrievalProvider(
     async extractShopeeSearch(input: BrowserShopeeSearchInput): Promise<BrowserShopeeSearchResult> {
       const url = `https://shopee.sg/search?keyword=${encodeURIComponent(input.query)}`;
       const page = await this.retrievePageSnapshot({ url, purpose: "market_shopee_search", policy: input.policy });
+      const products = parseShopeeProducts(page.text_excerpt, input.limit ?? 20);
+      const prices = products.map((product) => product.price_sgd).sort((a, b) => a - b);
       return {
         source: page.source,
         query: input.query,
         market: input.market,
         category: input.category,
-        products: [],
-        competitor_count: 0,
-        price_band: { low: 0, high: 0, median: 0 },
+        products,
+        competitor_count: products.length,
+        price_band: {
+          low: prices[0] ?? 0,
+          high: prices[prices.length - 1] ?? 0,
+          median: roundMoney(prices.length ? prices[Math.floor(prices.length / 2)] : 0),
+        },
         snapshot: page.snapshot,
-        warnings: [
-          {
-            code: "CHROME_EXTRACTOR_NOT_SPECIALIZED",
-            severity: "warning",
-            message: "Chrome page snapshot captured, but structured Shopee DOM extraction is not yet specialized.",
-          },
-        ],
+        warnings:
+          products.length === 0
+            ? [
+                {
+                  code: "CHROME_SHOPEE_PRODUCTS_NOT_FOUND",
+                  severity: "warning",
+                  message: "Chrome captured a Shopee page, but no visible product rows were parsed.",
+                },
+              ]
+            : undefined,
       };
     },
 
@@ -407,18 +418,23 @@ export function createChromeBrowserRetrievalProvider(
     async extract1688Search(input: Browser1688SearchInput): Promise<Browser1688SearchResult> {
       const url = `https://s.1688.com/selloffer/offer_search.htm?keywords=${encodeURIComponent(input.query)}`;
       const page = await this.retrievePageSnapshot({ url, purpose: "sourcing_1688_search", policy: input.policy });
+      assertNoAccessChallenge(page.text_excerpt, page.url);
+      const offers = parse1688Offers(page.text_excerpt, input.limit ?? 20);
       return {
         source: page.source,
         query: input.query,
-        offers: [],
+        offers,
         snapshot: page.snapshot,
-        warnings: [
-          {
-            code: "CHROME_EXTRACTOR_NOT_SPECIALIZED",
-            severity: "warning",
-            message: "Chrome page snapshot captured, but structured 1688 offer extraction is not yet specialized.",
-          },
-        ],
+        warnings:
+          offers.length === 0
+            ? [
+                {
+                  code: "CHROME_1688_OFFERS_NOT_FOUND",
+                  severity: "warning",
+                  message: "Chrome captured a 1688 page, but no visible offer rows were parsed.",
+                },
+              ]
+            : undefined,
       };
     },
 
@@ -427,6 +443,7 @@ export function createChromeBrowserRetrievalProvider(
         throw new Error("Chrome 1688 offer extraction requires a URL.");
       }
       const page = await this.retrievePageSnapshot({ url: input.url, purpose: "sourcing_1688_offer", policy: input.policy });
+      assertNoAccessChallenge(page.text_excerpt, page.url);
       throw new Error(`Chrome offer detail parser is pending for snapshot ${page.snapshot.snapshot_id}.`);
     },
 
@@ -443,6 +460,7 @@ export function createChromeBrowserRetrievalProvider(
 }
 
 export const browserRetrievalProvider = createSeedBrowserRetrievalProvider();
+export { createCdpChromeBrowserController } from "./chrome";
 export type * from "./types";
 
 function toPageSnapshot(
@@ -585,6 +603,167 @@ function buildSupplierStability(offer: SourcingSeed["offers"][number]): BrowserS
     stability_score: clamp(42 + stockScore + moqScore - riskPenalty, 0, 100),
     dispute_or_risk_notes: offer.supplier_risk_notes,
   };
+}
+
+function parseShopeeProducts(text: string, limit: number): BrowserShopeeProductSignal[] {
+  const lines = visibleLines(text);
+  const start = Math.max(
+    0,
+    lines.findIndex((line) => /search result/i.test(line)),
+  );
+  const products: BrowserShopeeProductSignal[] = [];
+
+  for (let index = start; index < lines.length && products.length < limit; index += 1) {
+    const title = lines[index];
+    if (!looksLikeShopeeProductTitle(title)) {
+      continue;
+    }
+
+    const priceIndex = findNextPriceIndex(lines, index + 1, 5);
+    if (priceIndex < 0) {
+      continue;
+    }
+
+    const price = parsePrice(lines[priceIndex]);
+    if (price <= 0) {
+      continue;
+    }
+
+    const rating = findNextRating(lines, priceIndex + 1, 8);
+    const shopType = /mall/i.test(lines.slice(Math.max(0, index - 3), index + 8).join(" "))
+      ? "mall"
+      : /preferred/i.test(lines.slice(Math.max(0, index - 3), index + 8).join(" "))
+        ? "preferred"
+        : "marketplace";
+
+    products.push({
+      item_id: `live_shopee_${hashText(`${title}:${price}`).slice(0, 12)}`,
+      title,
+      price_sgd: price,
+      rating,
+      review_count: 0,
+      shop_type: shopType,
+      evidence_label: `Chrome visible Shopee row: ${title} at SGD ${price.toFixed(2)}`,
+    });
+
+    index = priceIndex;
+  }
+
+  return products;
+}
+
+function parse1688Offers(text: string, limit: number): Browser1688OfferSignal[] {
+  const lines = visibleLines(text);
+  const offers: Browser1688OfferSignal[] = [];
+
+  for (let index = 0; index < lines.length && offers.length < limit; index += 1) {
+    const title = lines[index];
+    if (!looksLike1688OfferTitle(title)) {
+      continue;
+    }
+
+    const priceIndex = findNextCnyPriceIndex(lines, index + 1, 8);
+    if (priceIndex < 0) {
+      continue;
+    }
+
+    const price = parsePrice(lines[priceIndex]);
+    if (price <= 0) {
+      continue;
+    }
+
+    offers.push({
+      offer_id: `live_1688_${hashText(`${title}:${price}`).slice(0, 12)}`,
+      title,
+      source_price_cny: price,
+      currency: "CNY",
+      moq: 1,
+      available_stock: 0,
+      supplier_name: "Unknown visible 1688 supplier",
+      supplier_location: "Unknown",
+      domestic_dispatch_days: 3,
+      evidence_label: `Chrome visible 1688 row: ${title} at CNY ${price.toFixed(2)}`,
+    });
+
+    index = priceIndex;
+  }
+
+  return offers;
+}
+
+function assertNoAccessChallenge(text: string, url: string): void {
+  if (isAccessChallenge(text)) {
+    throw new Error(
+      `Browser retrieval hit an access verification page for ${url}. Human login/verification or an authorized API is required; seed/mock data was not used.`,
+    );
+  }
+}
+
+function isAccessChallenge(text: string): boolean {
+  return /滑块|验证|captcha|robot|人机|拖动.*验证|ensure normal access/i.test(text);
+}
+
+function visibleLines(text: string): string[] {
+  return text
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+function looksLikeShopeeProductTitle(line: string): boolean {
+  if (line.length < 18 || line.length > 220) {
+    return false;
+  }
+  if (/^(search result|sort by|relevance|latest|top sales|price|find similar|customer service|shop type)$/i.test(line)) {
+    return false;
+  }
+  return /\b(vacuum|cleaner|desktop|desk|keyboard|handheld|cordless|rechargeable)\b/i.test(line);
+}
+
+function looksLike1688OfferTitle(line: string): boolean {
+  if (line.length < 8 || line.length > 220) {
+    return false;
+  }
+  if (/^(Alibaba|阿里巴巴|验证|登录|搜索|筛选)$/i.test(line)) {
+    return false;
+  }
+  return /\b(vacuum|cleaner|desktop|desk|keyboard|handheld|cordless|rechargeable)\b/i.test(line) || /吸尘|清洁|桌面|键盘/.test(line);
+}
+
+function findNextPriceIndex(lines: string[], start: number, windowSize: number): number {
+  for (let index = start; index < Math.min(lines.length, start + windowSize); index += 1) {
+    if (parsePrice(lines[index]) > 0) {
+      return index;
+    }
+    if (lines[index] === "$" && parsePrice(lines[index + 1] ?? "") > 0) {
+      return index + 1;
+    }
+  }
+  return -1;
+}
+
+function findNextCnyPriceIndex(lines: string[], start: number, windowSize: number): number {
+  for (let index = start; index < Math.min(lines.length, start + windowSize); index += 1) {
+    if (parsePrice(lines[index]) > 0 && /¥|￥|元|RMB|CNY|起/.test(lines.slice(index - 1, index + 2).join(" "))) {
+      return index;
+    }
+  }
+  return -1;
+}
+
+function parsePrice(value: string): number {
+  const match = value.match(/(?:[$¥￥]|SGD|RMB|CNY)?\s*([0-9]+(?:\.[0-9]{1,2})?)/i);
+  return match ? Number(match[1]) : 0;
+}
+
+function findNextRating(lines: string[], start: number, windowSize: number): number {
+  for (let index = start; index < Math.min(lines.length, start + windowSize); index += 1) {
+    const value = Number(lines[index]);
+    if (value >= 0 && value <= 5) {
+      return value;
+    }
+  }
+  return 0;
 }
 
 function keywordHints(text: string): string[] {
