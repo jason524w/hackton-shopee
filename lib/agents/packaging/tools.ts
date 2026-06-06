@@ -38,7 +38,7 @@ export function createPackagingTools(openaiImage: OpenAIImageProvider): AgentToo
         properties: {
           runId: { type: "string" },
           prompt: { type: "string" },
-          asset_type: { enum: ["hero", "lifestyle", "feature"] },
+          asset_type: { type: "string", enum: ["hero", "lifestyle", "feature"] },
         },
         required: ["runId", "prompt", "asset_type"],
         additionalProperties: false,
@@ -62,7 +62,7 @@ export function createPackagingTools(openaiImage: OpenAIImageProvider): AgentToo
           runId: { type: "string" },
           prompt: { type: "string" },
           sourceImage: { type: "string" },
-          asset_type: { enum: ["hero", "lifestyle", "feature"] },
+          asset_type: { type: "string", enum: ["hero", "lifestyle", "feature"] },
         },
         required: ["runId", "prompt", "sourceImage", "asset_type"],
         additionalProperties: false,

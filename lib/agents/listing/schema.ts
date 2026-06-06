@@ -95,10 +95,10 @@ export interface ListingOutput {
 const listingImageSchema: JsonSchema = {
   type: "object",
   properties: {
-    type: { enum: ["hero", "lifestyle", "feature"] },
+    type: { type: "string", enum: ["hero", "lifestyle", "feature"] },
     url: { type: "string" },
     prompt: { type: "string" },
-    compliance: { enum: ["ok", "needs_review", "rejected"] },
+    compliance: { type: "string", enum: ["ok", "needs_review", "rejected"] },
   },
   required: ["type", "url", "prompt", "compliance"],
   additionalProperties: false,
@@ -170,7 +170,7 @@ export const selectedListingSchema: JsonSchema = {
   type: "object",
   properties: {
     opportunity_id: { type: "string" },
-    platform: { enum: ["Shopee", "Lazada"] },
+    platform: { type: "string", enum: ["Shopee", "Lazada"] },
     market: { type: "string" },
     language: { type: "string" },
     shopee: shopeeListingSchema,
@@ -238,7 +238,7 @@ export const listingSelectionSchema: JsonSchema = {
         type: "object",
         properties: {
           opportunity_id: { type: "string" },
-          status: { enum: ["selected", "candidate", "filtered"] },
+          status: { type: "string", enum: ["selected", "candidate", "filtered"] },
           reasons: { type: "array", items: { type: "string" } },
         },
         required: ["opportunity_id", "status", "reasons"],
@@ -273,8 +273,8 @@ export const listingOutputSchema: JsonSchema = {
         type: "object",
         properties: {
           ...factorScoreSchema.properties,
-          status: { enum: ["selected", "candidate", "filtered"] },
-          price_volatility_risk: { enum: ["low", "medium", "high"] },
+          status: { type: "string", enum: ["selected", "candidate", "filtered"] },
+          price_volatility_risk: { type: "string", enum: ["low", "medium", "high"] },
           reasons: { type: "array", items: { type: "string" } },
           evidence: {
             type: "array",

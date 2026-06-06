@@ -90,10 +90,10 @@ const ratingDistributionSchema = makeObjectSchema({
 });
 
 const agentResultSchema = makeObjectSchema({
-  key: { const: "market" },
+  key: { type: "string", const: "market" },
   name: { type: "string" },
   role: { type: "string" },
-  status: { enum: ["waiting", "running", "done", "blocked"] },
+  status: { type: "string", enum: ["waiting", "running", "done", "blocked"] },
   inputs_summary: { type: "string" },
   data_sources: { type: "array", items: { type: "string" } },
   evidence: { type: "array", items: evidenceSchema },
@@ -117,7 +117,7 @@ const directionSchema = makeObjectSchema({
   price_band: priceBandSchema,
   review_density: reviewDensitySchema,
   rating_distribution: ratingDistributionSchema,
-  market_heat: { enum: ["low", "medium", "high"] },
+  market_heat: { type: "string", enum: ["low", "medium", "high"] },
   suggested_price: { type: "number", minimum: 0 },
   source_product_ids: { type: "array", items: { type: "string" } },
   evidence: { type: "array", items: evidenceSchema },
@@ -128,7 +128,7 @@ const directionSchema = makeObjectSchema({
 const toolSnapshotSchema = makeObjectSchema({
   tool_name: { type: "string" },
   provider: { type: "string" },
-  mode: { enum: ["live", "seed", "snapshot", "browser"] },
+  mode: { type: "string", enum: ["live", "seed", "snapshot", "browser"] },
   fixture_id: { type: "string" },
   source_url: { type: "string" },
   captured_at: { type: "string" },
