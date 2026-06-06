@@ -22,8 +22,7 @@ import {
   createSeedShopeeProvider,
   createSeedSourcing1688Provider,
 } from "../providers";
-// #15 stub — swap to `from "./committee"` once TASK-COMMITTEE (#14) lands, then delete committee-stub.ts.
-import { committeeAgent } from "./committee-stub";
+import { makeCommitteeAgent } from "./committee";
 import { type Agent, type AgentContext, type AgentProviders, runPipeline } from "./contracts";
 import { runListingAgent } from "./listing";
 import { marginAgent } from "./margin";
@@ -107,7 +106,7 @@ export async function runOrchestration(
     marginAgent,
     (c) => runListingAgent(c, { mode: listingMode, runId, audit }),
     (c) => runPackagingAgent(c, { imageMode, runId }),
-    committeeAgent,
+    makeCommitteeAgent(textMode),
     riskAgent,
   ];
 
