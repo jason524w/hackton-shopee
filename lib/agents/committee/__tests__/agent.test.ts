@@ -4,7 +4,8 @@ import type { Opportunity, RunResult, SelectedListing } from "../../../../contra
 import { createRiskSupervisor } from "../../risk/checkpoints";
 import type { AgentContext } from "../../contracts";
 import { buildEvidence, deterministicOutput } from "../evidence";
-import { committeeAgent, runCommitteeAgent } from "../index";
+import { committeeAgent, isComplete, runCommitteeAgent } from "../index";
+import type { CommitteeOutput } from "../schema";
 
 function ctxWith(overrides: Partial<RunResult> = {}): AgentContext {
   const opps = mock.opportunities.map((o) => ({ ...o })) as unknown as Opportunity[];
@@ -96,6 +97,26 @@ describe("risk evidence source (finding #2)", () => {
     const slice = await committeeAgent(ctx);
     const reason = slice.opportunities!.find((o) => o.id === "opp_desk_vacuum")!.decision_reason;
     expect(reason).toMatch(/夸大|电器|复核|USB|安全|认证/);
+  });
+});
+
+describe("LLM output completeness (finding #3a)", () => {
+  it("isComplete: true when decisions+ranked cover all ids exactly, false otherwise", () => {
+    const ctx = ctxWith();
+    const opps = ctx.results.opportunities!;
+    const good = deterministicOutput(opps, ctx);
+    expect(isComplete(good, opps)).toBe(true);
+    expect(isComplete({ ...good, decisions: good.decisions.slice(1) }, opps)).toBe(false); // missing one
+    expect(isComplete({ ...good, ranked_ids: ["ghost", ...good.ranked_ids] }, opps)).toBe(false); // unknown id
+  });
+
+  it("falls back to deterministic + degraded when the LLM omits opportunities", async () => {
+    const ctx = ctxWith();
+    const opps = ctx.results.opportunities!;
+    const incomplete: CommitteeOutput = { decisions: [], ranked_ids: [], tradeoffs: [], summary: "x" };
+    const { output, degraded } = await runCommitteeAgent(ctx, { mode: "fixture", fixture: incomplete });
+    expect(degraded).not.toBeNull();
+    expect(output.decisions).toHaveLength(opps.length); // deterministic covers all
   });
 });
 

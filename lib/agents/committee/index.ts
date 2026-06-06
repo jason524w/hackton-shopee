@@ -15,9 +15,23 @@ export { buildEvidence, deterministicOutput } from "./evidence";
 
 export interface RunCommitteeOptions {
   mode?: AgentRunMode;
+  fixture?: CommitteeOutput; // override the fixture output (testing / #15 injection)
 }
 
-/** Runs the LLM committee (or fixture). On live failure, returns the deterministic fallback flagged degraded. */
+/**
+ * The LLM may set the verdict freely (pure-A), but its output must still STRUCTURALLY
+ * cover every opportunity exactly once — decisions and ranked_ids cover the same id set.
+ * This is not a verdict guardrail (we don't override Go/Watch/Reject); it only rejects
+ * a malformed/incomplete response so we don't silently keep stale decisions.
+ */
+export function isComplete(output: CommitteeOutput, opps: Opportunity[]): boolean {
+  const ids = new Set(opps.map((o) => o.id));
+  const coversExactly = (arr: string[]): boolean =>
+    arr.length === ids.size && new Set(arr).size === ids.size && arr.every((id) => ids.has(id));
+  return coversExactly(output.decisions.map((d) => d.id)) && coversExactly(output.ranked_ids);
+}
+
+/** Runs the LLM committee (or fixture). On failure OR incomplete output, returns the deterministic fallback flagged degraded. */
 export async function runCommitteeAgent(
   ctx: AgentContext,
   options: RunCommitteeOptions = {},
@@ -33,13 +47,23 @@ export async function runCommitteeAgent(
     outputSchema: COMMITTEE_OUTPUT_SCHEMA,
     tools: [],
     mode,
-    fixture: () => deterministicOutput(opps, ctx),
+    fixture: options.fixture ?? (() => deterministicOutput(opps, ctx)),
     retryOnce: true,
   });
 
-  if (result.ok) return { output: result.output, degraded: null };
-  // Live LLM failed → deterministic fallback (surfaced as degraded).
-  return { output: deterministicOutput(opps, ctx), degraded: result.error };
+  if (result.ok && isComplete(result.output, opps)) {
+    return { output: result.output, degraded: null };
+  }
+
+  // Live LLM failed OR returned an incomplete decision set → deterministic fallback.
+  const degraded: DiagnosticError = result.ok
+    ? {
+        code: "SCHEMA_VALIDATION_FAILED",
+        message: "committee output did not cover all opportunities exactly once",
+        retryable: false,
+      }
+    : result.error;
+  return { output: deterministicOutput(opps, ctx), degraded };
 }
 
 export const committeeAgent: Agent = async (ctx: AgentContext): Promise<Partial<RunResult>> => {
