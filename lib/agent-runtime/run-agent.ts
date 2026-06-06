@@ -193,7 +193,10 @@ async function runFixture<Input, Output>(
     });
   }
 
-  const output = typeof options.fixture === "function" ? await options.fixture(options.input) : options.fixture;
+  const output =
+    typeof options.fixture === "function"
+      ? await (options.fixture as (input: Input) => Promise<Output> | Output)(options.input)
+      : options.fixture;
   const validation = validateJsonSchema(options.outputSchema, output);
   await recordSchemaResult(options, runId, audit, 1, validation);
 
