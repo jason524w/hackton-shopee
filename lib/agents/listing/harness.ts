@@ -1,6 +1,7 @@
 import mockResult from "../../../contract/mock-result.json";
 import type { RunResult } from "../../../contract/result";
 import {
+  createSeedBrowserRetrievalProvider,
   createSeedFxProvider,
   createSeedOpenAIImageProvider,
   createSeedShippingProvider,
@@ -61,6 +62,7 @@ function createFixtureContext(): AgentContext {
       shipping: createSeedShippingProvider(),
       fx: createSeedFxProvider(),
       openaiImage: createSeedOpenAIImageProvider(),
+      browser: createSeedBrowserRetrievalProvider(),
     },
     risk: createNoopRisk(),
   };

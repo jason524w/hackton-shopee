@@ -7,6 +7,7 @@ import type {
   RunResult,
 } from "../../contract/result";
 import type {
+  BrowserRetrievalProvider,
   FxProvider,
   OpenAIImageProvider,
   ShippingProvider,
@@ -20,6 +21,7 @@ export interface AgentProviders {
   shipping: ShippingProvider;
   fx: FxProvider;
   openaiImage: OpenAIImageProvider;
+  browser: BrowserRetrievalProvider;
 }
 
 // Risk supervises the downstream business decision checkpoints. Market and

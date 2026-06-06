@@ -461,6 +461,35 @@ Output must include:
 
 For MVP, seed rate is acceptable as long as it is documented.
 
+### Browser Retrieval Provider
+
+Required functions:
+
+```ts
+browser.retrievePageSnapshot(url, purpose)
+browser.extractShopeeSearch(query, market)
+browser.extractShopeeAdsSignals(market, query)
+browser.extractWebTrend(query, market)
+browser.extract1688Search(query)
+browser.extract1688Offer(offerId or url)
+browser.refreshOfferStock(offerId)
+browser.extractSupplierSignals(offerId or supplierName)
+```
+
+Purpose:
+
+- Give agents a controlled fallback for pages that do not have accessible APIs.
+- Keep Chrome / Playwright / manual snapshot control inside provider adapters.
+- Prevent agents from directly handling browser sessions, cookies, credentials, or raw page state.
+
+Requirements:
+
+- Enforce allowed domains and max browser steps in provider policy, not in prompts.
+- Return normalized data plus source URL, captured_at, raw_snapshot_id, extracted_text_hash, and screenshot_path when available.
+- Do not record cookies, auth tokens, phone numbers, buyer/seller private account data, or hidden page state in audit.
+- Seed mode must work without opening Chrome.
+- Chrome mode can be injected through a controller adapter and must still return schema-valid provider outputs or diagnostic errors.
+
 ### OpenAI Image Provider
 
 Required functions:

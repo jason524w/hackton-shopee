@@ -3,9 +3,12 @@ import { join } from "node:path";
 
 export interface ProviderSource {
   provider: string;
-  mode: "live" | "seed";
+  mode: "live" | "seed" | "snapshot" | "browser";
   fixture_id?: string;
+  raw_snapshot_id?: string;
   source_url?: string;
+  screenshot_path?: string;
+  extracted_text_hash?: string;
   captured_at: string;
 }
 

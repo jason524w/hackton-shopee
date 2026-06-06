@@ -3,6 +3,7 @@ import type { RunResult } from "../../../../contract/result";
 import { describe, expect, it, vi } from "vitest";
 import { createNoopRisk, type AgentContext, type RiskCheckpoint, type RiskSupervisor } from "../../contracts";
 import {
+  createSeedBrowserRetrievalProvider,
   createSeedFxProvider,
   createSeedShippingProvider,
   createSeedShopeeProvider,
@@ -203,6 +204,7 @@ function createContext(openaiImage: OpenAIImageProvider, risk: RiskSupervisor = 
       shipping: createSeedShippingProvider(),
       fx: createSeedFxProvider(),
       openaiImage,
+      browser: createSeedBrowserRetrievalProvider(),
     },
     risk,
   };

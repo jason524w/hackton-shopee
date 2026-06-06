@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import mockResult from "../../../../contract/mock-result.json";
 import type { RunResult } from "../../../../contract/result";
 import {
+  createSeedBrowserRetrievalProvider,
   createSeedFxProvider,
   createSeedOpenAIImageProvider,
   createSeedShippingProvider,
@@ -158,6 +159,7 @@ function createFixtureContext(
       shipping: createSeedShippingProvider(),
       fx: createSeedFxProvider(),
       openaiImage: createSeedOpenAIImageProvider(),
+      browser: createSeedBrowserRetrievalProvider(),
     },
     risk,
   };

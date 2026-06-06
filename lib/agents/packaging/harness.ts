@@ -3,6 +3,7 @@ import type { RunResult } from "../../../contract/result";
 import { AFFIRMATIVE_PROMPT_REVIEW_TERMS } from "../../compliance/claims";
 import { createNoopRisk, type AgentContext } from "../contracts";
 import {
+  createSeedBrowserRetrievalProvider,
   createSeedFxProvider,
   createSeedOpenAIImageProvider,
   createSeedShippingProvider,
@@ -86,6 +87,7 @@ function createFixtureContext(): AgentContext {
       shipping: createSeedShippingProvider(),
       fx: createSeedFxProvider(),
       openaiImage: createSeedOpenAIImageProvider(),
+      browser: createSeedBrowserRetrievalProvider(),
     },
     risk: createNoopRisk(),
   };
