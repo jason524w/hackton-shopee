@@ -1,0 +1,21 @@
+{
+  "fixture_id": "shipping-cn-to-sg-mini-parcel-2026-06-06",
+  "captured_at": "2026-06-06T00:00:00+08:00",
+  "routes": [
+    {
+      "from": "CN",
+      "to": "SG",
+      "method": "Seed economy cross-border small parcel",
+      "base_fee_sgd": 1.2,
+      "per_100g_sgd": 0.48,
+      "volumetric_divisor": 6000,
+      "days_min": 6,
+      "days_max": 10,
+      "assumptions": [
+        "Estimate for small cross-border parcel from China to Singapore.",
+        "Final rate depends on chosen forwarder and platform logistics program.",
+        "Use low/base/high range in margin model rather than a single promise."
+      ]
+    }
+  ]
+}

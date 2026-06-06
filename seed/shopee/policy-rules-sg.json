@@ -1,0 +1,32 @@
+{
+  "fixture_id": "shopee-sg-policy-rules-mini-appliance-2026-06-06",
+  "captured_at": "2026-06-06T00:00:00+08:00",
+  "source_url": "https://help.shopee.sg/portal/4/article/77151",
+  "market": "Singapore",
+  "rules": [
+    {
+      "id": "sg-listing-claims-exaggerated-performance",
+      "title": "Avoid exaggerated or unverifiable performance claims",
+      "severity": "warning",
+      "applies_to": ["title", "description", "feature_image"],
+      "guidance": "Do not claim super suction, industrial-grade power, guaranteed deep clean or other unsupported performance statements.",
+      "source_url": "https://cdngarenanow-a.akamaihd.net/shopee/seller/seller_cms/57eedfed7dfd35ddb5700002da951ac0/%5BSG%5D%20Listing%20Violations%20Guide.pdf"
+    },
+    {
+      "id": "sg-electrical-safety-review",
+      "title": "Electrical and USB-powered products need human review",
+      "severity": "warning",
+      "applies_to": ["category", "listing", "packaging"],
+      "guidance": "For USB rechargeable electrical products, verify supplier safety information, charging details and local compliance before launch.",
+      "source_url": "https://help.shopee.sg/portal/4/article/77151"
+    },
+    {
+      "id": "sg-prohibited-counterfeit-ip",
+      "title": "Counterfeit or IP-infringing goods are prohibited",
+      "severity": "hard_block",
+      "applies_to": ["brand", "title", "image"],
+      "guidance": "Reject listings that use protected brands, logos or misleading branded packaging without authorization.",
+      "source_url": "https://help.shopee.sg/portal/4/article/77151"
+    }
+  ]
+}

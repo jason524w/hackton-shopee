@@ -1,0 +1,61 @@
+{
+  "fixture_id": "shopee-sg-mini-desk-vacuum-search-2026-06-06",
+  "captured_at": "2026-06-06T00:00:00+08:00",
+  "source_url": "https://shopee.sg/search?keyword=mini%20desk%20vacuum",
+  "market": "Singapore",
+  "category": "Home Appliances > Small Household Appliances",
+  "products": [
+    {
+      "item_id": "sg-desk-vac-001",
+      "title": "Mini Desk Vacuum Cleaner USB Cordless Keyboard Cleaner",
+      "price_sgd": 12.9,
+      "rating": 4.7,
+      "review_count": 186,
+      "sold_label": "seed: visible sales label",
+      "shop_type": "preferred",
+      "image_url": "/seed/images/desk-vacuum-hero.svg",
+      "product_url": "seed://shopee/mini-desk-vacuum-001",
+      "category_id": 100636,
+      "evidence_label": "Shopee SG search result: compact USB desk vacuum with review density"
+    },
+    {
+      "item_id": "sg-desk-vac-002",
+      "title": "Portable Mini Vacuum for Desk Keyboard Crumbs USB Rechargeable",
+      "price_sgd": 15.5,
+      "rating": 4.6,
+      "review_count": 94,
+      "sold_label": "seed: visible sales label",
+      "shop_type": "marketplace",
+      "image_url": "/seed/images/desk-vacuum-lifestyle.svg",
+      "product_url": "seed://shopee/mini-desk-vacuum-002",
+      "category_id": 100636,
+      "evidence_label": "Shopee SG competitor: rechargeable office cleaning angle"
+    },
+    {
+      "item_id": "sg-desk-vac-003",
+      "title": "Desktop Vacuum Cleaner Mini Handheld Dust Cleaner for Student Desk",
+      "price_sgd": 9.8,
+      "rating": 4.4,
+      "review_count": 51,
+      "sold_label": "seed: low-volume listing",
+      "shop_type": "marketplace",
+      "image_url": "/seed/images/desk-vacuum-feature.svg",
+      "product_url": "seed://shopee/mini-desk-vacuum-003",
+      "category_id": 100636,
+      "evidence_label": "Shopee SG competitor: lower price band"
+    },
+    {
+      "item_id": "sg-desk-vac-004",
+      "title": "Cute Mini Table Vacuum Keyboard Dust Sweeper for Home Office",
+      "price_sgd": 18.9,
+      "rating": 4.8,
+      "review_count": 213,
+      "sold_label": "seed: visible sales label",
+      "shop_type": "preferred",
+      "image_url": "/seed/images/desk-vacuum-hero.svg",
+      "product_url": "seed://shopee/mini-desk-vacuum-004",
+      "category_id": 100636,
+      "evidence_label": "Shopee SG competitor: higher price with cute lifestyle packaging"
+    }
+  ]
+}
