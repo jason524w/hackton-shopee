@@ -1,0 +1,185 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sea Launch AI RunResult",
+  "description": "Contract returned by POST /api/run. Backend output must validate against this; frontend renders against it. Keep in sync with contract/result.ts and contract/mock-result.json.",
+  "type": "object",
+  "required": ["run_id", "created_at", "currency", "brief", "agents", "opportunities", "committee", "selected_listing"],
+  "additionalProperties": false,
+  "properties": {
+    "run_id": { "type": "string" },
+    "created_at": { "type": "string" },
+    "currency": { "type": "string" },
+    "brief": { "$ref": "#/$defs/brief" },
+    "agents": { "type": "array", "items": { "$ref": "#/$defs/agent" }, "minItems": 1 },
+    "opportunities": { "type": "array", "items": { "$ref": "#/$defs/opportunity" }, "minItems": 1 },
+    "committee": { "$ref": "#/$defs/committee" },
+    "selected_listing": { "$ref": "#/$defs/selectedListing" }
+  },
+  "$defs": {
+    "brief": {
+      "type": "object",
+      "required": ["target_market", "target_platform", "product_intent", "category", "budget", "target_margin", "max_fulfillment_days", "risk_appetite", "language"],
+      "properties": {
+        "target_market": { "type": "string" },
+        "target_platform": { "enum": ["Shopee", "Lazada"] },
+        "seller_type": { "type": "string" },
+        "product_intent": { "type": "string" },
+        "category": { "type": "string" },
+        "budget": { "type": "number" },
+        "target_margin": { "type": "number", "minimum": 0, "maximum": 1 },
+        "max_fulfillment_days": { "type": "number" },
+        "risk_appetite": { "enum": ["conservative", "balanced", "aggressive"] },
+        "language": { "type": "string" }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "required": ["label", "value"],
+      "properties": { "label": { "type": "string" }, "value": { "type": "string" } }
+    },
+    "agent": {
+      "type": "object",
+      "required": ["key", "name", "role", "status", "evidence", "key_judgment", "score", "confidence", "warnings"],
+      "properties": {
+        "key": { "enum": ["market", "sourcing", "margin", "risk", "listing", "committee"] },
+        "name": { "type": "string" },
+        "role": { "type": "string" },
+        "status": { "enum": ["waiting", "running", "done", "blocked"] },
+        "inputs_summary": { "type": "string" },
+        "data_sources": { "type": "array", "items": { "type": "string" } },
+        "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } },
+        "key_judgment": { "type": "string" },
+        "score": { "type": "number", "minimum": 0, "maximum": 100 },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "warnings": { "type": "array", "items": { "type": "string" } },
+        "risk_level": { "enum": ["low", "medium", "high"] }
+      }
+    },
+    "costLine": {
+      "type": "object",
+      "required": ["label", "amount", "type"],
+      "properties": {
+        "label": { "type": "string" },
+        "amount": { "type": "number" },
+        "type": { "enum": ["revenue", "cost", "net"] }
+      }
+    },
+    "marginTier": {
+      "type": "object",
+      "required": ["net_profit", "net_margin"],
+      "properties": { "net_profit": { "type": "number" }, "net_margin": { "type": "number" } }
+    },
+    "margin": {
+      "type": ["object", "null"],
+      "required": ["base", "low", "high", "cost_breakdown"],
+      "properties": {
+        "base": { "$ref": "#/$defs/marginTier" },
+        "low": { "$ref": "#/$defs/marginTier" },
+        "high": { "$ref": "#/$defs/marginTier" },
+        "cost_breakdown": { "type": "array", "items": { "$ref": "#/$defs/costLine" } }
+      }
+    },
+    "scores": {
+      "type": "object",
+      "required": ["profit", "demand", "compliance", "fulfillment", "packaging", "overall"],
+      "properties": {
+        "profit": { "type": "number" },
+        "demand": { "type": "number" },
+        "compliance": { "type": "number" },
+        "fulfillment": { "type": "number" },
+        "packaging": { "type": "number" },
+        "overall": { "type": "number" }
+      }
+    },
+    "opportunity": {
+      "type": "object",
+      "required": ["id", "is_primary", "name", "target_market", "target_platform", "source_price", "suggested_price", "minimum_viable_price", "gross_margin", "stock_status", "fulfillment_days", "market_heat", "risk_level", "decision", "decision_reason", "scores", "margin", "key_reasons"],
+      "properties": {
+        "id": { "type": "string" },
+        "is_primary": { "type": "boolean" },
+        "name": { "type": "string" },
+        "direction": { "type": "string" },
+        "target_market": { "type": "string" },
+        "target_platform": { "type": "string" },
+        "source_price": { "type": "number" },
+        "suggested_price": { "type": "number" },
+        "minimum_viable_price": { "type": "number" },
+        "gross_margin": { "type": "number" },
+        "stock_status": { "enum": ["in_stock", "low", "out"] },
+        "fulfillment_days": { "type": "number" },
+        "market_heat": { "enum": ["low", "medium", "high"] },
+        "risk_level": { "enum": ["low", "medium", "high"] },
+        "decision": { "enum": ["Go", "Watch", "Reject"] },
+        "decision_reason": { "type": "string" },
+        "scores": { "$ref": "#/$defs/scores" },
+        "margin": { "$ref": "#/$defs/margin" },
+        "key_reasons": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "tradeoff": {
+      "type": "object",
+      "required": ["opportunity_id", "conflict", "resolution"],
+      "properties": {
+        "opportunity_id": { "type": "string" },
+        "conflict": { "type": "string" },
+        "resolution": { "type": "string" }
+      }
+    },
+    "committee": {
+      "type": "object",
+      "required": ["ranked_ids", "weights", "tradeoffs", "summary"],
+      "properties": {
+        "ranked_ids": { "type": "array", "items": { "type": "string" } },
+        "weights": { "type": "object" },
+        "tradeoffs": { "type": "array", "items": { "$ref": "#/$defs/tradeoff" } },
+        "summary": { "type": "string" }
+      }
+    },
+    "listingImage": {
+      "type": "object",
+      "required": ["type", "url", "prompt", "compliance"],
+      "properties": {
+        "type": { "enum": ["hero", "lifestyle", "feature"] },
+        "url": { "type": "string" },
+        "prompt": { "type": "string" },
+        "compliance": { "enum": ["ok", "needs_review", "rejected"] }
+      }
+    },
+    "shopeeListing": {
+      "type": "object",
+      "required": ["item_name", "category", "price", "stock", "sku", "description", "bullet_points", "logistics", "required_fields_total", "required_fields_filled", "missing_fields"],
+      "properties": {
+        "item_name": { "type": "string" },
+        "category": { "type": "string" },
+        "category_id": { "type": "number" },
+        "brand": { "type": "string" },
+        "condition": { "type": "string" },
+        "price": { "type": "number" },
+        "stock": { "type": "number" },
+        "sku": { "type": "string" },
+        "variations": { "type": "array" },
+        "attributes": { "type": "object" },
+        "description": { "type": "string" },
+        "bullet_points": { "type": "array", "items": { "type": "string" } },
+        "logistics": { "type": "object" },
+        "required_fields_total": { "type": "number" },
+        "required_fields_filled": { "type": "number" },
+        "missing_fields": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "selectedListing": {
+      "type": "object",
+      "required": ["opportunity_id", "platform", "market", "language", "shopee", "images", "compliance", "editable_json_ready"],
+      "properties": {
+        "opportunity_id": { "type": "string" },
+        "platform": { "enum": ["Shopee", "Lazada"] },
+        "market": { "type": "string" },
+        "language": { "type": "string" },
+        "shopee": { "$ref": "#/$defs/shopeeListing" },
+        "images": { "type": "array", "items": { "$ref": "#/$defs/listingImage" } },
+        "compliance": { "type": "object" },
+        "editable_json_ready": { "type": "boolean" }
+      }
+    }
+  }
+}

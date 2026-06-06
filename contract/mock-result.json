@@ -1,0 +1,282 @@
+{
+  "run_id": "run_demo_001",
+  "created_at": "2026-06-06T09:30:00+08:00",
+  "currency": "SGD",
+  "brief": {
+    "target_market": "Singapore",
+    "target_platform": "Shopee",
+    "seller_type": "individual_dropshipper",
+    "product_intent": "mini desk vacuum",
+    "category": "home_appliances_small",
+    "budget": 500,
+    "target_margin": 0.25,
+    "max_fulfillment_days": 12,
+    "risk_appetite": "balanced",
+    "language": "en"
+  },
+  "agents": [
+    {
+      "key": "market",
+      "name": "Market Trend Agent",
+      "role": "发现目标市场的需求、热度与竞品价格",
+      "status": "done",
+      "inputs_summary": "Singapore · Shopee · mini desk vacuum",
+      "data_sources": ["Shopee SG search (seed)", "Web search"],
+      "evidence": [
+        { "label": "竞品数量", "value": "37 listings on Shopee SG" },
+        { "label": "价格带", "value": "SGD 7.90 – 15.90" },
+        { "label": "评论密度", "value": "top listing 1.2k reviews, 4.6★" },
+        { "label": "热度来源", "value": "desk-cleaning content trending on TikTok SG" }
+      ],
+      "key_judgment": "需求真实存在,价格带集中、竞争中等;适合轻资产卖家测试,但同质化偏高。",
+      "score": 78,
+      "confidence": 0.74,
+      "warnings": ["价格竞争激烈,需要差异化包装"]
+    },
+    {
+      "key": "sourcing",
+      "name": "Sourcing Agent",
+      "role": "匹配低价货源,判断库存与履约可行性",
+      "status": "done",
+      "inputs_summary": "mini desk vacuum · ≤12 天履约 · 预算 SGD 500",
+      "data_sources": ["1688 quotes (seed)"],
+      "evidence": [
+        { "label": "采购价", "value": "¥15.5 (~SGD 2.90) /件" },
+        { "label": "起订量", "value": "MOQ 50" },
+        { "label": "可用库存", "value": ">5000" },
+        { "label": "包装重量", "value": "180g" }
+      ],
+      "key_judgment": "货源充足、价差明显;但跨境到货 8–12 天接近平台履约上限。",
+      "score": 72,
+      "confidence": 0.7,
+      "warnings": ["履约时间接近上限,需在 listing 注明发货周期"]
+    },
+    {
+      "key": "margin",
+      "name": "Margin Agent",
+      "role": "扣完全部成本后判断真实利润空间",
+      "status": "done",
+      "inputs_summary": "source SGD 2.90 → sell SGD 11.90",
+      "data_sources": ["cost model"],
+      "evidence": [
+        { "label": "建议售价", "value": "SGD 11.90" },
+        { "label": "净利(base)", "value": "SGD 3.37" },
+        { "label": "净利率(base)", "value": "28%" },
+        { "label": "最低可行售价", "value": "SGD 9.40" }
+      ],
+      "key_judgment": "base 档利润成立;但 high-return 情形下利润率掉到 ~12%,利润对退货和运费敏感。",
+      "score": 66,
+      "confidence": 0.62,
+      "warnings": ["利润对退货率与国际运费敏感"]
+    },
+    {
+      "key": "risk",
+      "name": "Risk & Compliance Agent",
+      "role": "检查平台、商品、履约与内容风险",
+      "status": "done",
+      "inputs_summary": "small electrical appliance · Shopee SG",
+      "data_sources": ["Shopee prohibited & listing-violation rules (seed)"],
+      "evidence": [
+        { "label": "禁售/限售", "value": "通过" },
+        { "label": "品牌/IP", "value": "通过(选用无品牌白牌)" },
+        { "label": "电器安全", "value": "⚠ 需标注电压/USB 供电,避免安全认证暗示" },
+        { "label": "夸大宣传", "value": "⚠ 竞品常见『超强吸力』属夸大,需规避" }
+      ],
+      "key_judgment": "无硬性拦截,但属电器类:存在夸大吸力与电器安全描述风险,需人工复核。",
+      "score": 58,
+      "risk_level": "medium",
+      "confidence": 0.8,
+      "warnings": [
+        "避免『超强吸力 / 工业级』等夸大表述",
+        "需注明 USB 供电与适用场景,不暗示安全认证"
+      ]
+    },
+    {
+      "key": "listing",
+      "name": "Listing & Packaging Agent",
+      "role": "生成 Shopee 可上架字段 + 本地化标题/卖点/图",
+      "status": "done",
+      "inputs_summary": "selected: mini desk vacuum · Shopee SG · EN",
+      "data_sources": ["Shopee category schema (seed)", "competitor titles (seed)"],
+      "evidence": [
+        { "label": "类目", "value": "Home Appliances > Vacuum Cleaners" },
+        { "label": "必填字段", "value": "11/11 完整" },
+        { "label": "标题风格", "value": "对标 top-3 竞品结构 + HDB/office 场景" }
+      ],
+      "key_judgment": "字段完整可上架;已按 Risk 约束改写卖点,去掉夸大词。",
+      "score": 81,
+      "confidence": 0.77,
+      "warnings": []
+    },
+    {
+      "key": "committee",
+      "name": "Committee Agent",
+      "role": "汇总各 agent,处理 tradeoff,给最终决策",
+      "status": "done",
+      "inputs_summary": "market+sourcing+margin+risk+listing",
+      "data_sources": [],
+      "evidence": [
+        { "label": "利润", "value": "成立但敏感 (66)" },
+        { "label": "需求", "value": "中高 (78)" },
+        { "label": "合规", "value": "中风险 (58)" }
+      ],
+      "key_judgment": "利润在 base 档成立、需求真实,但电器合规为中风险且利润敏感 → 给 Watch,不直接 Go。",
+      "score": 69,
+      "confidence": 0.71,
+      "warnings": []
+    }
+  ],
+  "opportunities": [
+    {
+      "id": "opp_desk_vacuum",
+      "is_primary": true,
+      "name": "Mini Desk Vacuum (USB, cordless)",
+      "direction": "桌面/键盘清洁小电",
+      "target_market": "Singapore",
+      "target_platform": "Shopee",
+      "source_price": 2.9,
+      "suggested_price": 11.9,
+      "minimum_viable_price": 9.4,
+      "gross_margin": 0.46,
+      "stock_status": "in_stock",
+      "fulfillment_days": 10,
+      "market_heat": "high",
+      "risk_level": "medium",
+      "decision": "Watch",
+      "decision_reason": "需求真实、利润 base 档成立,但属电器类中风险且利润对退货/运费敏感;建议先小批量测试并规避夸大表述。",
+      "scores": { "profit": 66, "demand": 78, "compliance": 58, "fulfillment": 72, "packaging": 81, "overall": 69 },
+      "margin": {
+        "base": { "net_profit": 3.37, "net_margin": 0.28 },
+        "low": { "net_profit": 1.45, "net_margin": 0.12 },
+        "high": { "net_profit": 4.52, "net_margin": 0.38 },
+        "cost_breakdown": [
+          { "label": "Selling price", "amount": 11.9, "type": "revenue" },
+          { "label": "Source price", "amount": -2.9, "type": "cost" },
+          { "label": "Intl shipping", "amount": -1.5, "type": "cost" },
+          { "label": "Local delivery", "amount": -1.2, "type": "cost" },
+          { "label": "Platform fee (8%)", "amount": -0.95, "type": "cost" },
+          { "label": "Payment fee (2%)", "amount": -0.24, "type": "cost" },
+          { "label": "GST (9%)", "amount": -0.4, "type": "cost" },
+          { "label": "Return reserve (5%)", "amount": -0.6, "type": "cost" },
+          { "label": "Damage reserve (2%)", "amount": -0.24, "type": "cost" },
+          { "label": "Packaging", "amount": -0.3, "type": "cost" },
+          { "label": "AI ops", "amount": -0.1, "type": "cost" },
+          { "label": "Net profit", "amount": 3.37, "type": "net" }
+        ]
+      },
+      "key_reasons": [
+        "Shopee SG 37 个竞品,需求真实",
+        "采购价差大(46% 毛利)",
+        "电器合规中风险 + 利润敏感 → Watch"
+      ]
+    },
+    {
+      "id": "opp_cable_organizer",
+      "is_primary": false,
+      "name": "Desk Cable Organizer Kit",
+      "direction": "桌面线缆收纳",
+      "target_market": "Singapore",
+      "target_platform": "Shopee",
+      "source_price": 0.85,
+      "suggested_price": 5.9,
+      "minimum_viable_price": 4.2,
+      "gross_margin": 0.55,
+      "stock_status": "in_stock",
+      "fulfillment_days": 9,
+      "market_heat": "medium",
+      "risk_level": "low",
+      "decision": "Go",
+      "decision_reason": "风险低、轻量运费低、可多 SKU;利润不爆炸但可持续测试。",
+      "scores": { "profit": 61, "demand": 64, "compliance": 88, "fulfillment": 80, "packaging": 70, "overall": 71 },
+      "margin": null,
+      "key_reasons": ["合规风险低", "运费低、可多 SKU", "利润故事弱于小电"]
+    },
+    {
+      "id": "opp_mini_dehumidifier",
+      "is_primary": false,
+      "name": "Portable Mini Dehumidifier",
+      "direction": "小型除湿器",
+      "target_market": "Singapore",
+      "target_platform": "Shopee",
+      "source_price": 6.5,
+      "suggested_price": 18.9,
+      "minimum_viable_price": 16.0,
+      "gross_margin": 0.41,
+      "stock_status": "in_stock",
+      "fulfillment_days": 13,
+      "market_heat": "high",
+      "risk_level": "high",
+      "decision": "Reject",
+      "decision_reason": "电器安全认证要求高、售后/漏液投诉风险大,且履约超出用户 12 天上限 → 不适合轻资产新手测试。",
+      "scores": { "profit": 70, "demand": 75, "compliance": 35, "fulfillment": 48, "packaging": 60, "overall": 52 },
+      "margin": null,
+      "key_reasons": ["电器安全/认证风险高", "履约 13 天超上限", "售后投诉风险大"]
+    }
+  ],
+  "committee": {
+    "ranked_ids": ["opp_cable_organizer", "opp_desk_vacuum", "opp_mini_dehumidifier"],
+    "weights": { "profit": 0.3, "demand": 0.25, "compliance": 0.2, "fulfillment": 0.15, "packaging": 0.1 },
+    "tradeoffs": [
+      {
+        "opportunity_id": "opp_desk_vacuum",
+        "conflict": "高需求 + 中合规风险 + 利润敏感",
+        "resolution": "Watch:可测试但需规避夸大表述、注明履约,先小批量"
+      },
+      {
+        "opportunity_id": "opp_mini_dehumidifier",
+        "conflict": "高利润 + 高合规风险 + 长履约",
+        "resolution": "Reject:认证与售后风险超过利润收益,履约超上限"
+      }
+    ],
+    "summary": "推荐先用 cable organizer 做低风险起步,desk vacuum 作为高潜但需谨慎的 Watch 项小批量测试;dehumidifier 不建议新手碰。"
+  },
+  "selected_listing": {
+    "opportunity_id": "opp_desk_vacuum",
+    "platform": "Shopee",
+    "market": "Singapore",
+    "language": "en",
+    "shopee": {
+      "item_name": "Mini Desk Vacuum Cleaner USB Cordless Keyboard Cleaner for Home Office HDB",
+      "category": "Home Appliances > Vacuum Cleaners",
+      "category_id": 100629,
+      "brand": "No Brand",
+      "condition": "New",
+      "price": 11.9,
+      "stock": 100,
+      "sku": "MDV-USB-WHT",
+      "variations": [
+        { "name": "Color", "options": ["White", "Pink", "Black"] }
+      ],
+      "attributes": {
+        "power_source": "USB Rechargeable",
+        "capacity": "Cordless Handheld",
+        "warranty": "7-day return"
+      },
+      "description": "Compact USB cordless desk vacuum for keyboards, desks and small spaces. Lightweight and easy to use in HDB homes, dorms and offices. Rechargeable battery, no cords. Suitable for crumbs, dust and hair on flat surfaces.\n\nNote: For light desktop cleaning. Ships from overseas, est. delivery 8-12 days.",
+      "bullet_points": [
+        "USB rechargeable, fully cordless",
+        "Compact size for HDB desks & dorms",
+        "Cleans keyboards, crumbs & desk dust",
+        "Lightweight 180g handheld design"
+      ],
+      "logistics": { "weight_g": 180, "length_cm": 14, "width_cm": 6, "height_cm": 6 },
+      "required_fields_total": 11,
+      "required_fields_filled": 11,
+      "missing_fields": []
+    },
+    "images": [
+      { "type": "hero", "url": "/seed/images/desk-vacuum-hero.png", "prompt": "white mini handheld USB desk vacuum on a clean wooden office desk, soft natural light, Singapore HDB home office, product-centered, e-commerce hero shot", "compliance": "ok" },
+      { "type": "lifestyle", "url": "/seed/images/desk-vacuum-lifestyle.png", "prompt": "person using mini desk vacuum to clean keyboard crumbs, compact apartment desk, cozy lifestyle, daytime", "compliance": "ok" },
+      { "type": "feature", "url": "/seed/images/desk-vacuum-feature.png", "prompt": "feature callouts: USB rechargeable, cordless, 180g, for desk & keyboard, clean infographic style", "compliance": "needs_review" }
+    ],
+    "compliance": {
+      "human_review_required": true,
+      "warnings": [
+        "避免『超强吸力 / 工业级』等夸大表述",
+        "注明 USB 供电与海外发货周期",
+        "feature 图需人工确认不暗示安全认证"
+      ]
+    },
+    "editable_json_ready": true
+  }
+}
