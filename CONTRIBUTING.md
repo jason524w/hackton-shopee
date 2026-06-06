@@ -7,6 +7,7 @@
   > private 免费库服务端无法硬挡 → 这是**团队约定**,PR 上的 CI 红绿是安全网。请自觉遵守。
 - 分支名:`task-<n>-<slug>`,例:`task-2-war-room`。
 - **一个 task/track 一个 PR**,尽量小、尽量快。
+- **PR 正文必须写 `Closes #<issue 号>`**:merge 后 GitHub 自动关闭对应 task issue,避免代码合了 issue 还挂着(早期 #19/#20/#21 漏写,导致 #1/#8/#9 事后手动补关)。
 - **不强制 review**(等审会死锁):**PR + CI 绿 → 自己 merge**;鼓励队友顺手扫一眼。
 - merge 后删分支。
 

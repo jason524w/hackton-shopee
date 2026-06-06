@@ -78,7 +78,7 @@ npm run dev                  # http://localhost:3000
 1. `gh issue list` 看未认领任务。
 2. 领一个:`gh issue edit <n> --add-assignee @me`,并把它移到 in-progress。
 3. **每个任务开独立分支**:`git checkout -b task-<n>-<slug>`。
-4. 做完开 PR:`gh pr create`,标题带 `TASK-<n>`,正文写"对哪些 contract 字段负责"。
+4. 做完开 PR:`gh pr create`,标题带 `TASK-<n>`,正文**必须写 `Closes #<issue 号>`**(merge 后自动关 issue,避免做完了 issue 还挂着)+ "对哪些 contract 字段负责"。
 5. **绝不直接 push main,一切走 PR**(含 TASK-01 骨架);main 永远保持可 demo。
    不强制 review:**PR + CI 绿 → 自己 merge**。详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
