@@ -57,6 +57,7 @@ export function createCdpChromeBrowserController(
         await client.send("Runtime.enable");
         await navigate(client, input.url, navigationTimeoutMs);
         await sleep(settleMs);
+        await scrollPage(client, input.policy.max_steps, settleMs);
 
         const extracted = await evaluatePage(client);
         const screenshotPath = input.policy.capture_screenshot
@@ -109,7 +110,7 @@ async function evaluatePage(client: CdpClient): Promise<ChromeEvaluateValue> {
   const expression = `(() => {
     const visibleText = document.body ? document.body.innerText : "";
     const links = Array.from(document.querySelectorAll("a[href]"))
-      .slice(0, 80)
+      .slice(0, 200)
       .map((node) => ({
         label: (node.textContent || node.getAttribute("aria-label") || "").replace(/\\s+/g, " ").trim().slice(0, 160),
         url: new URL(node.getAttribute("href"), location.href).href
@@ -146,6 +147,22 @@ async function evaluatePage(client: CdpClient): Promise<ChromeEvaluateValue> {
   };
 }
 
+async function scrollPage(client: CdpClient, maxSteps: number, settleMs: number): Promise<void> {
+  const steps = Math.max(0, Math.min(maxSteps, 12));
+  for (let step = 0; step < steps; step += 1) {
+    await client.send("Runtime.evaluate", {
+      expression: `(() => {
+        const before = window.scrollY;
+        window.scrollBy(0, Math.max(window.innerHeight * 0.85, 600));
+        return { before, after: window.scrollY, height: document.documentElement.scrollHeight };
+      })()`,
+      returnByValue: true,
+      awaitPromise: true,
+    });
+    await sleep(Math.max(500, Math.min(settleMs, 3_000)));
+  }
+}
+
 async function captureScreenshot(
   client: CdpClient,
   screenshotDir: string,
@@ -180,7 +197,7 @@ function sanitizeLinks(links: Array<{ label: string; url: string }>): Array<{ la
       url: link.url,
     });
   }
-  return output.slice(0, 40);
+  return output.slice(0, 120);
 }
 
 function redactText(text: string): string {

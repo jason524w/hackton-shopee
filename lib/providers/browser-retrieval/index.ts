@@ -305,6 +305,35 @@ export function createSeedBrowserRetrievalProvider(): BrowserRetrievalProvider {
       };
     },
 
+    async extractTaobaoOffer(input: Browser1688OfferInput): Promise<BrowserUnavailableResult> {
+      const capturedAt = nowIso();
+      const url = input.url ?? "https://item.taobao.com/";
+      const snapshot = createSnapshot({
+        url,
+        capturedAt,
+        text: `No seed Taobao offer detail was performed for ${input.offerId ?? input.url ?? "unknown offer"}.`,
+        method: "seed",
+        confidence: 0.2,
+        selectorNotes: ["taobao detail live browser extraction disabled in seed mode"],
+        warnings: ["Seed mode does not fabricate Taobao offer detail fields."],
+      });
+
+      return {
+        source: source("browser-retrieval", "seed", capturedAt, url, snapshot),
+        available: false,
+        reason: "Seed mode does not provide Taobao offer detail; use a user-authorized Chrome session.",
+        requires_human_input: true,
+        snapshot,
+        warnings: [
+          {
+            code: "TAOBAO_DETAIL_SEED_EMPTY",
+            severity: "info",
+            message: "Seed mode returns no Taobao offer detail; use Chrome mode for real sourcing specs.",
+          },
+        ],
+      };
+    },
+
     async refreshOfferStock(input: BrowserOfferStockInput): Promise<BrowserOfferStockResult> {
       const seed = await readSeedJson<SourcingSeed>("seed/sourcing-1688/mini-desk-vacuum-offers.json");
       const offer = findOffer(seed, { offerId: input.offerId });
@@ -453,7 +482,7 @@ export function createChromeBrowserRetrievalProvider(
       const url = `https://s.1688.com/selloffer/offer_search.htm?keywords=${encode1688Keyword(input.query)}`;
       const page = await this.retrievePageSnapshot({ url, purpose: "sourcing_1688_search", policy: input.policy });
       assertNoAccessChallenge(page.text_excerpt, page.url);
-      const offers = parse1688Offers(page.text_excerpt, input.limit ?? 20);
+      const offers = parse1688Offers(page.text_excerpt, input.limit ?? 20, page.links);
       if (offers.length === 0) {
         throw new Error(
           `No visible 1688 offer rows were parsed for ${page.url}. Human login/refresh or parser update is required; seed/mock data was not used.`,
@@ -471,7 +500,7 @@ export function createChromeBrowserRetrievalProvider(
       const url = `https://s.taobao.com/search?q=${encodeURIComponent(input.query)}`;
       const page = await this.retrievePageSnapshot({ url, purpose: "sourcing_taobao_search", policy: input.policy });
       assertNoAccessChallenge(page.text_excerpt, page.url);
-      const offers = parseTaobaoOffers(page.text_excerpt, input.limit ?? 20);
+      const offers = parseTaobaoOffers(page.text_excerpt, input.limit ?? 20, page.links);
       if (offers.length === 0) {
         throw new Error(
           `No visible Taobao product rows were parsed for ${page.url}. Human login/refresh or parser update is required; seed/mock data was not used.`,
@@ -494,14 +523,57 @@ export function createChromeBrowserRetrievalProvider(
           requiresHumanInput: true,
         });
       }
-      const page = await this.retrievePageSnapshot({ url: input.url, purpose: "sourcing_1688_offer", policy: input.policy });
-      assertNoAccessChallenge(page.text_excerpt, page.url);
-      return unavailableBrowserResult({
-        page,
-        code: "CHROME_1688_OFFER_PARSER_PENDING",
-        message: `Chrome captured the 1688 offer page, but detailed offer parsing is pending for snapshot ${page.snapshot.snapshot_id}.`,
-        requiresHumanInput: false,
+      const page = await this.retrievePageSnapshot({
+        url: input.url,
+        purpose: "sourcing_1688_offer",
+        policy: { max_steps: 12, ...input.policy },
       });
+      assertNoAccessChallenge(page.text_excerpt, page.url);
+      const detail = parseSourcingOfferDetailPage(page, input, "1688");
+      if (!detail.available) {
+        return unavailableBrowserResult({
+          page,
+          code: detail.code,
+          message: detail.reason,
+          requiresHumanInput: detail.requiresHumanInput,
+        });
+      }
+      return {
+        source: page.source,
+        offer: detail.offer,
+        snapshot: page.snapshot,
+      };
+    },
+
+    async extractTaobaoOffer(input: Browser1688OfferInput): Promise<Browser1688OfferResult | BrowserUnavailableResult> {
+      if (!input.url) {
+        return unavailableBrowserResult({
+          url: "https://item.taobao.com/",
+          code: "CHROME_TAOBAO_OFFER_URL_REQUIRED",
+          message: "Chrome Taobao offer extraction requires an item URL; no browser page was opened.",
+          requiresHumanInput: true,
+        });
+      }
+      const page = await this.retrievePageSnapshot({
+        url: input.url,
+        purpose: "sourcing_taobao_offer",
+        policy: { max_steps: 12, ...input.policy },
+      });
+      assertNoAccessChallenge(page.text_excerpt, page.url);
+      const detail = parseSourcingOfferDetailPage(page, input, "taobao");
+      if (!detail.available) {
+        return unavailableBrowserResult({
+          page,
+          code: detail.code,
+          message: detail.reason,
+          requiresHumanInput: detail.requiresHumanInput,
+        });
+      }
+      return {
+        source: page.source,
+        offer: detail.offer,
+        snapshot: page.snapshot,
+      };
     },
 
     async refreshOfferStock(input: BrowserOfferStockInput): Promise<BrowserOfferStockResult | BrowserUnavailableResult> {
@@ -756,9 +828,14 @@ function parseShopeeProducts(text: string, limit: number): BrowserShopeeProductS
   return products;
 }
 
-function parse1688Offers(text: string, limit: number): Browser1688OfferSignal[] {
+function parse1688Offers(
+  text: string,
+  limit: number,
+  links: Array<{ label: string; url: string }> = [],
+): Browser1688OfferSignal[] {
   const lines = visibleLines(text);
   const offers: Browser1688OfferSignal[] = [];
+  const usedUrls = new Set<string>();
 
   for (let index = 0; index < lines.length && offers.length < limit; index += 1) {
     const title = lines[index];
@@ -786,6 +863,7 @@ function parse1688Offers(text: string, limit: number): Browser1688OfferSignal[] 
       supplier_name: "Unknown visible 1688 supplier",
       supplier_location: "Unknown",
       domestic_dispatch_days: 3,
+      source_url: matchOfferLink(links, title, "1688", usedUrls),
       evidence_label: `Chrome visible 1688 row: ${title} at CNY ${price.toFixed(2)}`,
     });
 
@@ -806,10 +884,15 @@ function encode1688Keyword(query: string): string {
   return knownGbkQueries[trimmed] ?? encodeURIComponent(trimmed);
 }
 
-function parseTaobaoOffers(text: string, limit: number): Browser1688OfferSignal[] {
+function parseTaobaoOffers(
+  text: string,
+  limit: number,
+  links: Array<{ label: string; url: string }> = [],
+): Browser1688OfferSignal[] {
   const lines = visibleLines(text);
   const offers: Browser1688OfferSignal[] = [];
   const seen = new Set<string>();
+  const usedUrls = new Set<string>();
 
   for (let index = 0; index < lines.length && offers.length < limit; index += 1) {
     const title = lines[index];
@@ -843,6 +926,7 @@ function parseTaobaoOffers(text: string, limit: number): Browser1688OfferSignal[
       supplier_name: supplierName,
       supplier_location: location,
       domestic_dispatch_days: 3,
+      source_url: matchOfferLink(links, title, "taobao", usedUrls),
       evidence_label: `Chrome visible Taobao row: ${title} at CNY ${price.toFixed(2)}`,
     });
 
@@ -850,6 +934,345 @@ function parseTaobaoOffers(text: string, limit: number): Browser1688OfferSignal[
   }
 
   return offers;
+}
+
+type SourcingDetailPlatform = "1688" | "taobao";
+
+type SourcingDetailParseResult =
+  | { available: true; offer: Browser1688OfferDetail }
+  | { available: false; code: string; reason: string; requiresHumanInput: boolean };
+
+function parseSourcingOfferDetailPage(
+  page: BrowserRetrievePageSnapshotResult,
+  input: Browser1688OfferInput,
+  platform: SourcingDetailPlatform,
+): SourcingDetailParseResult {
+  const lines = visibleLines(page.text_excerpt);
+  const title = inferDetailTitle(lines, page.title, platform);
+  const price = inferDetailPrice(lines, title);
+  const weight = parsePackageWeight(page.text_excerpt);
+  const dimensions = parsePackageDimensions(page.text_excerpt);
+  const stock = parseStockSignal(page.text_excerpt);
+  const supplier = inferSupplierProfile(lines, platform);
+  const missing = [
+    title ? "" : "product title",
+    price > 0 ? "" : "source price",
+    weight ? "" : "package weight",
+    dimensions ? "" : "package dimensions",
+    stock ? "" : "stock or in-stock signal",
+    supplier.supplier_name !== "Unknown visible supplier" ? "" : "shop/supplier name",
+  ].filter(Boolean);
+
+  if (!title || price <= 0 || !weight || !dimensions || !stock || missing.length > 0) {
+    return {
+      available: false,
+      code: platform === "1688" ? "CHROME_1688_OFFER_DETAIL_INCOMPLETE" : "CHROME_TAOBAO_OFFER_DETAIL_INCOMPLETE",
+      reason: `Chrome captured ${platform} offer detail ${page.url}, but these comparable-spec fields were not visible: ${missing.join(
+        ", ",
+      )}. Ask the user to log in/open the detail page or update the parser; seed/mock specs were not used.`,
+      requiresHumanInput: true,
+    };
+  }
+
+  const offerId = input.offerId ?? `${platform === "1688" ? "live_1688" : "live_taobao"}_${hashText(page.url).slice(0, 12)}`;
+  const supplierRiskNotes = [
+    ...(hasSingleDimensionSignal(page.text_excerpt)
+      ? ["Dimension field showed one value under 长x宽x高; interpreted as equal length/width/height and requires supplier confirmation."]
+      : []),
+    ...(stock.exact ? [] : ["Visible in-stock signal was present, but exact stock quantity was not visible; confirm with supplier."]),
+    ...(supplier.supplier_name === "Unknown visible supplier" ? ["Supplier/shop name was not visible in detail parser."] : []),
+  ];
+  const offer: Browser1688OfferDetail = {
+    offer_id: offerId,
+    title,
+    source_price_cny: price,
+    currency: "CNY",
+    moq: parseMoq(page.text_excerpt) ?? 1,
+    available_stock: stock.value,
+    supplier_name: supplier.supplier_name,
+    supplier_location: supplier.supplier_location,
+    domestic_dispatch_days: parseDispatchDays(page.text_excerpt) ?? 3,
+    source_url: page.url,
+    evidence_label: `Chrome visible ${platform} detail: ${title} at CNY ${price.toFixed(2)}`,
+    sku_options: parseSkuOptions(lines),
+    package_weight_g: weight,
+    package_dimensions_cm: dimensions,
+    price_ladder: [{ min_qty: parseMoq(page.text_excerpt) ?? 1, unit_price_cny: price }],
+    supplier_stability: {
+      supplier_name: supplier.supplier_name,
+      supplier_location: supplier.supplier_location,
+      stability_score: scoreDetailSupplier(stock.value, supplierRiskNotes.length),
+      supplier_years: parseSupplierYears(page.text_excerpt),
+      dispute_or_risk_notes: supplierRiskNotes,
+    },
+    last_seen_stock: stock.value,
+    last_seen_at: page.source.captured_at,
+    negotiation_notes: [
+      "Confirm that the parsed package weight/dimensions match the exact SKU before buying test stock.",
+      "Confirm current stock and dispatch time before committing test order.",
+      "Ask supplier for USB/electrical safety notes before Shopee launch.",
+    ],
+    supplier_risk_notes: supplierRiskNotes,
+  };
+
+  return { available: true, offer };
+}
+
+function matchOfferLink(
+  links: Array<{ label: string; url: string }>,
+  title: string,
+  platform: SourcingDetailPlatform,
+  usedUrls: Set<string>,
+): string | undefined {
+  const candidates = links
+    .filter((link) => isOfferDetailUrl(link.url, platform) && !usedUrls.has(link.url))
+    .map((link) => ({ ...link, score: titleLinkScore(title, link.label, link.url) }))
+    .sort((left, right) => right.score - left.score);
+  const best = candidates.find((link) => link.score > 0) ?? candidates[0];
+  if (!best) {
+    return undefined;
+  }
+  usedUrls.add(best.url);
+  return best.url;
+}
+
+function isOfferDetailUrl(url: string, platform: SourcingDetailPlatform): boolean {
+  try {
+    const target = new URL(url);
+    if (platform === "1688") {
+      return /(^|\.)1688\.com$/.test(target.hostname) && /\/offer\/|offerId=|detail/.test(target.href);
+    }
+    return (
+      /(^|\.)taobao\.com$|(^|\.)tmall\.com$/.test(target.hostname) &&
+      /item\.htm|itemId=|id=|detail/.test(target.href)
+    );
+  } catch {
+    return false;
+  }
+}
+
+function titleLinkScore(title: string, label: string, url: string): number {
+  const normalizedTitle = normalizeLoose(title);
+  const normalizedLabel = normalizeLoose(label);
+  let score = 0;
+  if (normalizedLabel && (normalizedTitle.includes(normalizedLabel) || normalizedLabel.includes(normalizedTitle.slice(0, 24)))) {
+    score += 30;
+  }
+  for (const token of titleTokens(title)) {
+    if (normalizedLabel.includes(token)) {
+      score += 4;
+    }
+  }
+  if (/offer|item|detail/.test(url)) {
+    score += 1;
+  }
+  return score;
+}
+
+function titleTokens(title: string): string[] {
+  const normalized = normalizeLoose(title);
+  const ascii = normalized.split(/\s+/).filter((token) => token.length >= 3);
+  const chinese = Array.from(title.matchAll(/[\u4e00-\u9fa5]{2,}/g))
+    .flatMap((match) => chunks(match[0], 2))
+    .filter((token) => /吸尘|桌面|清洁|键盘|迷你|充电|学生/.test(token));
+  return unique([...ascii, ...chinese]);
+}
+
+function inferDetailTitle(lines: string[], fallbackTitle: string, platform: SourcingDetailPlatform): string {
+  const matcher = platform === "1688" ? looksLike1688OfferTitle : looksLikeTaobaoOfferTitle;
+  return (
+    lines.find((line) => matcher(line) && !/推荐|相似|大家都在/.test(line)) ??
+    fallbackTitle.replace(/[-_].*$/, "").trim()
+  );
+}
+
+function inferDetailPrice(lines: string[], title: string): number {
+  const titleIndex = lines.findIndex((line) => line === title);
+  const searchStart = titleIndex >= 0 ? titleIndex + 1 : 0;
+  const nearby = findNextCnyPriceIndex(lines, searchStart, 40);
+  if (nearby >= 0) {
+    return parsePrice(lines[nearby]);
+  }
+  const prices = lines
+    .map(parsePrice)
+    .filter((value) => value > 0 && value < 10_000)
+    .sort((left, right) => left - right);
+  return prices[0] ?? 0;
+}
+
+function parsePackageWeight(text: string): number | undefined {
+  const patterns = [
+    /(?:商品件重尺[\s\S]{0,80})?重量\s*[（(]\s*g\s*[)）][^\d]{0,20}(\d+(?:\.\d+)?)/i,
+    /(?:净重|毛重|包装重量|产品重量|商品重量|重量)[^\d]{0,20}(\d+(?:\.\d+)?)(?!\s*(?:cm|厘米|mm|毫米))/i,
+    /(?:包装重量|产品重量|商品重量|净重|毛重|重量|weight)[^\d]{0,16}(\d+(?:\.\d+)?)\s*(kg|公斤|千克|g|克)/i,
+    /(\d+(?:\.\d+)?)\s*(kg|公斤|千克|g|克)[^\n]{0,16}(?:包装重量|产品重量|商品重量|净重|毛重|重量|weight)/i,
+  ];
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (!match) {
+      continue;
+    }
+    const value = Number(match[1]);
+    const unit = (match[2] ?? inferWeightUnitFromMatch(match[0], value)).toLowerCase();
+    if (!Number.isFinite(value) || value <= 0) {
+      continue;
+    }
+    return /kg|公斤|千克/.test(unit) ? Math.round(value * 1000) : Math.round(value);
+  }
+  return undefined;
+}
+
+function parsePackageDimensions(text: string): { length: number; width: number; height: number } | undefined {
+  const normalized = text.replace(/[×＊*]/g, "x").replace(/[()（）]/g, "");
+  const patterns = [
+    /(?:长\s*x\s*宽\s*x\s*高|长宽高|包装尺寸|产品尺寸|商品尺寸|外箱尺寸|尺寸|规格|dimension)[^\d]{0,40}(\d+(?:\.\d+)?)\s*(cm|厘米|mm|毫米)?\s*x\s*(\d+(?:\.\d+)?)\s*(cm|厘米|mm|毫米)?\s*x\s*(\d+(?:\.\d+)?)\s*(cm|厘米|mm|毫米)?/i,
+    /(\d+(?:\.\d+)?)\s*(cm|厘米|mm|毫米)?\s*x\s*(\d+(?:\.\d+)?)\s*(cm|厘米|mm|毫米)?\s*x\s*(\d+(?:\.\d+)?)\s*(cm|厘米|mm|毫米)?[^\n]{0,40}(?:长\s*x\s*宽\s*x\s*高|长宽高|包装尺寸|产品尺寸|商品尺寸|尺寸|规格|dimension)/i,
+  ];
+  for (const pattern of patterns) {
+    const match = normalized.match(pattern);
+    if (!match) {
+      continue;
+    }
+    const values = [Number(match[1]), Number(match[3]), Number(match[5])];
+    if (values.some((value) => !Number.isFinite(value) || value <= 0)) {
+      continue;
+    }
+    const unit = [match[2], match[4], match[6]].filter(Boolean).join(" ").toLowerCase();
+    const scale = /mm|毫米/.test(unit) ? 0.1 : 1;
+    return {
+      length: roundDimension(values[0] * scale),
+      width: roundDimension(values[1] * scale),
+      height: roundDimension(values[2] * scale),
+    };
+  }
+  const single = normalized.match(/(?:长\s*x\s*宽\s*x\s*高|长宽高)[^\d]{0,40}(\d+(?:\.\d+)?)\s*(cm|厘米|mm|毫米)/i);
+  if (single) {
+    const value = Number(single[1]);
+    if (Number.isFinite(value) && value > 0) {
+      const scale = /mm|毫米/i.test(single[2]) ? 0.1 : 1;
+      const dimension = roundDimension(value * scale);
+      return { length: dimension, width: dimension, height: dimension };
+    }
+  }
+  return undefined;
+}
+
+function hasSingleDimensionSignal(text: string): boolean {
+  return /(?:长\s*x\s*宽\s*x\s*高|长宽高)[^\d]{0,40}\d+(?:\.\d+)?\s*(?:cm|厘米|mm|毫米)/i.test(
+    text.replace(/[×＊*]/g, "x").replace(/[()（）]/g, ""),
+  );
+}
+
+function inferWeightUnitFromMatch(matchText: string, value: number): string {
+  if (/重量\s*[（(]\s*g\s*[)）]/i.test(matchText)) {
+    return "g";
+  }
+  if (/净重|毛重/i.test(matchText) && value > 0 && value <= 10) {
+    return "kg";
+  }
+  return value >= 20 ? "g" : "kg";
+}
+
+function parseStockSignal(text: string): { value: number; exact: boolean } | undefined {
+  const exactPatterns = [
+    /(?:库存|可售|现货)[^\d]{0,12}(\d{1,8})\s*(?:件|个|台|套)?/,
+    /(\d{1,8})\s*(?:件|个|台|套)?[^\n]{0,8}(?:库存|可售|现货)/,
+  ];
+  for (const pattern of exactPatterns) {
+    const match = text.match(pattern);
+    if (match) {
+      const value = Number(match[1]);
+      if (Number.isFinite(value) && value >= 0) {
+        return { value, exact: true };
+      }
+    }
+  }
+  if (/库存充足|现货|有货|in stock/i.test(text)) {
+    return { value: 1, exact: false };
+  }
+  return undefined;
+}
+
+function inferSupplierProfile(
+  lines: string[],
+  platform: SourcingDetailPlatform,
+): { supplier_name: string; supplier_location: string } {
+  const supplierLine = lines.find((line) => isSupplierNameLine(line, platform)) ?? "Unknown visible supplier";
+  const locationLine = lines.find((line) => isLocationLine(line)) ?? "Unknown";
+  return {
+    supplier_name: supplierLine,
+    supplier_location: locationLine,
+  };
+}
+
+function isSupplierNameLine(line: string, platform: SourcingDetailPlatform): boolean {
+  if (line.length < 3 || line.length > 60) {
+    return false;
+  }
+  if (/客服|联系|收藏|关注|商品|价格|库存|规格|参数|详情|评价|推荐|搜索|登录|注册/.test(line)) {
+    return false;
+  }
+  return platform === "1688"
+    ? /公司|工厂|厂|店|商行|贸易|批发|供应链/.test(line)
+    : /店|旗舰店|专营店|企业店|官方|工厂|公司/.test(line);
+}
+
+function isLocationLine(line: string): boolean {
+  return /广东|浙江|江苏|福建|上海|北京|深圳|广州|义乌|东莞|汕头|宁波|杭州|泉州|合肥|安徽/.test(line) && line.length <= 30;
+}
+
+function parseMoq(text: string): number | undefined {
+  const match = text.match(/(?:起批|起订|MOQ|最小起订量)[^\d]{0,12}(\d{1,6})/i);
+  return match ? Number(match[1]) : undefined;
+}
+
+function parseDispatchDays(text: string): number | undefined {
+  const match = text.match(/(?:发货|出货|dispatch|ship)[^\d]{0,16}(\d{1,3})\s*(?:天|日|day)/i);
+  return match ? Number(match[1]) : undefined;
+}
+
+function parseSupplierYears(text: string): number | undefined {
+  const match = text.match(/(\d{1,2})\s*年(?:老店|诚信通|会员|经营)/);
+  return match ? Number(match[1]) : undefined;
+}
+
+function parseSkuOptions(lines: string[]): Array<{ name: string; options: string[] }> {
+  const colorLine = lines.find((line) => /^颜色|颜色分类|Color/i.test(line));
+  if (!colorLine) {
+    return [];
+  }
+  const options = colorLine
+    .replace(/^颜色分类?[:：]?|^Color[:：]?/i, "")
+    .split(/[、,，/|]/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, 8);
+  return options.length ? [{ name: "Color", options }] : [];
+}
+
+function scoreDetailSupplier(stock: number, riskNoteCount: number): number {
+  return clamp(52 + Math.min(24, stock / 50) - riskNoteCount * 6, 0, 100);
+}
+
+function normalizeLoose(value: string): string {
+  return value.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").replace(/\s+/g, " ").trim();
+}
+
+function chunks(value: string, size: number): string[] {
+  const chars = Array.from(value);
+  const output: string[] = [];
+  for (let index = 0; index <= chars.length - size; index += 1) {
+    output.push(chars.slice(index, index + size).join(""));
+  }
+  return output;
+}
+
+function unique(values: string[]): string[] {
+  return Array.from(new Set(values.filter(Boolean)));
+}
+
+function roundDimension(value: number): number {
+  return Math.round(value * 10) / 10;
 }
 
 function assertNoAccessChallenge(text: string, url: string): void {
