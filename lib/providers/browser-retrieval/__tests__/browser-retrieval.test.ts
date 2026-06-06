@@ -26,6 +26,52 @@ describe("browser retrieval provider", () => {
     expect(offer.offer.negotiation_notes.length).toBeGreaterThan(0);
   });
 
+  it("does not fabricate Taobao rows in seed mode", async () => {
+    const provider = createSeedBrowserRetrievalProvider();
+    const result = await provider.extractTaobaoSearch({ query: "桌面吸尘器", limit: 5 });
+
+    expect(result.source.mode).toBe("seed");
+    expect(result.offers).toHaveLength(0);
+    expect(result.snapshot.warnings.join(" ")).toMatch(/does not fabricate/i);
+    expect(result.warnings?.[0]?.code).toBe("TAOBAO_SEED_EMPTY");
+  });
+
+  it("parses Taobao visible product rows from Chrome snapshots", async () => {
+    const controller: BrowserController = {
+      async capture(input) {
+        return {
+          url: input.url,
+          title: "桌面吸尘器_淘宝搜索",
+          text: [
+            "桌面清洁小车吸尘器可爱迷你桌面吸尘器学生橡皮屑键盘清理器",
+            "¥",
+            "10",
+            ".33",
+            "1万+人付款",
+            "安徽",
+            "合肥",
+            "锐耀数码专营店",
+          ].join("\n"),
+          links: [],
+          captured_at: "2026-06-06T00:00:00.000Z",
+        };
+      },
+    };
+    const provider = createChromeBrowserRetrievalProvider(controller, {
+      allowedDomains: ["taobao.com"],
+      maxSteps: 2,
+    });
+
+    const result = await provider.extractTaobaoSearch({ query: "桌面吸尘器", limit: 3 });
+
+    expect(result.source.mode).toBe("browser");
+    expect(result.snapshot.extraction_method).toBe("chrome");
+    expect(result.offers).toHaveLength(1);
+    expect(result.offers[0]?.title).toMatch(/桌面清洁/);
+    expect(result.offers[0]?.source_price_cny).toBe(10.33);
+    expect(result.offers[0]?.supplier_name).toBe("锐耀数码专营店");
+  });
+
   it("keeps Chrome mode constrained by domain allowlist", async () => {
     const controller: BrowserController = {
       async capture(input) {
