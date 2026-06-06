@@ -23,16 +23,22 @@ Brief
  → Sourcing    只对 primary 候选,读 1688 种子报价           supplier/price/stock
  → Margin      套利润公式,出 low/base/high + cost 瀑布      margin detail
  → Risk        对照 Shopee 禁售/违规规则打分                 flags / risk_level
- → Listing     生成 Shopee 字段 + 本地化标题/卖点/图prompt   shopee listing
+ → Listing     消费 canonical score + 工具筛选 + Packaging handoff
+ → Packaging   生成 Shopee-ready 文案/字段 + 本地化图片       selected_listing
  → Committee   汇总 + tradeoff + Go/Watch/Reject 排序        committee + decisions
 ```
 
-**性能取舍:** Market 产 3 候选,但**只有 `is_primary` 的候选走完整 Sourcing→Margin→
-Risk→Listing 深管道**;另外 2 个只给轻量打分。控制延迟与 token。
+**性能取舍:** Market 产 3 候选;Listing Ranker 不覆盖 Market 的 `is_primary`,也不替代
+Committee 的最终排序。它消费上游 canonical scores,用工具证据做筛选/解释,但**只有
+handoff 候选进入 Packaging 深管道**;另外候选保留轻量分数与筛选理由。控制延迟与 token。
 
-**每个 agent = 一次 Responses API 调用**,`response_format: json_schema (strict)`,
-输出直接是 contract 里对应的结构。需要"查数据"的 Market / Sourcing 用 Function Calling
-调 `seed/` 里的函数(`search_shopee`, `get_1688_quotes`)。
+**接线约束:** Listing handoff 不是 Listing Studio 最终交付物。`/api/run` 接 live pipeline
+时必须 Listing → Packaging 成对接线,由 Packaging 写最终 copy/images/ready 状态后再返回给前端。
+
+**每个 agent = 一次 Responses API 调用**,`response_format: json_schema (strict)`。
+单个 agent 可有内部 schema(例如 Listing Ranker 的 `ranked_ids` / factor scores / filters);
+最终只由 `/api/run` 汇总出的 `RunResult` 对齐 `contract/`。需要"查数据"的 agent 用
+Function Calling 调 `seed/` 里的 provider。
 
 agent 详细输入/输出/prompt 意图见 [AGENTS.md](AGENTS.md)。
 
