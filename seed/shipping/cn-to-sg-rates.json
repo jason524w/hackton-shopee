@@ -1,6 +1,12 @@
 {
   "fixture_id": "shipping-cn-to-sg-mini-parcel-2026-06-06",
   "captured_at": "2026-06-06T00:00:00+08:00",
+  "source_url": "seed://shipping/cn-to-sg-small-parcel",
+  "source_notes": [
+    "Fixture rate for MVP margin replay, not a live carrier quote.",
+    "Use low/base/high scenarios in margin instead of promising one exact delivery price.",
+    "Replace with authorized forwarder or platform-logistics quote before real purchase."
+  ],
   "routes": [
     {
       "from": "CN",

@@ -1,0 +1,111 @@
+{
+  "fixture_id": "market-shopee-sg-mini-desk-vacuum-competitor-details-2026-06-06",
+  "captured_at": "2026-06-06T00:00:00+08:00",
+  "market": "Singapore",
+  "platform": "Shopee",
+  "query": "desk vacuum",
+  "source_urls": [
+    "https://shopee.sg/%E3%80%90SG-Seller%E3%80%91Portable-Mini-Desktop-Cleaner-Desk-Vacuum-Cleaner-Dust-Collector-for-Home-Office-School-Keyboard-Cleaning-i.509512140.15123682897",
+    "https://shopee.sg/list/desk%20vacuum",
+    "https://shopee.sg/list/Desktop/vacuum%20cleaner"
+  ],
+  "capture_notes": [
+    "Top competitors were selected from crawled Shopee SG desk-vacuum and desktop-vacuum pages.",
+    "Shopee snippets expose price/rating more reliably than review counts; review counts are left as 0 when not visible.",
+    "The file is meant for Market, Listing and Packaging fixture evidence, not for sales-volume claims."
+  ],
+  "competitors": [
+    {
+      "id": "competitor_sg_desk_vac_001",
+      "item_id": "sg-desk-vac-001",
+      "title": "Portable Mini Desktop Cleaner Desk Vacuum Cleaner Dust Collector for Home Office School Keyboard Cleaning",
+      "product_url": "https://shopee.sg/%E3%80%90SG-Seller%E3%80%91Portable-Mini-Desktop-Cleaner-Desk-Vacuum-Cleaner-Dust-Collector-for-Home-Office-School-Keyboard-Cleaning-i.509512140.15123682897",
+      "visible_price_sgd": {
+        "low": 6.9,
+        "high": 11.9,
+        "source_text": "$6.90-$11.90 visible on crawled product page"
+      },
+      "rating": 4.7,
+      "review_count": 0,
+      "review_count_observed": false,
+      "visible_shop_signals": [
+        "12 variations available",
+        "Pre-order ships in 12 days",
+        "15-day free returns",
+        "Free shipping"
+      ],
+      "main_image_style": "Small product on simple marketplace background, many color/variant thumbnails",
+      "selling_point_structure": [
+        "Portable mini desktop cleaner",
+        "Home, office, school and keyboard cleaning",
+        "Dust collector / eraser sweeper framing"
+      ],
+      "attributes": {
+        "product_type": "Mini desktop vacuum / dust collector",
+        "use_case": "dry desk crumbs, eraser dust, keyboard cleaning",
+        "fulfillment_signal": "pre-order",
+        "compliance_watch": "Battery or USB power details require seller verification"
+      }
+    },
+    {
+      "id": "competitor_sg_desk_vac_002",
+      "item_id": "sg-desk-vac-002",
+      "title": "Xiaomi NUSIGN Desktop Cleaner Desk Cleaner Lightweight Durable Vacuum Cleaner for School Classroom Office",
+      "product_url": "https://shopee.sg/list/desk%20vacuum",
+      "visible_price_sgd": {
+        "low": 14.16,
+        "high": 14.16,
+        "source_text": "$14.16 visible on crawled Shopee desk vacuum list"
+      },
+      "rating": 4.8,
+      "review_count": 0,
+      "review_count_observed": false,
+      "visible_shop_signals": [
+        "Marketplace row",
+        "School/classroom/office positioning"
+      ],
+      "main_image_style": "Brand-led desktop cleaner angle, likely clean product cutout",
+      "selling_point_structure": [
+        "Brand keyword first",
+        "Lightweight and durable claims",
+        "School classroom and office use"
+      ],
+      "attributes": {
+        "product_type": "Desktop cleaner",
+        "use_case": "school classroom, office desk",
+        "price_position": "mid-price",
+        "compliance_watch": "Brand/IP usage requires authorization if replicated"
+      }
+    },
+    {
+      "id": "competitor_sg_desk_vac_003",
+      "item_id": "sg-desk-vac-004",
+      "title": "Mini Cute Cartoon Vacuum Cleaner Dust Cleaning Creative Portable Desktop Corner Dirt Sweeper Vacuum Cleaner For Desk Keyboard Office",
+      "product_url": "https://shopee.sg/list/desk%20vacuum",
+      "visible_price_sgd": {
+        "low": 15.0,
+        "high": 15.0,
+        "source_text": "$15.00 visible on crawled Shopee desk vacuum list"
+      },
+      "rating": 4.8,
+      "review_count": 0,
+      "review_count_observed": false,
+      "visible_shop_signals": [
+        "Free gift badge visible",
+        "Cute/cartoon gift angle"
+      ],
+      "main_image_style": "Cute product color/character styling with giftable framing",
+      "selling_point_structure": [
+        "Cute cartoon angle",
+        "Corner dirt sweeper",
+        "Desk, keyboard and office use"
+      ],
+      "attributes": {
+        "product_type": "Cute mini desktop vacuum",
+        "use_case": "desk corner dirt, keyboard, office",
+        "price_position": "upper-mid for this micro category",
+        "compliance_watch": "Cartoon/IP-style visuals should avoid protected characters"
+      }
+    }
+  ]
+}
