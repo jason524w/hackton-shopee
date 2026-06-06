@@ -6,7 +6,7 @@
 //   - market / sourcing / listing  → mode-aware runXAgent(...) wrappers
 //   - margin / risk                → deterministic Agent consts (no LLM, no mode)
 //   - packaging                    → image-mode-aware wrapper
-//   - committee                    → STUB (swap import when TASK-COMMITTEE #14 lands)
+//   - committee                    → makeCommitteeAgent(textMode) (real TASK-COMMITTEE agent)
 //
 // Execution order puts risk LAST so it aggregates every checkpoint; the returned
 // agents[] is then re-sorted to the canonical contract order.
@@ -18,11 +18,11 @@ import { resolveAuditRoot } from "./audit-root";
 import {
   createSeedBrowserRetrievalProvider,
   createSeedFxProvider,
-  createSeedOpenAIImageProvider,
   createSeedShippingProvider,
   createSeedShopeeProvider,
   createSeedSourcing1688Provider,
 } from "../providers";
+import { createOpenAIImageProvider } from "../providers/openai-image";
 import { makeCommitteeAgent } from "./committee";
 import { type Agent, type AgentContext, type AgentProviders, runPipeline } from "./contracts";
 import { runListingAgent } from "./listing";
@@ -56,13 +56,16 @@ export interface OrchestrationOptions {
   providers?: AgentProviders;
 }
 
-export function createSeedProviders(): AgentProviders {
+// Data providers are seed-backed (the demo's grounding); only the image provider
+// follows imageMode so full live mode actually generates images. The live image
+// provider self-falls-back to a dry-run/seed asset on any error, so this never 500s.
+export function createSeedProviders(imageMode: "live" | "dry-run" = "dry-run"): AgentProviders {
   return {
     shopee: createSeedShopeeProvider(),
     sourcing1688: createSeedSourcing1688Provider(),
     shipping: createSeedShippingProvider(),
     fx: createSeedFxProvider(),
-    openaiImage: createSeedOpenAIImageProvider(),
+    openaiImage: createOpenAIImageProvider({ mode: imageMode === "live" ? "live" : "dry-run" }),
     browser: createSeedBrowserRetrievalProvider(),
   };
 }
@@ -117,7 +120,7 @@ export async function runOrchestration(
   const ctx: AgentContext = {
     brief,
     results: {},
-    providers: opts.providers ?? createSeedProviders(),
+    providers: opts.providers ?? createSeedProviders(imageMode),
     risk: createRiskSupervisor(),
   };
 
