@@ -23,8 +23,10 @@
    (`mock-result.json` + `result.ts` + `result.schema.json`)。
 2. **MVP 范围内才动手。** 只做 [docs/MVP-SCOPE.md](docs/MVP-SCOPE.md) 里"✅ 做"的部分。
    想加功能 → 先问"它服务 demo 高潮吗?"(见下)。不服务就不做。
-3. **Demo 不 live 调模型。** `/api/run?mock=1` 必须永远能零延迟返回 mock。真实链路
-   是加分项,不是 demo 主路径。
+3. **分两层交付,demo 不 live 调模型。**
+   - **P0(必达):** `/api/run?mock=1` + 缓存,让整条 demo 主线端到端跑通、零延迟、零失败。
+   - **P1(加分):** 真实 agent pipeline(`lib/agents/*`)。它**是 MVP 的一部分要做**,
+     但**不是 demo 的主路径**——demo 默认走缓存,真实链路当展示/备份。
 
 ## Demo 高潮(所有取舍的判断标准)
 
@@ -75,6 +77,7 @@ npm run dev                  # http://localhost:3000
 3. **每个任务开独立分支**:`git checkout -b task-<n>-<slug>`。
 4. 做完开 PR:`gh pr create`,标题带 `TASK-<n>`,正文写"对哪些 contract 字段负责"。
 5. **绝不直接 push main**;main 永远保持可 demo。
+   **唯一例外:TASK-01 骨架**——为快速解锁全队,允许直接 push main 一次。
 
 > 还没建 Issues 时,先在 TASKS.md 里把自己名字写到任务后面占位。
 

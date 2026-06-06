@@ -14,7 +14,9 @@
 
 - 后端接口:`POST /api/run`,body = `Brief`,返回 `RunResult`。
 - 前端先 `import mock from "@/contract/mock-result.json"` 渲染所有页面;后端 ready 后改成 fetch `/api/run`,**结构完全一致,零返工**。
+- **`result.ts` 是规范来源(canonical)**;`result.schema.json` 是后端校验目标,与之保持同步。
 - 改 schema 必须三处同步改:`mock-result.json` + `result.ts` + `result.schema.json`,并在群里吼一声。
+- 改完跑 `node scripts/check-contract.mjs`(零依赖)验证 mock 仍符合 schema —— 防漂移。
 
 ## demo mode
 

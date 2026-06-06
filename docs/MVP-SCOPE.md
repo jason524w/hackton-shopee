@@ -10,8 +10,8 @@
 | Agent War Room | 渲染 6 个 agent,status 渐进点亮 + evidence + score |
 | Opportunity Board | 3 张候选卡 + 主卡利润瀑布 + Committee 排序/tradeoff |
 | Listing Studio | Shopee 一份 listing + 预生成图 + compliance 警告 |
-| `/api/run` | 真实管道,输出符合 `contract/result.schema.json` |
-| `/api/run?mock=1` | 直回 mock,demo 兜底 |
+| `/api/run?mock=1` + 缓存 | **P0 必达**:demo 主路径,零延迟零失败 |
+| `/api/run` 真实管道 | **P1 加分**:输出符合 `contract/result.schema.json`,当展示/备份 |
 | seed 真实数据 | 吸尘器的 Shopee + 1688 种子数据 |
 
 ## ❌ 不做(进 roadmap slide,嘴上讲)
@@ -19,6 +19,9 @@
 | 砍掉 | 原因 |
 |---|---|
 | Lazada 双平台字段 | 工程量翻倍,评委加分有限 |
+
+> 注:`contract` 里保留 `"Lazada"` 作为 **future-compat 字段**,但 **MVP UI 固定 Shopee**,
+> 不实现 Lazada 渲染/转译。Lazada 只在 pitch 的 roadmap 里讲。
 | 多地区 SG/MY/PH 本地化变体 | 一个市场足够讲清本地化逻辑 |
 | ROI Dashboard 写代码 | 改成 1 张静态 slide |
 | 实时图像生成 | demo 前预生成 2–3 张存 `seed/images/` |

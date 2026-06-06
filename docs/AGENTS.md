@@ -1,7 +1,12 @@
 # Agent 规格 — 6 个 agent
 
-每个 agent = 一次 OpenAI Responses API 调用,`response_format` 用 strict json_schema,
-输出直接是 `contract/result.ts` 里对应的结构。实现放 `lib/agents/<key>.ts`。
+每个 agent = 一次 OpenAI Responses API 调用,`response_format` 用 strict json_schema。
+实现放 `lib/agents/<key>.ts`。
+
+> **契约边界(重要):** contract 只定义**最终汇总的 `RunResult`**。下面每个 agent 的
+> "输出"是**内部中间产物**(directions[]、supplier、flags、ranked… ),**其 schema 由 P1
+> 自由决定,不属于 contract**。P1 在 `app/api/run` 里把这些中间产物**汇总**成 `RunResult`,
+> **只有这个最终对象必须通过 `contract/result.schema.json`**(用 `scripts/check-contract.mjs` 验)。
 
 公共约定:
 - 输入是上游 agent 的输出 + `brief`。
