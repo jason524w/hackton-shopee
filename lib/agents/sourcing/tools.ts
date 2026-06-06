@@ -73,7 +73,7 @@ export function createSourcingTools(providers: AgentProviders): AgentTool[] {
       parameters: makeObjectSchema({
         url: { type: "string" },
         purpose: {
-          enum: ["sourcing_1688_search", "sourcing_1688_offer", "sourcing_taobao_search", "sourcing_supplier_profile"],
+          type: "string", enum: ["sourcing_1688_search", "sourcing_1688_offer", "sourcing_taobao_search", "sourcing_supplier_profile"],
         },
       }),
       execute(input: unknown) {
@@ -108,13 +108,12 @@ export function createSourcingTools(providers: AgentProviders): AgentTool[] {
       name: "browser_extract_1688_offer",
       description:
         "Use the controlled browser retrieval provider to extract a 1688 offer page by offer id or URL.",
-      parameters: makeObjectSchema(
-        {
-          offerId: { type: "string" },
-          url: { type: "string" },
-        },
-        [],
-      ),
+      // strict function schemas require every key in `required`; optionality is
+      // expressed via nullable types instead.
+      parameters: makeObjectSchema({
+        offerId: { type: ["string", "null"] },
+        url: { type: ["string", "null"] },
+      }),
       execute(input: unknown) {
         return providers.browser.extract1688Offer(input as Browser1688OfferInput);
       },
@@ -123,13 +122,12 @@ export function createSourcingTools(providers: AgentProviders): AgentTool[] {
       name: "browser_extract_taobao_offer",
       description:
         "Use a user-authorized controlled browser session to extract a Taobao/Tmall product detail page by item URL.",
-      parameters: makeObjectSchema(
-        {
-          offerId: { type: "string" },
-          url: { type: "string" },
-        },
-        [],
-      ),
+      // strict function schemas require every key in `required`; optionality is
+      // expressed via nullable types instead.
+      parameters: makeObjectSchema({
+        offerId: { type: ["string", "null"] },
+        url: { type: ["string", "null"] },
+      }),
       execute(input: unknown) {
         return providers.browser.extractTaobaoOffer(input as Browser1688OfferInput);
       },
@@ -149,13 +147,10 @@ export function createSourcingTools(providers: AgentProviders): AgentTool[] {
       name: "browser_extract_supplier_signals",
       description:
         "Use the controlled browser retrieval provider to extract supplier stability and negotiation signals.",
-      parameters: makeObjectSchema(
-        {
-          offerId: { type: "string" },
-          supplierName: { type: "string" },
-        },
-        [],
-      ),
+      parameters: makeObjectSchema({
+        offerId: { type: ["string", "null"] },
+        supplierName: { type: ["string", "null"] },
+      }),
       execute(input: unknown) {
         return providers.browser.extractSupplierSignals(input as BrowserSupplierSignalsInput);
       },

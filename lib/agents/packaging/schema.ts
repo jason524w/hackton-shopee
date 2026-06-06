@@ -166,7 +166,7 @@ export const localPreferenceProfileSchema: JsonSchema = {
     copy_pattern: {
       type: "object",
       properties: {
-        tone: { enum: ["factual", "friendly", "cute-functional"] },
+        tone: { type: "string", enum: ["factual", "friendly", "cute-functional"] },
         buyer_use_cases: { type: "array", items: { type: "string" } },
         bullet_order: { type: "array", items: { type: "string" } },
         compliance_notes: { type: "array", items: { type: "string" } },
@@ -261,7 +261,7 @@ export const packagingOutputSchema: JsonSchema = {
       items: {
         type: "object",
         properties: {
-          type: { enum: ["hero", "lifestyle", "feature"] },
+          type: { type: "string", enum: ["hero", "lifestyle", "feature"] },
           prompt: { type: "string" },
           constraints: {
             type: "object",
@@ -286,10 +286,10 @@ export const packagingOutputSchema: JsonSchema = {
       items: {
         type: "object",
         properties: {
-          type: { enum: ["hero", "lifestyle", "feature"] },
+          type: { type: "string", enum: ["hero", "lifestyle", "feature"] },
           url: { type: "string" },
           prompt: { type: "string" },
-          compliance: { enum: ["ok", "needs_review", "rejected"] },
+          compliance: { type: "string", enum: ["ok", "needs_review", "rejected"] },
           notes: { type: "array", items: { type: "string" } },
         },
         required: ["type", "url", "prompt", "compliance", "notes"],

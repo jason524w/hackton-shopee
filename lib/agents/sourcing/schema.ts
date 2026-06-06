@@ -112,10 +112,10 @@ const scenarioSchema = makeObjectSchema({
 });
 
 const agentResultSchema = makeObjectSchema({
-  key: { const: "sourcing" },
+  key: { type: "string", const: "sourcing" },
   name: { type: "string" },
   role: { type: "string" },
-  status: { enum: ["waiting", "running", "done", "blocked"] },
+  status: { type: "string", enum: ["waiting", "running", "done", "blocked"] },
   inputs_summary: { type: "string" },
   data_sources: { type: "array", items: { type: "string" } },
   evidence: { type: "array", items: evidenceSchema },
@@ -129,7 +129,7 @@ const agentResultSchema = makeObjectSchema({
 const snapshotSchema = makeObjectSchema({
   tool_name: { type: "string" },
   provider: { type: "string" },
-  mode: { enum: ["live", "seed", "snapshot", "browser"] },
+  mode: { type: "string", enum: ["live", "seed", "snapshot", "browser"] },
   fixture_id: { type: "string" },
   source_url: { type: "string" },
   captured_at: { type: "string" },

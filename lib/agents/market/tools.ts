@@ -31,8 +31,17 @@ export function createMarketTools(providers: AgentProviders): AgentTool[] {
       parameters: makeObjectSchema({
         itemId: { type: "string" },
       }),
-      execute(input: unknown) {
-        return providers.shopee.getProductDetail(input as ShopeeProductDetailInput);
+      async execute(input: unknown) {
+        try {
+          return await providers.shopee.getProductDetail(input as ShopeeProductDetailInput);
+        } catch (error) {
+          // Seed detail coverage is partial — let the model recover instead of killing the run.
+          return {
+            found: false,
+            message: error instanceof Error ? error.message : "Product detail not found",
+            hint: "Detail data is only captured for some items. Use the search result fields you already have, or query another itemId.",
+          };
+        }
       },
     },
     {
@@ -42,7 +51,7 @@ export function createMarketTools(providers: AgentProviders): AgentTool[] {
       parameters: makeObjectSchema({
         url: { type: "string" },
         purpose: {
-          enum: ["market_shopee_search", "market_shopee_product", "market_shopee_ads", "market_web_trend"],
+          type: "string", enum: ["market_shopee_search", "market_shopee_product", "market_shopee_ads", "market_web_trend"],
         },
       }),
       execute(input: unknown) {

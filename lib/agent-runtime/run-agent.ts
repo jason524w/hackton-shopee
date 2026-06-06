@@ -227,7 +227,8 @@ async function runLiveWithRetry<Input, Output>(
     setAttempts(attempt);
     try {
       return await withTimeout(
-        options.timeoutMs ?? 60_000,
+        // Multi-tool live attempts with reasoning models routinely exceed 60s.
+        options.timeoutMs ?? 180_000,
         (signal) => runLiveAttempt(options, runId, audit, attempt, signal),
         options.agentKey,
         runId,
@@ -261,7 +262,8 @@ async function runLiveAttempt<Input, Output>(
   const model = options.model ?? readEnv("OPENAI_TEXT_MODEL") ?? readEnv("OPENAI_MODEL") ?? "gpt-5.5";
   const client = options.client ?? new FetchOpenAIResponsesClient(options.apiKey ?? readRequiredOpenAIKey());
   const tools = options.tools ?? [];
-  const maxToolCalls = options.maxToolCalls ?? 8;
+  // 8 was too tight for live sourcing (offer details × N + supplier signals + fx).
+  const maxToolCalls = options.maxToolCalls ?? 16;
   const inputItems: Record<string, unknown>[] = [
     {
       role: "system",
@@ -373,7 +375,9 @@ function buildResponsesRequest<Input, Output>(
     tool_choice: tools.length ? "auto" : "none",
     parallel_tool_calls: false,
     text: createResponseTextFormat(options.outputSchemaName ?? `${options.agentKey}_output`, options.outputSchema),
-    store: false,
+    // store must be true: the tool loop echoes output items (rs_* ids) back as the
+    // next request's input, and the API can only resolve those ids if they were stored.
+    store: true,
   };
 }
 

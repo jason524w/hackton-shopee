@@ -18,14 +18,28 @@ interface ShippingSeed {
   }>;
 }
 
+// Route codes in seed data are ISO-ish ("CN", "SG") but models pass free-text
+// place names ("Guangzhou, Guangdong, China"). Match leniently on aliases.
+const REGION_ALIASES: Record<string, string[]> = {
+  cn: ["cn", "china", "guangzhou", "shenzhen", "yiwu", "dongguan", "zhejiang", "guangdong", "prc", "中国"],
+  sg: ["sg", "singapore", "新加坡"],
+};
+
+function matchesRegion(routeCode: string, input: string): boolean {
+  const code = routeCode.trim().toLowerCase();
+  const text = input.trim().toLowerCase();
+  if (code === text) return true;
+  const aliases = REGION_ALIASES[code] ?? [code];
+  return aliases.some((alias) => text === alias || text.includes(alias));
+}
+
 export function createSeedShippingProvider(): ShippingProvider {
   return {
     async estimateCrossBorder(input: ShippingEstimateInput): Promise<ShippingEstimateResult> {
       const seed = await readSeedJson<ShippingSeed>("seed/shipping/cn-to-sg-rates.json");
       const route = seed.routes.find(
         (candidate) =>
-          candidate.from.toLowerCase() === input.from.toLowerCase() &&
-          candidate.to.toLowerCase() === input.to.toLowerCase(),
+          matchesRegion(candidate.from, input.from) && matchesRegion(candidate.to, input.to),
       );
       if (!route) {
         throw new Error(`Shipping route not found from=${input.from} to=${input.to}`);
