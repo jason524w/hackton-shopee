@@ -1,72 +1,460 @@
-# 任务板 — Sea Launch AI
+# Sea Launch AI Task Board
 
-> 多电脑 / 多 agent 协作。**认领用 GitHub Issues**(`gh issue list` → 自分配 → 开分支 → PR)。
-> 本文件是人读的总览;状态以 Issues 为准。开工流程见 [CLAUDE.md](../CLAUDE.md#多电脑--多-agent-任务领取流程)。
+> This is the working TODO list. The implementation details live in [IMPLEMENTATION-ROADMAP.md](IMPLEMENTATION-ROADMAP.md).
 
-## 角色
+## Working Rules
 
-| 代号 | 角色 | 主线 |
-|---|---|---|
-| P1 | AI / Backend | agent 管道 + 利润/风险逻辑 + `/api/run` |
-| P2 | Frontend 主力 | Seller Brief + Agent War Room |
-| P3 | Frontend / Data | Opportunity Board + Listing Studio + 种子数据 |
-| P4 | Product / Pitch | demo 脚本 + slides + QA + 录屏 |
+- Keep `main` demo-safe.
+- Use one branch per task.
+- Contract changes must update all three files together:
+  - `contract/result.ts`
+  - `contract/result.schema.json`
+  - `contract/mock-result.json`
+- Run `node scripts/check-contract.mjs` after every contract or mock change.
+- `POST /api/run?mock=1` must always work.
+- Every agent must have `skill.ts`, `tools.ts`, `schema.ts`, `harness.ts`, and `index.ts`.
 
-## 依赖关系
+## Owners
 
+| Role | Focus |
+| --- | --- |
+| P1 AI / Backend | contract, runtime, providers, agents, `/api/run`, audit |
+| P2 Frontend | Seller Brief, Agent War Room, run state |
+| P3 Frontend / Data | Opportunity Board, Listing Studio, seed fixtures, images |
+| P4 Product / Demo | story, QA, pitch, fallback recording |
+
+## Dependency Map
+
+```txt
+TASK-01 Contract
+  -> TASK-02 Skeleton + mock API
+  -> TASK-03 Runtime + audit
+  -> TASK-04 Providers + seed
+  -> TASK-05 Market Agent
+  -> TASK-06 Sourcing Agent
+  -> TASK-07 Margin + Risk Agents
+  -> TASK-08 Listing Agent
+  -> TASK-09 Packaging Agent + live images
+  -> TASK-10 Committee Agent
+  -> TASK-11 Real /api/run integration
+
+Frontend can start after TASK-02 using contract/mock-result.json:
+TASK-12 Brief + War Room
+TASK-13 Opportunity Board + Listing Studio + ROI
+
+QA and pitch run across the whole project:
+TASK-14 Harness + CI
+TASK-15 Live demo hardening
 ```
-TASK-01 骨架 ──┬─▶ TASK-02 Brief ──▶ TASK-03 War Room
-               ├─▶ TASK-04 Opportunity Board
-               ├─▶ TASK-05 Listing Studio
-               └─▶ TASK-06 /api/run(mock) ──▶ TASK-07 真实 agent 管道
-TASK-08 种子数据(独立,尽早)
-TASK-09 pitch(独立,后期)
-```
-> contract 已就位,**TASK-02/03/04/05 可对着 `contract/mock-result.json` 立即并行,不等后端。**
-> 新版后端 7-agent 实施路线、目录规范、harness 与 audit 要求见 [IMPLEMENTATION-ROADMAP.md](IMPLEMENTATION-ROADMAP.md)。
 
----
+## TASK-01 · Contract 7-Agent Update · P1
 
-## TASK-01 · Next.js 骨架 · P1/P2
-- 建 Next.js 14 (App Router) + TS + Tailwind,4 个页面路由占位 + `lib/openai.ts` + `.env.example`。
-- `app/api/run/route.ts` 先实现 `?mock=1` 返回 `contract/mock-result.json`。
-- **验收**:`npm run dev` 起得来;访问 4 个路由不报错;`/api/run?mock=1` 返回完整 JSON。
+Paths:
 
-## TASK-02 · Seller Brief 页 · P2
-- 表单产出 `Brief`(见 `contract/result.ts`),提交后调 `/api/run` 跳 War Room。
-- **验收**:能填完整 brief 并触发一次 run(先打 `?mock=1`)。
+- `contract/result.ts`
+- `contract/result.schema.json`
+- `contract/mock-result.json`
+- `scripts/check-contract.mjs` if needed
 
-## TASK-03 · Agent War Room 页 · P2
-- 渲染 `agents[]`:新版 contract 为 7 个 agent 卡片,status 渐进点亮、evidence、score、confidence、warnings。
-- 允许展示 agent 间冲突(利润高/风险高),最后 Committee 汇总。
-- **验收**:对着 mock 能播放出"逐个 agent 完成"的过程,看得到证据和分数。
+Requirements:
 
-## TASK-04 · Opportunity Board 页 · P3
-- 渲染 `opportunities[]`:3 张卡 + Go/Watch/Reject badge + 风险等级。
-- 主卡(`is_primary`)展示 **利润瀑布图**(`margin.cost_breakdown`)+ low/base/high。
-- 展示 `committee`(排序 + tradeoff)。默认按 overall 排序,**高风险不得因利润高排到最前**。
-- **验收**:一眼看懂哪个值得测;利润卡数字与 mock 一致;点主卡可进 Listing Studio。
+- Add `packaging` to `AgentKey`.
+- Add `audit_run_id` to `RunResult`.
+- Keep final output contract-first and frontend-safe.
+- Add Packaging Agent to `agents[]`.
+- Move image ownership to Packaging Agent while keeping UI field `selected_listing.images[]`.
+- Keep Mini Desk Vacuum primary decision as `Watch`.
 
-## TASK-05 · Listing Studio 页 · P3
-- 渲染 `selected_listing`:Shopee 字段表格(可编辑)、bullet points、3 张图分组、
-  compliance 警告、missing fields、JSON 复制按钮。
-- **验收**:字段完整可复制;compliance 警告醒目;图片分 hero/lifestyle/feature。
+Acceptance:
 
-## TASK-06 · /api/run mock 接线 · P1
-- `POST /api/run` 接收 `Brief`,默认也先返回 mock(结构 = `RunResult`),供前端联调。
-- **验收**:前端把 mock import 换成 fetch `/api/run`,**零改动**正常渲染。
+- `node scripts/check-contract.mjs` passes.
+- Mock contains 7 agents.
+- War Room can render Market, Sourcing, Margin, Risk, Listing, Packaging, Committee.
 
-## TASK-07 · 真实 agent 管道 · P1
-- 实现新版 7-agent 管道与目录规范,以 [IMPLEMENTATION-ROADMAP.md](IMPLEMENTATION-ROADMAP.md) 为准。
-- 每个 agent 用 Responses API + strict json_schema;Market/Sourcing 用 Function Calling 读 `seed/`。
-- **验收**:`/api/run`(非 mock)真实跑出结果且**通过 `contract/result.schema.json` 校验**;
-  吸尘器 primary 决策 = Watch、Risk 含电器/夸大 warning。
+## TASK-02 · Next.js Skeleton + Mock API · P1/P2
 
-## TASK-08 · 种子真实数据 · P3
-- 手抓吸尘器:8–10 条真实 Shopee SG listing(标题/价/评论/评分)+ 3–4 个 1688 报价 → `seed/desk-vacuum.json`。
-- Shopee 禁售/违规规则摘要 → `seed/shopee-rules.json`。预生成 3 张图 → `seed/images/`。
-- **验收**:`seed/` 数据可被 Market/Sourcing/Risk 的 Function 读取。
+Paths:
 
-## TASK-09 · Pitch + Demo 兜底 · P4
-- 3 分钟脚本(问题→方案→demo→市场)、slides(含 roadmap 砍掉项)、录屏兜底、彩排 ≥2 遍。
-- **验收**:讲稿定稿;录屏覆盖完整 happy path;计时 ≤3 分钟。
+- `app/`
+- `components/`
+- `lib/openai.ts`
+- `package.json`
+- `tsconfig.json`
+- `tailwind.config.*`
+- `.env.example`
+
+Requirements:
+
+- Build Next.js 14 App Router skeleton.
+- Configure TypeScript and Tailwind.
+- Add placeholder routes for Brief, War Room, Opportunity Board, Listing Studio, ROI/Admin.
+- Implement `POST /api/run?mock=1` by returning `contract/mock-result.json`.
+- Import types from `contract/result.ts`.
+
+Acceptance:
+
+- `npm run dev` starts.
+- `/api/run?mock=1` returns a valid full result.
+
+## TASK-03 · Agent Runtime + Audit · P1
+
+Paths:
+
+- `lib/agent-runtime/run-agent.ts`
+- `lib/agent-runtime/tool-runner.ts`
+- `lib/agent-runtime/audit.ts`
+- `lib/agent-runtime/schemas.ts`
+- `lib/agent-runtime/errors.ts`
+- `lib/agent-runtime/replay.ts`
+- `lib/openai.ts`
+
+Requirements:
+
+- Wrap OpenAI Responses API.
+- Enforce Structured Outputs.
+- Support Function Calling / ReAct-style tool loops.
+- Record audit snapshots for agent inputs, tool calls, model response ids, parsed outputs, validation, latency, and cost.
+- Support modes: `mock`, `fixture`, `live`.
+
+Acceptance:
+
+- A fake agent can call a fake tool, return strict JSON, validate schema, and write audit.
+
+## TASK-04 · Provider Adapters + Seed Data · P1/P3
+
+Paths:
+
+- `lib/providers/shopee/*`
+- `lib/providers/sourcing-1688/*`
+- `lib/providers/shipping/*`
+- `lib/providers/fx/*`
+- `seed/**/*`
+
+Requirements:
+
+- Implement provider interfaces:
+  - `shopee.searchProducts`
+  - `shopee.getProductDetail`
+  - `shopee.getCategoryAttributes`
+  - `shopee.getPolicyRules`
+  - `sourcing.searchOffers`
+  - `sourcing.getOfferDetail`
+  - `shipping.estimateCrossBorder`
+  - `fx.convert`
+- Add Mini Desk Vacuum Shopee SG seed fixtures.
+- Add 1688 supplier seed fixtures.
+- Add shipping and FX assumptions.
+- Keep source links or fixture ids in every tool output.
+
+Acceptance:
+
+- Market and Sourcing can run without network.
+- Audit shows which fixture/source each signal came from.
+
+## TASK-05 · Market Trend Agent · P1
+
+Paths:
+
+- `lib/agents/market/skill.ts`
+- `lib/agents/market/tools.ts`
+- `lib/agents/market/schema.ts`
+- `lib/agents/market/harness.ts`
+- `lib/agents/market/index.ts`
+
+Skill:
+
+- Judge Shopee SG demand for Mini Desk Vacuum.
+- Estimate demand signal, competitor count, price band, review density, rating distribution, trend links.
+- Never claim fake monthly sales.
+
+Tools:
+
+- `shopee.searchProducts`
+- `shopee.getProductDetail`
+- optional `shopee.getCategoryAttributes`
+
+Acceptance:
+
+- Harness confirms `competitor_count > 0`.
+- Every evidence item has a source or fixture id.
+- Output can feed Sourcing and Packaging style notes.
+
+## TASK-06 · Sourcing Agent · P1
+
+Paths:
+
+- `lib/agents/sourcing/skill.ts`
+- `lib/agents/sourcing/tools.ts`
+- `lib/agents/sourcing/schema.ts`
+- `lib/agents/sourcing/harness.ts`
+- `lib/agents/sourcing/index.ts`
+
+Skill:
+
+- Find low-cost, fulfillable supplier candidates.
+- Output source price, stock, MOQ, domestic dispatch, package weight, dimensions, and fulfillment warnings.
+
+Tools:
+
+- `sourcing.searchOffers`
+- `sourcing.getOfferDetail`
+- `fx.convert`
+- `shipping.estimateCrossBorder`
+
+Acceptance:
+
+- `source_price > 0`.
+- MOQ, stock, weight, and dimensions are present.
+- Fulfillment warning appears if delivery exceeds user max.
+
+## TASK-07 · Margin + Risk Agents · P1
+
+Paths:
+
+- `lib/agents/margin/skill.ts`
+- `lib/agents/margin/tools.ts`
+- `lib/agents/margin/schema.ts`
+- `lib/agents/margin/harness.ts`
+- `lib/agents/margin/index.ts`
+- `lib/agents/risk/skill.ts`
+- `lib/agents/risk/tools.ts`
+- `lib/agents/risk/schema.ts`
+- `lib/agents/risk/harness.ts`
+- `lib/agents/risk/index.ts`
+
+Margin Skill:
+
+- Deterministically calculate gross margin, net profit, and net margin.
+- Produce low/base/high scenarios.
+- Let LLM explain sensitivity only; do not let the model calculate money.
+
+Margin Tools:
+
+- deterministic cost model
+- `shipping.estimateCrossBorder`
+- `fx.convert`
+- `risk.checkpoint("margin")`
+
+Risk Skill:
+
+- Act as cross-cutting compliance supervisor.
+- Run checkpoints at `margin`, `listing`, `packaging`, and `committee`.
+- Flag exaggerated suction and electrical / USB safety review.
+
+Risk Tools:
+
+- `shopee.getPolicyRules`
+- listing violation rule matcher
+- claim checker
+- category validator
+- image compliance checker
+
+Acceptance:
+
+- Mini Desk Vacuum base margin is around 28%.
+- Bad case margin is around 12%.
+- Risk level is `medium`.
+- `human_review_required = true`.
+- No hard prohibited flag unless a real rule supports it.
+
+## TASK-08 · Listing Agent · P1
+
+Paths:
+
+- `lib/agents/listing/skill.ts`
+- `lib/agents/listing/tools.ts`
+- `lib/agents/listing/schema.ts`
+- `lib/agents/listing/harness.ts`
+- `lib/agents/listing/index.ts`
+
+Skill:
+
+- Produce Shopee-ready structured listing fields.
+- Generate safe English title, bullets, description, SKU, variations, category attributes, logistics, and missing fields.
+- Do not generate images.
+
+Tools:
+
+- `shopee.getCategoryAttributes`
+- title validator
+- description validator
+- SKU / variation normalizer
+- `risk.checkpoint("listing")`
+
+Acceptance:
+
+- Required fields are filled or explicitly listed as missing.
+- Risk warnings are reflected in wording.
+- No exaggerated claims appear in title or description.
+
+## TASK-09 · Packaging Agent + Live Images · P1/P3
+
+Paths:
+
+- `lib/agents/packaging/skill.ts`
+- `lib/agents/packaging/tools.ts`
+- `lib/agents/packaging/schema.ts`
+- `lib/agents/packaging/harness.ts`
+- `lib/agents/packaging/index.ts`
+- `lib/providers/openai-image/*`
+- `public/generated/*`
+- `seed/images/*`
+
+Skill:
+
+- Create localized Shopee SG packaging angle.
+- Generate hero, lifestyle, and feature image prompts.
+- Generate live product images through OpenAI.
+- Attach image compliance notes.
+
+Tools:
+
+- competitor style extractor
+- prompt constraint builder
+- `openaiImage.generateProductImage`
+- `openaiImage.editProductImage`
+- `openaiImage.checkImageCompliance`
+- `risk.checkpoint("packaging")`
+
+Acceptance:
+
+- Dry-run mode creates prompts without image API calls.
+- Live mode generates or gracefully falls back for 3 image slots.
+- Prompts only contain real product attributes.
+- Prompts avoid "super suction", "industrial grade", fake certification, and unsupported battery claims.
+
+## TASK-10 · Committee Agent · P1
+
+Paths:
+
+- `lib/agents/committee/skill.ts`
+- `lib/agents/committee/tools.ts`
+- `lib/agents/committee/schema.ts`
+- `lib/agents/committee/harness.ts`
+- `lib/agents/committee/index.ts`
+
+Skill:
+
+- Act as CEO / investment committee.
+- Deterministically combine scores and gates.
+- Use LLM only for explanation or Devil's Advocate summary.
+
+Tools:
+
+- deterministic scoring function
+- deterministic gate evaluator
+- `risk.checkpoint("committee")`
+- optional LLM summary generator
+
+Acceptance:
+
+- Mini Desk Vacuum returns `Watch`.
+- High-risk products cannot become `Go`.
+- Decision reason mentions profit sensitivity and compliance review.
+
+## TASK-11 · Real API Integration · P1
+
+Paths:
+
+- `app/api/run/route.ts`
+- `app/api/runs/[id]/audit/route.ts`
+- `lib/agent-runtime/*`
+- `lib/agents/*`
+- `contract/*`
+
+Requirements:
+
+- Wire pipeline:
+  `market -> sourcing -> margin -> listing -> packaging -> committee`
+- Invoke Risk checkpoints during margin, listing, packaging, committee.
+- Support:
+  - `POST /api/run?mock=1`
+  - `POST /api/run?images=0`
+  - `POST /api/run`
+  - `GET /api/runs/:id/audit`
+- Validate final result against contract schema.
+
+Acceptance:
+
+- Mock mode is instant.
+- Text-only live mode works.
+- Full live mode attempts image generation.
+- Audit endpoint explains the run.
+
+## TASK-12 · Frontend Brief + War Room · P2
+
+Paths:
+
+- `app/*`
+- `components/*`
+
+Requirements:
+
+- English Seller Brief with MVP defaults.
+- War Room renders 7 agent cards.
+- Risk card shows checkpoint timeline.
+- Cards show waiting/running/done/blocked, evidence, scores, warnings, confidence.
+
+Acceptance:
+
+- Frontend can run against `contract/mock-result.json`.
+- Demo visibly shows agent collaboration and conflict.
+
+## TASK-13 · Frontend Board + Listing Studio + ROI · P2/P3
+
+Paths:
+
+- `app/*`
+- `components/*`
+
+Requirements:
+
+- Opportunity Board renders Go/Watch/Reject cards.
+- Margin chart shows low/base/high.
+- Listing Studio shows Shopee fields, safe copy, generated images, prompts, compliance notes, and copyable JSON.
+- ROI/Admin Summary shows time saved, risks blocked, reusable prompt/template, and next monitoring items.
+
+Acceptance:
+
+- User can move from Brief to War Room to Board to Listing Studio.
+- Watch decision is visually understandable.
+
+## TASK-14 · Harness + CI · P1/P3
+
+Paths:
+
+- `lib/agents/*/harness.ts`
+- `scripts/*`
+- `.github/workflows/*`
+
+Requirements:
+
+- Add fixture harness for each agent.
+- Add deterministic tests for margin and committee.
+- Keep contract check in CI.
+- Live smoke tests must be opt-in, not required for every PR.
+
+Acceptance:
+
+- Fixture harness validates all agents locally.
+- Contract drift fails PR checks.
+
+## TASK-15 · Live Demo + Pitch · P4
+
+Paths:
+
+- `docs/IMPLEMENTATION-ROADMAP.md`
+- local demo assets if needed
+
+Requirements:
+
+- Rehearse mock path.
+- Rehearse live text path.
+- Rehearse live image path.
+- Capture fallback recording/screenshots.
+- Prepare 3-minute pitch around "profit-aware before copywriting".
+
+Acceptance:
+
+- Demo survives network/model/image failure.
+- Pitch clearly explains why `Watch` is the correct trusted decision.
