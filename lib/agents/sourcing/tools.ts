@@ -120,6 +120,21 @@ export function createSourcingTools(providers: AgentProviders): AgentTool[] {
       },
     },
     {
+      name: "browser_extract_taobao_offer",
+      description:
+        "Use a user-authorized controlled browser session to extract a Taobao/Tmall product detail page by item URL.",
+      parameters: makeObjectSchema(
+        {
+          offerId: { type: "string" },
+          url: { type: "string" },
+        },
+        [],
+      ),
+      execute(input: unknown) {
+        return providers.browser.extractTaobaoOffer(input as Browser1688OfferInput);
+      },
+    },
+    {
       name: "browser_refresh_offer_stock",
       description:
         "Use the controlled browser retrieval provider to refresh currently visible stock for a 1688 offer.",

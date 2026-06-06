@@ -75,7 +75,114 @@ describe("browser retrieval provider", () => {
     expect(result.offers[0]?.supplier_name).toBe("锐耀数码专营店");
   });
 
-  it("returns unavailable metadata for pending Chrome sourcing detail tools", async () => {
+  it("parses comparable specs from 1688 and Taobao detail snapshots", async () => {
+    const controller: BrowserController = {
+      async capture(input) {
+        const taobao = input.url.includes("taobao.com");
+        return {
+          url: input.url,
+          title: taobao ? "迷你桌面吸尘器淘宝详情" : "桌面吸尘器1688详情",
+          text: taobao
+            ? [
+                "桌面清洁小车吸尘器可爱迷你桌面吸尘器学生橡皮屑键盘清理器",
+                "¥",
+                "10",
+                ".33",
+                "库存 268 件",
+                "包装重量 0.32kg",
+                "包装尺寸 10x10x8cm",
+                "锐耀数码专营店",
+                "安徽 合肥",
+              ].join("\n")
+            : [
+                "桌面吸尘器手持学生大吸力电动橡皮擦USB充电款儿童桌面清洁神器",
+                "¥13.00",
+                "库存 1200 件",
+                "起批 1 件",
+                "商品属性",
+                "材质",
+                "塑料",
+                "品牌",
+                "咔巴熊",
+                "型号",
+                "KBX-3091",
+                "长x宽x高",
+                "80×80×60（mm）",
+                "净重",
+                "0.2",
+                "商品件重尺",
+                "重量(g)",
+                "150",
+                "深圳市清洁电器工厂",
+                "广东 深圳",
+              ].join("\n"),
+          links: [],
+          captured_at: "2026-06-06T00:00:00.000Z",
+        };
+      },
+    };
+    const provider = createChromeBrowserRetrievalProvider(controller, {
+      allowedDomains: ["1688.com", "taobao.com"],
+      maxSteps: 2,
+    });
+
+    const offer1688 = await provider.extract1688Offer({ url: "https://detail.1688.com/offer/example.html" });
+    const offerTaobao = await provider.extractTaobaoOffer({ url: "https://item.taobao.com/item.htm?id=123" });
+
+    if ("available" in offer1688) throw new Error(offer1688.reason);
+    if ("available" in offerTaobao) throw new Error(offerTaobao.reason);
+    expect(offer1688.offer.package_weight_g).toBe(150);
+    expect(offer1688.offer.package_dimensions_cm).toEqual({ length: 8, width: 8, height: 6 });
+    expect(offer1688.offer.available_stock).toBe(1200);
+    expect(offer1688.offer.supplier_name).toMatch(/工厂/);
+    expect(offerTaobao.offer.package_weight_g).toBe(320);
+    expect(offerTaobao.offer.package_dimensions_cm).toEqual({ length: 10, width: 10, height: 8 });
+    expect(offerTaobao.offer.available_stock).toBe(268);
+    expect(offerTaobao.offer.supplier_name).toBe("锐耀数码专营店");
+  });
+
+  it("parses single-value 1688 length-width-height as equal dimensions with review note", async () => {
+    const controller: BrowserController = {
+      async capture(input) {
+        return {
+          url: input.url,
+          title: "咔巴熊桌面吸尘器",
+          text: [
+            "咔巴熊桌面吸尘器清洁文具学生吸橡皮擦屑铅笔灰儿童电动小型迷你",
+            "¥6.00",
+            "库存 500 件",
+            "商品属性",
+            "品牌",
+            "咔巴熊",
+            "型号",
+            "KBX-3091",
+            "长x宽x高",
+            "20（mm）",
+            "商品件重尺",
+            "重量(g)",
+            "150",
+            "义乌市咔巴熊文具商行",
+            "浙江 义乌",
+          ].join("\n"),
+          links: [],
+          captured_at: "2026-06-06T00:00:00.000Z",
+        };
+      },
+    };
+    const provider = createChromeBrowserRetrievalProvider(controller, {
+      allowedDomains: ["1688.com"],
+      maxSteps: 2,
+    });
+
+    const offer = await provider.extract1688Offer({ url: "https://detail.1688.com/offer/example.html" });
+
+    if ("available" in offer) throw new Error(offer.reason);
+    expect(offer.offer.package_weight_g).toBe(150);
+    expect(offer.offer.package_dimensions_cm).toEqual({ length: 2, width: 2, height: 2 });
+    expect(offer.offer.supplier_risk_notes.join(" ")).toMatch(/one value under 长x宽x高/);
+  });
+
+  it("returns unavailable metadata when detail snapshots lack comparable specs", async () => {
     const controller: BrowserController = {
       async capture(input) {
         return {
@@ -99,7 +206,8 @@ describe("browser retrieval provider", () => {
     expect("available" in offer && offer.available).toBe(false);
     expect("available" in stock && stock.available).toBe(false);
     expect("available" in supplier && supplier.available).toBe(false);
-    expect(offer.warnings?.[0]?.code).toBe("CHROME_1688_OFFER_PARSER_PENDING");
+    expect(offer.warnings?.[0]?.code).toBe("CHROME_1688_OFFER_DETAIL_INCOMPLETE");
+    expect("available" in offer && offer.reason).toMatch(/package weight|package dimensions/);
     expect(stock.warnings?.[0]?.code).toBe("CHROME_STOCK_REFRESH_URL_REQUIRED");
     expect(supplier.warnings?.[0]?.code).toBe("CHROME_SUPPLIER_PROFILE_URL_REQUIRED");
   });
