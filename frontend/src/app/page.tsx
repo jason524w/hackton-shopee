@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { SiteNav } from "@/components/marketing/site-nav";
 import { CountUp } from "@/components/primitives/count-up";
 import { staggerContainer, staggerItem } from "@/components/primitives/motion";
-import { DEPARTMENTS, HOMEPAGE_STATS } from "@/lib/mock-data";
+import { DEPARTMENT_META as DEPARTMENTS, HOMEPAGE_STATS } from "@/lib/static-content";
 import { FLOW_STEPS } from "@/lib/flow";
 
 const AGENT_DEPARTMENTS = [

@@ -3,23 +3,14 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ExternalLink } from "lucide-react";
-import { OPPORTUNITIES } from "@/lib/mock-data";
 import { useAppStore } from "@/lib/store";
 import { DecisionChip, StatusText } from "@/components/primitives/status";
-
-const DEMO_CASES = OPPORTUNITIES.filter((o) =>
-  [
-    "mini-desk-vacuum",
-    "portable-dehumidifier",
-    "cable-organizer",
-    "pet-grooming-tool",
-    "compact-steamer",
-  ].includes(o.id),
-);
 
 export default function HistoryPage() {
   const router = useRouter();
   const selectProduct = useAppStore((s) => s.selectProduct);
+  // Run history = opportunities surfaced by the latest live run.
+  const DEMO_CASES = useAppStore((s) => s.opportunities);
 
   function openCase(productId: string) {
     selectProduct(productId);
@@ -42,7 +33,7 @@ export default function HistoryPage() {
           </p>
         </div>
         <button
-          onClick={() => openCase("mini-desk-vacuum")}
+          onClick={() => DEMO_CASES[0] && openCase(DEMO_CASES[0].id)}
           className="self-start bg-orange px-5 py-3 font-display text-sm font-black text-white"
         >
           Replay best case →

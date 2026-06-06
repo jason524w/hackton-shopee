@@ -17,16 +17,17 @@
 
 ## 🔒 三条铁律(任何改动都不能违反)
 
-1. **Contract-first。** `contract/` 是前后端唯一对齐目标。前端对着
-   `contract/mock-result.json` 开发,后端 `/api/run` 的输出必须能通过
-   `contract/result.schema.json` 校验。**改 contract = 改 3 个文件并通知全队**
-   (`mock-result.json` + `result.ts` + `result.schema.json`)。
+1. **Contract-first。** `contract/` 是前后端唯一对齐目标。后端 `/api/run` 的输出必须能通过
+   `contract/result.schema.json` 校验,前端从 `contract/result.ts` import 类型。
+   **改 contract = 改 3 个文件并通知全队**
+   (`result.ts` + `result.schema.json` + `fixtures/sample-result.json`)。
 2. **MVP 范围内才动手。** 只做 [docs/MVP-SCOPE.md](docs/MVP-SCOPE.md) 里"✅ 做"的部分。
    想加功能 → 先问"它服务 demo 高潮吗?"(见下)。不服务就不做。
-3. **Live 是主 demo 路径,mock 是永不可移除的安全网。**
-   - **主路径:** `/api/run` 真实 7-agent pipeline(含 live 图像生成),见 [IMPLEMENTATION-ROADMAP](docs/IMPLEMENTATION-ROADMAP.md)。
-   - **安全网(必达、一键可切):** `/api/run?mock=1` + 缓存,零延迟零失败,live 卡顿/失败随时切回。
-   - **`/api/run?images=0`** 跑纯文本快速彩排。**永远不要移除 `?mock=1`**;demo 当天先验安全网再跑 live。
+3. **单一真实路径。** `/api/run` 只走真实 7-agent pipeline(含 live 图像生成),见
+   [IMPLEMENTATION-ROADMAP](docs/IMPLEMENTATION-ROADMAP.md)。
+   - **禁止 mock 参数、静态返回、缓存回放、无 key 静默降级**;没配 `OPENAI_API_KEY` 就返回 503。
+   - `contract/fixtures/` 只能被测试代码 import;**任何运行时 import fixture 的 PR 一律打回**。
+   - **`/api/run?images=0`** 跑纯文本快速彩排(走真实文本管道,不算 mock)。
 
 ## Demo 高潮(所有取舍的判断标准)
 
@@ -49,7 +50,7 @@
 contract/            ← 前后端数据契约(已就位,先读 contract/README.md)
 docs/                ← 架构 / ROADMAP / COMMITTEE / 范围 / 任务板 / PRD
 app/
-  api/run/route.ts   ← POST,返回 RunResult;?mock=1 / ?images=0 / live
+  api/run/route.ts   ← POST,返回 RunResult;live 唯一路径(?images=0 跳过图像生成)
   api/runs/[id]/audit/route.ts
   (brief / war-room / board / studio 页面路由)
 components/          ← UI 组件

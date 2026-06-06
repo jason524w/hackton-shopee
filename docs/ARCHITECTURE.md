@@ -79,14 +79,17 @@ net_margin = net_profit / selling_price
 | 高利润 + 高合规风险 + 长履约 | Reject |
 | 低风险 + 稳定货源 + 中等利润 | Go |
 
-## Demo mode
+## 失败处理(取代旧的 demo mode)
 
-`/api/run?mock=1` 直接返回 `contract/mock-result.json`。真实跑通后把输出存成缓存,
-demo 默认走缓存路径,真跑当备份 + 准备录屏兜底。
+`/api/run` 只有 live 一条路径:无 `OPENAI_API_KEY` → 503 `not_configured`;
+管道失败 → 500 + `audit_run_id`(可查 `/api/runs/:id/audit` 定位哪个 agent 挂了);
+输出不过 schema → 500 `contract_violation` + 错误明细。前端渲染对应失败态,不静默降级。
 
 ## 技术决策记录
 
 - **为什么 Next.js 单仓**:4 人 1 天,前端 + API routes 同仓,省去前后端联调与部署。
 - **为什么不上 agent 框架**:6 个串行结构化调用,手写更可控、更好 debug。
 - **为什么 contract-first**:让前端零依赖后端并行开发,这是 hackathon 最大提速点。
+- **为什么去掉 mock 路径**:demo 期结束后双路径导致前端渲染逻辑与真实输出漂移、
+  契约校验形同虚设;单一路径让 schema 校验在每次真实运行中生效(见 REFACTOR.md)。
 - **为什么砍 Lazada / 多地区 / ROI 代码**:见 [MVP-SCOPE.md](MVP-SCOPE.md)。

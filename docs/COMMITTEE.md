@@ -8,7 +8,7 @@
 
 > ⚠️ **实现方向变更(2026-06,#14):** 本规范 §1「LLM 不碰最终决策 / 确定性 Gate 是硬保障」**已被推翻**。
 > #14 落地为 **pure-A:LLM 直接定 Go/Watch/Reject(产品亮点)**;确定性加权/gate 降级为 **证据 + LLM 失败兜底**。
-> **硬红线(hard_block / risk 高不能 Go)改由 skill 指令 + eval 保障(软约束),不再是代码硬闸**;demo 安全网仍是 `?mock=1`。
+> **硬红线(hard_block / risk 高不能 Go)改由 skill 指令 + eval 保障(软约束),不再是代码硬闸**;live 管道是唯一路径(无 mock 安全网,见 REFACTOR.md)。
 > **以 [docs/design/committee.md](design/committee.md) 为 #14 的实现权威**;本文的加权公式/权重/contract 映射仍有效,gate 部分仅作"兜底逻辑"参考。
 
 ---
@@ -218,5 +218,5 @@ async function runDevil(
 ```
 
 **实现顺序:** 先 `mergeAndGate` + `applyGates`(确定性,带单测覆盖 demo 高潮的
-吸尘器 case)→ 跑通 mock 主线 → 再接 `runDevil`。
+吸尘器 case)→ 跑通 live 主线 → 再接 `runDevil`。
 **任何时候 `/api/run` 输出都要能通过 `contract/result.schema.json`。**

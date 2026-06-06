@@ -20,7 +20,7 @@
 - **`contract/` 是只读共享**:要改先在群里吼,改完跑 `node scripts/check-contract.mjs`。
 
 ## 不破坏 main
-- main 永远 **P0 可 demo**(`/api/run?mock=1` + 前端主线跑得通)。
+- main 永远 **P0 可 demo**(`/api/run` live 管道 + 前端主线跑得通;无 mock 兜底,坏了就修)。
 - PR 别合进跑不起来 / 报错的东西。
 
 ## CI

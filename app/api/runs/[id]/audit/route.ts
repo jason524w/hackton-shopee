@@ -3,7 +3,7 @@ import { join, resolve } from "node:path";
 import { NextResponse } from "next/server";
 
 import type { AgentAuditSnapshot } from "../../../../../lib/agent-runtime/audit";
-import { AUDIT_ROOT_DIR } from "../../../../../lib/agents/orchestrate";
+import { resolveAuditRoot } from "../../../../../lib/agents/audit-root";
 import { CANONICAL_AGENT_ORDER } from "../../../../../lib/agents/validate-run-result";
 import { isSafeAuditRunId } from "./run-id";
 
@@ -15,7 +15,7 @@ export async function GET(
   { params }: { params: { id: string } },
 ): Promise<NextResponse> {
   const runId = params.id;
-  const auditRoot = resolve(process.cwd(), AUDIT_ROOT_DIR);
+  const auditRoot = resolveAuditRoot();
   const agentsDir = resolve(auditRoot, runId, "agents");
 
   if (!isSafeAuditRunId(runId) || !agentsDir.startsWith(join(auditRoot, runId) + "/")) {

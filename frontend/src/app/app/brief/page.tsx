@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAppStore } from "@/lib/store";
-import { DEMO_BRIEF } from "@/lib/mock-data";
+import { DEMO_BRIEF } from "@/lib/static-content";
 
 function Segmented({
   options,

@@ -1,16 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { DEPARTMENTS } from "@/lib/mock-data";
+import { useAppStore } from "@/lib/store";
 import { DecisionChip } from "@/components/primitives/status";
+import type { DepartmentResult } from "@/lib/types";
 
-const MATRIX = DEPARTMENTS.filter((d) => d.id !== "committee").map((d) => ({
-  name: d.department,
-  score: d.score,
-  finding: d.keyFinding,
-  state:
-    d.id === "risk" ? "Warning" : d.id === "listing" ? "Ready" : "Positive",
-}));
+function toMatrix(departments: DepartmentResult[]) {
+  return departments
+    .filter((d) => d.id !== "committee")
+    .map((d) => ({
+      name: d.department,
+      score: d.score,
+      finding: d.keyFinding,
+      state: d.warnings.length > 0 ? "Warning" : d.id === "listing" ? "Ready" : "Positive",
+    }));
+}
 
 const CONFLICTS = [
   ["High demand + low margin", "Watch — find cheaper sourcing or differentiate"],
@@ -29,6 +33,8 @@ const WEIGHTS = [
 ];
 
 export default function CommitteePage() {
+  const departments = useAppStore((s) => s.departments);
+  const MATRIX = toMatrix(departments);
   return (
     <div className="px-14 py-7">
       {/* Decision card */}

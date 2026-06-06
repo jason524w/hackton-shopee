@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useAppStore } from "@/lib/store";
-import { OPPORTUNITIES, BOARD_SUMMARY } from "@/lib/mock-data";
 import { DecisionChip } from "@/components/primitives/status";
 
 const COLS =
@@ -14,22 +13,40 @@ const COLS =
 export default function BoardPage() {
   const router = useRouter();
   const selectProduct = useAppStore((s) => s.selectProduct);
+  const OPPORTUNITIES = useAppStore((s) => s.opportunities);
+  const summary = useAppStore((s) => s.boardSummary);
 
   function select(id: string) {
     selectProduct(id);
     router.push("/app/studio");
   }
 
+  if (!summary) {
+    return (
+      <div className="px-14 py-7">
+        <h1 className="font-display text-[34px] font-black tracking-tight text-ink mb-1">
+          No opportunities yet.
+        </h1>
+        <p className="font-display text-[15px] font-light italic text-ink-faint">
+          Run a brief first — the board fills with live committee output.
+        </p>
+        <Link href="/app/brief" className="font-mono text-[11px] text-orange mt-4 inline-block">
+          ← Start from a brief
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="px-14 py-7">
       <h1 className="font-display text-[34px] font-black tracking-tight text-ink mb-1">
-        {BOARD_SUMMARY.found} opportunities found.
+        {summary.found} opportunities found.
       </h1>
       <p className="font-mono text-[11px] tracking-wide text-ink-faint">
-        <span className="text-ink">{BOARD_SUMMARY.go} Go</span> ·{" "}
-        <span className="text-ink">{BOARD_SUMMARY.watch} Watch</span> · avg margin{" "}
-        <span className="text-ink">{BOARD_SUMMARY.avgMargin}</span> ·{" "}
-        {BOARD_SUMMARY.riskFlags} risk flag
+        <span className="text-ink">{summary.go} Go</span> ·{" "}
+        <span className="text-ink">{summary.watch} Watch</span> · avg margin{" "}
+        <span className="text-ink">{summary.avgMargin}</span> ·{" "}
+        {summary.riskFlags} risk flag
       </p>
       <Link href="/app/committee" className="font-mono text-[11px] text-orange mb-6 inline-block">
         View full committee review →
@@ -57,7 +74,9 @@ export default function BoardPage() {
         >
           <span className="flex items-center gap-3 pr-4">
             <span className="relative h-14 w-20 shrink-0 overflow-hidden bg-ivory-deep">
-              <Image src={o.heroImage} alt={o.productName} fill className="object-cover" />
+              {o.heroImage && (
+                <Image src={o.heroImage} alt={o.productName} fill className="object-cover" />
+              )}
             </span>
             <span>
               <span className="font-display text-[15px] font-semibold text-ink transition-colors group-hover:text-orange">

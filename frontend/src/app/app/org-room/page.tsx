@@ -1,34 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { DEPARTMENTS } from "@/lib/mock-data";
+import { useAppStore } from "@/lib/store";
 import { StatusText } from "@/components/primitives/status";
-import type { DeptStatus } from "@/lib/types";
-
-const ORDER = DEPARTMENTS.map((d) => d.id);
 
 export default function OrgRoomPage() {
   const router = useRouter();
-  // Simulate sequential completion: index of the dept currently running.
-  const [runningIndex, setRunningIndex] = useState(0);
+  const departments = useAppStore((s) => s.departments);
+  const runStatus = useAppStore((s) => s.runStatus);
+  const runError = useAppStore((s) => s.runError);
 
-  useEffect(() => {
-    if (runningIndex >= ORDER.length) return;
-    const t = setTimeout(() => setRunningIndex((i) => i + 1), 1100);
-    return () => clearTimeout(t);
-  }, [runningIndex]);
-
-  function statusFor(i: number): DeptStatus {
-    if (i < runningIndex) return "complete";
-    if (i === runningIndex) return "running";
-    return "waiting";
-  }
-
-  const allDone = runningIndex >= ORDER.length;
-  const completed = DEPARTMENTS.filter((_, i) => statusFor(i) === "complete");
+  const completed = departments.filter((d) => d.status === "complete");
+  const allDone = runStatus === "done";
 
   return (
     <div className="grid min-h-[70vh] grid-cols-[2fr_3fr]">
@@ -37,7 +22,7 @@ export default function OrgRoomPage() {
         <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-ink-faint mb-5">
           AI Commerce Company
         </p>
-        {DEPARTMENTS.map((d, i) => (
+        {departments.map((d, i) => (
           <Link
             key={d.id}
             href={`/app/org-room/${d.id}`}
@@ -48,12 +33,12 @@ export default function OrgRoomPage() {
             </span>
             <span
               className={`font-display text-base font-semibold flex-1 ${
-                statusFor(i) === "running" ? "text-orange" : "text-ink"
+                d.status === "running" ? "text-orange" : "text-ink"
               }`}
             >
               {d.shortName}
             </span>
-            <StatusText status={statusFor(i)} />
+            <StatusText status={d.status} />
           </Link>
         ))}
       </div>
@@ -73,6 +58,21 @@ export default function OrgRoomPage() {
             </button>
           )}
         </div>
+
+        {runStatus === "idle" && (
+          <p className="py-3 font-display text-[15px] font-light italic text-ink-faint">
+            No run yet — submit a brief to put the company to work.
+          </p>
+        )}
+
+        {runStatus === "error" && (
+          <div className="py-3">
+            <p className="font-mono text-[11px] font-semibold uppercase tracking-wide text-red-600 mb-1">
+              Pipeline Error
+            </p>
+            <p className="font-display text-[15px] font-light italic text-ink-soft">{runError}</p>
+          </div>
+        )}
 
         {completed.map((d) => (
           <motion.div
@@ -94,13 +94,13 @@ export default function OrgRoomPage() {
           </motion.div>
         ))}
 
-        {!allDone && (
+        {runStatus === "running" && (
           <div className="py-3 opacity-50">
             <p className="font-mono text-[11px] font-semibold uppercase tracking-wide text-ink-faint mb-1">
-              {DEPARTMENTS[runningIndex]?.department} · Running…
+              Live pipeline running…
             </p>
             <p className="font-display text-[15px] font-light italic text-ink-faint">
-              Analyzing…
+              Analyzing market, sourcing, margin, risk, listing, packaging…
             </p>
           </div>
         )}

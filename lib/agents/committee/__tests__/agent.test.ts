@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import mock from "../../../../contract/mock-result.json";
+import mock from "../../../../contract/fixtures/sample-result.json";
 import type { Opportunity, RunResult, SelectedListing } from "../../../../contract/result";
 import { createRiskSupervisor } from "../../risk/checkpoints";
 import type { AgentContext } from "../../contracts";

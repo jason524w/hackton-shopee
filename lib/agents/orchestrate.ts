@@ -20,7 +20,7 @@ import { createRiskSupervisor, riskAgent } from "./risk";
 import { primaryOpportunityToDirection, runSourcingAgent, toSourcingRunResultSlice } from "./sourcing";
 import { assertValidRunResult, CANONICAL_AGENT_ORDER } from "./validate-run-result";
 
-export const AUDIT_ROOT_DIR = ".runs";
+export { resolveAuditRoot } from "./audit-root";
 
 export interface OrchestrationOptions {
   textMode?: AgentRunMode;
@@ -84,7 +84,8 @@ function orderAgents(agents: RunResult["agents"]): RunResult["agents"] {
 
 export async function runOrchestration(brief: Brief, opts: OrchestrationOptions = {}): Promise<RunResult> {
   const runId = opts.runId ?? createAuditRunId("run");
-  const textMode: AgentRunMode = opts.textMode ?? "fixture";
+  // Live is the only production mode; "fixture" may only be passed from test code.
+  const textMode: AgentRunMode = opts.textMode ?? "live";
   const imageMode = opts.imageMode ?? "dry-run";
   const listingMode = textMode === "live" ? "live" : "fixture";
 

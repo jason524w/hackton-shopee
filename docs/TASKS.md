@@ -6,14 +6,14 @@
 
 ## ✅ 已完成(bootstrap)
 - **契约 Phase 0**:contract 升到 **7-agent**(+ packaging)+ `audit_run_id`,`check-contract` 通过。
-- 文档冲突已消解:demo 路径(live 主 + mock 安全网)、COMMITTEE/AGENTS 对齐 7-agent。
+- 文档冲突已消解:demo 路径(live 唯一路径,无 mock,见 REFACTOR.md)、COMMITTEE/AGENTS 对齐 7-agent。
 
 ## 依赖与并行
 
 ```
 TASK-01 骨架(blocking)── scaffold lib/ 全部目录 + api 占位 + audit stub
    │
-   ├─▶ 前端轨  TASK-FE          ── 对 mock 渲染 7 agent,独立,不卡别人
+   ├─▶ 前端轨  TASK-FE          ── 渲染 7 agent(单测对 contract/fixtures),独立,不卡别人
    ├─▶ 后端 ┌ TASK-RUNTIME-AUDIT ┐
    │        └ TASK-PROVIDERS ────┘→ TASK-MARGIN-RISK / MARKET-SOURCING / LISTING / PACKAGING
    │                                    └──────────────┬───────────────┘
@@ -42,7 +42,7 @@ TASK-PITCH 文案/录屏 ── 无依赖
 
 ## 建议起步顺序
 1. **TASK-01 骨架**先做、PR 合入即解锁(它把 `lib/` 所有空目录建好,后端 9 个 PR 才不撞车)。
-2. 与骨架并行:**TASK-DATA**(给 providers 当 fixture)、**TASK-PITCH**、**TASK-FE**(对 mock 开发)。
+2. 与骨架并行:**TASK-DATA**(给 providers 当 seed 数据)、**TASK-PITCH**、**TASK-FE**。
 3. 骨架后:**TASK-RUNTIME-AUDIT + TASK-PROVIDERS** 先行,它们是其余 agent 的地基。
 4. 然后 agent 们并行:margin-risk / market-sourcing / listing / packaging。
 5. 收口:committee → api-integration → harness-qa。

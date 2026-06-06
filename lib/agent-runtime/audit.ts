@@ -50,7 +50,7 @@ export interface AgentAuditSnapshot {
   run_id: string;
   agent_key: RuntimeAgentKey;
   skill_version?: string;
-  mode: "fixture" | "live" | "mock";
+  mode: "fixture" | "live";
   status: AuditRunStatus;
   started_at: string;
   completed_at?: string;
