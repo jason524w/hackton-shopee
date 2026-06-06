@@ -23,6 +23,7 @@ TASK-08 种子数据(独立,尽早)
 TASK-09 pitch(独立,后期)
 ```
 > contract 已就位,**TASK-02/03/04/05 可对着 `contract/mock-result.json` 立即并行,不等后端。**
+> 新版后端 7-agent 实施路线、目录规范、harness 与 audit 要求见 [IMPLEMENTATION-ROADMAP.md](IMPLEMENTATION-ROADMAP.md)。
 
 ---
 
@@ -36,7 +37,7 @@ TASK-09 pitch(独立,后期)
 - **验收**:能填完整 brief 并触发一次 run(先打 `?mock=1`)。
 
 ## TASK-03 · Agent War Room 页 · P2
-- 渲染 `agents[]`:6 个 agent 卡片,status 渐进点亮、evidence、score、confidence、warnings。
+- 渲染 `agents[]`:新版 contract 为 7 个 agent 卡片,status 渐进点亮、evidence、score、confidence、warnings。
 - 允许展示 agent 间冲突(利润高/风险高),最后 Committee 汇总。
 - **验收**:对着 mock 能播放出"逐个 agent 完成"的过程,看得到证据和分数。
 
@@ -56,7 +57,7 @@ TASK-09 pitch(独立,后期)
 - **验收**:前端把 mock import 换成 fetch `/api/run`,**零改动**正常渲染。
 
 ## TASK-07 · 真实 agent 管道 · P1
-- 实现 `lib/agents/{market,sourcing,margin,risk,listing,committee}.ts`,见 [AGENTS.md](AGENTS.md)。
+- 实现新版 7-agent 管道与目录规范,以 [IMPLEMENTATION-ROADMAP.md](IMPLEMENTATION-ROADMAP.md) 为准。
 - 每个 agent 用 Responses API + strict json_schema;Market/Sourcing 用 Function Calling 读 `seed/`。
 - **验收**:`/api/run`(非 mock)真实跑出结果且**通过 `contract/result.schema.json` 校验**;
   吸尘器 primary 决策 = Watch、Risk 含电器/夸大 warning。
