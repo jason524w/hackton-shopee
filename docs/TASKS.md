@@ -20,7 +20,7 @@
 ## 依赖图
 
 ```
-TASK-01 骨架(blocking, ~30min, 直接 push main)
+TASK-01 骨架(blocking, ~30min, PR 合入即解锁)
    │
    ├─▶ TASK-FE  前端整轨 ── 对着 mock 开发,内部 4 页 subagent 并行,不卡别人
    └─▶ TASK-BE  后端 ── lib/agents 可先写,api/run 接线等骨架
@@ -37,6 +37,6 @@ TASK-PITCH 文案/录屏 ── 立刻可写,后期收口
 
 ## 流程
 1. `gh issue list` → 领一个 → `gh issue edit <n> --add-assignee @me`
-2. `git checkout -b task-<n>-<slug>`(骨架例外:直接 push main)
+2. `git checkout -b task-<n>-<slug>`
 3. 做完 `gh pr create`,标题带任务号,正文写"对哪些 contract 字段/路径负责"
-4. 绝不直接 push main(骨架除外);main 永远可 demo
+4. **一切走 PR,绝不直接 push main**;CI 绿后自己 merge;main 永远可 demo

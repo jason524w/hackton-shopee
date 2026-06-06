@@ -1,0 +1,17 @@
+name: contract-check
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  contract-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Validate contract (mock-result.json vs schema)
+        run: node scripts/check-contract.mjs

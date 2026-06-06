@@ -76,8 +76,8 @@ npm run dev                  # http://localhost:3000
 2. 领一个:`gh issue edit <n> --add-assignee @me`,并把它移到 in-progress。
 3. **每个任务开独立分支**:`git checkout -b task-<n>-<slug>`。
 4. 做完开 PR:`gh pr create`,标题带 `TASK-<n>`,正文写"对哪些 contract 字段负责"。
-5. **绝不直接 push main**;main 永远保持可 demo。
-   **唯一例外:TASK-01 骨架**——为快速解锁全队,允许直接 push main 一次。
+5. **绝不直接 push main,一切走 PR**(含 TASK-01 骨架);main 永远保持可 demo。
+   不强制 review:**PR + CI 绿 → 自己 merge**。详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 > 还没建 Issues 时,先在 TASKS.md 里把自己名字写到任务后面占位。
 
