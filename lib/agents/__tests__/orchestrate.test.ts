@@ -54,4 +54,23 @@ describe("runOrchestration (fixture mode)", () => {
     const market = await audit.getAgentSnapshot("run_test_002", "market");
     expect(market?.status).toBe("completed");
   });
+
+  it("writes a completed audit snapshot for every one of the seven agents", async () => {
+    // #15 audit goal: a complete 7-agent run proof. LLM-backed agents self-record rich
+    // detail; deterministic/non-threading agents (margin, risk, packaging, committee) get a
+    // pipeline-level envelope so GET /api/runs/:id/audit returns the whole chain.
+    const audit = new InMemoryAuditSink();
+    await runOrchestration(brief, {
+      textMode: "fixture",
+      imageMode: "dry-run",
+      runId: "run_test_audit",
+      audit,
+    });
+
+    for (const key of CANONICAL_AGENT_ORDER) {
+      const snap = await audit.getAgentSnapshot("run_test_audit", key);
+      expect(snap, `missing audit snapshot for ${key}`).toBeTruthy();
+      expect(snap?.status).toBe("completed");
+    }
+  });
 });

@@ -23,6 +23,8 @@ interface SchemaNode {
   $ref?: string;
   type?: string | string[];
   enum?: unknown[];
+  minimum?: number;
+  maximum?: number;
   properties?: Record<string, SchemaNode>;
   required?: string[];
   items?: SchemaNode;
@@ -64,6 +66,21 @@ function check(
     const t = Array.isArray(node) ? "array" : node === null ? "null" : typeof node;
     const ok = types.some((x) => x === t);
     if (!ok) errors.push(`${path}: expected ${types.join("|")}, got ${t}`);
+  }
+  // Runtime data (unlike the curated mock) can carry NaN/Infinity — typeof is still
+  // "number", but JSON.stringify turns them into null, producing an off-contract body.
+  // Reject non-finite numbers and enforce the schema's minimum/maximum bounds.
+  if (typeof node === "number") {
+    if (!Number.isFinite(node)) {
+      errors.push(`${path}: expected finite number, got ${node}`);
+    } else {
+      if (sch.minimum !== undefined && node < sch.minimum) {
+        errors.push(`${path}: ${node} < minimum ${sch.minimum}`);
+      }
+      if (sch.maximum !== undefined && node > sch.maximum) {
+        errors.push(`${path}: ${node} > maximum ${sch.maximum}`);
+      }
+    }
   }
   if (node === null || typeof node !== "object") {
     // primitives and null are fully checked above

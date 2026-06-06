@@ -11,7 +11,7 @@
 // Execution order puts risk LAST so it aggregates every checkpoint; the returned
 // agents[] is then re-sorted to the canonical contract order.
 
-import type { Brief, Committee, RunResult, SelectedListing } from "../../contract/result";
+import type { AgentKey, Brief, Committee, RunResult, SelectedListing } from "../../contract/result";
 import { createAuditRunId, type AuditSink } from "../agent-runtime/audit";
 import type { AgentRunMode } from "../agent-runtime/run-agent";
 import {
@@ -64,6 +64,36 @@ export function createSeedProviders(): AgentProviders {
   };
 }
 
+// Guarantees a complete 7-agent audit chain. LLM-backed agents self-record rich
+// snapshots (tool calls / model responses) via runAgent; deterministic or
+// non-audit-threading agents (margin, risk, packaging, committee) would otherwise
+// leave a hole, so we write a minimal start/complete envelope only when the agent
+// did not already record one — no double-writes for the self-recording agents.
+function withAuditEnvelope(
+  key: AgentKey,
+  agent: Agent,
+  runId: string,
+  audit: AuditSink,
+  mode: AgentRunMode,
+): Agent {
+  return async (ctx) => {
+    const slice = await agent(ctx);
+    const existing = await audit.getAgentSnapshot(runId, key);
+    if (!existing) {
+      await audit.startAgent({
+        runId,
+        agentKey: key,
+        skillVersion: "pipeline-envelope",
+        mode,
+        input: {},
+        metadata: { source: "orchestrate-envelope" },
+      });
+      await audit.completeAgent(runId, key, slice);
+    }
+    return slice;
+  };
+}
+
 function orderAgents(agents: RunResult["agents"]): RunResult["agents"] {
   const byKey = new Map(agents.map((a) => [a.key, a]));
   return CANONICAL_AGENT_ORDER.map((key) => byKey.get(key)).filter(
@@ -89,26 +119,36 @@ export async function runOrchestration(
   };
 
   // Execution order: risk runs LAST to aggregate margin/listing/packaging/committee checkpoints.
-  const agents: Agent[] = [
-    (c) =>
-      runMarketAgent({ brief: c.brief }, c, { mode: textMode, runId, audit }).then(
-        toMarketRunResultSlice,
-      ),
-    (c) => {
-      const primary = c.results.opportunities?.find((o) => o.is_primary);
-      const direction = primaryOpportunityToDirection(primary, c);
-      return runSourcingAgent({ brief: c.brief, primary_direction: direction }, c, {
-        mode: textMode,
-        runId,
-        audit,
-      }).then((output) => toSourcingRunResultSlice(output, primary));
-    },
-    marginAgent,
-    (c) => runListingAgent(c, { mode: listingMode, runId, audit }),
-    (c) => runPackagingAgent(c, { imageMode, runId }),
-    makeCommitteeAgent(textMode),
-    riskAgent,
+  const keyedAgents: Array<[AgentKey, Agent]> = [
+    [
+      "market",
+      (c) =>
+        runMarketAgent({ brief: c.brief }, c, { mode: textMode, runId, audit }).then(
+          toMarketRunResultSlice,
+        ),
+    ],
+    [
+      "sourcing",
+      (c) => {
+        const primary = c.results.opportunities?.find((o) => o.is_primary);
+        const direction = primaryOpportunityToDirection(primary, c);
+        return runSourcingAgent({ brief: c.brief, primary_direction: direction }, c, {
+          mode: textMode,
+          runId,
+          audit,
+        }).then((output) => toSourcingRunResultSlice(output, primary));
+      },
+    ],
+    ["margin", marginAgent],
+    ["listing", (c) => runListingAgent(c, { mode: listingMode, runId, audit })],
+    ["packaging", (c) => runPackagingAgent(c, { imageMode, runId })],
+    ["committee", makeCommitteeAgent(textMode)],
+    ["risk", riskAgent],
   ];
+
+  const agents: Agent[] = keyedAgents.map(([key, agent]) =>
+    audit ? withAuditEnvelope(key, agent, runId, audit, textMode) : agent,
+  );
 
   const { results } = await runPipeline(agents, ctx);
 
