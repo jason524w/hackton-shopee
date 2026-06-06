@@ -1,0 +1,31 @@
+export const UNSUPPORTED_PRODUCT_CLAIMS = [
+  "super suction",
+  "strong suction",
+  "industrial grade",
+  "medical grade",
+  "certified safe",
+  "safety certified",
+  "guaranteed deep clean",
+  "hepa",
+  "kills germs",
+  "removes mites",
+  "waterproof",
+  "wet and dry",
+  "wet mess",
+  "floor cleaner",
+  "car vacuum",
+  "sofa vacuum",
+  "official",
+  "local stock",
+  "local warranty",
+  "ce",
+  "ul",
+  "psb",
+];
+
+export const AFFIRMATIVE_PROMPT_REVIEW_TERMS = [
+  "super suction",
+  "industrial grade",
+  "certified safe",
+  "wet mess",
+];
