@@ -20,6 +20,10 @@ yarn-debug.log*
 yarn-error.log*
 *.log
 
+# sea launch ai — audit snapshots & live-generated images (not committed)
+.runs/
+public/generated/
+
 # os / editor
 .DS_Store
 .vscode/

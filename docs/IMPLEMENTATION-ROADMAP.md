@@ -1437,9 +1437,115 @@ Backend is MVP-ready when:
 - Seven agents appear in `agents[]`.
 - Risk evidence aggregates multiple checkpoints.
 - Mini Desk Vacuum primary decision is Watch.
-- Margin story matches demo.
+- Margin story matches demo (base ~28%, bad case ~12%).
 - Live image generation works or falls back visibly.
 - Audit endpoint can show tool calls and schema results.
 - All harness assertions pass.
 - Team can replay a run from audit snapshots.
 
+Demo / frontend is MVP-ready when:
+
+- `node scripts/check-contract.mjs` passes (7 agents agree across `result.ts`, `result.schema.json`, `mock-result.json`).
+- `/api/run?mock=1` returns instantly.
+- `/api/run?images=0` runs the text pipeline with a prompt-only Packaging Agent.
+- Risk Agent flags Mini Desk Vacuum exaggerated suction and electrical/USB safety review.
+- Committee Agent deterministically returns `Watch` for Mini Desk Vacuum.
+- War Room shows 7 agents with the Risk checkpoint timeline.
+- Listing Studio shows Shopee fields, Packaging prompts, generated images, compliance notes, and copyable JSON.
+
+## 16. Environment Variables
+
+`.env.example` is the source of truth for required config; copy it to `.env.local`
+(`cp .env.example .env.local`). Target shape for the 7-agent + image + audit pipeline:
+
+```txt
+OPENAI_API_KEY=
+OPENAI_TEXT_MODEL=gpt-5.5
+OPENAI_IMAGE_MODEL=gpt-image-2
+DEMO_MOCK_ONLY=false
+LIVE_IMAGE_GENERATION=true
+PROVIDER_MODE=fixture
+AUDIT_STORAGE=local
+```
+
+Notes:
+
+- `DEMO_MOCK_ONLY=true` forces `/api/run` to behave like `?mock=1` for an emergency demo
+  (the永不可移除的安全网, see CLAUDE.md 铁律 3).
+- `LIVE_IMAGE_GENERATION=false` makes the Packaging Agent dry-run prompts and use fallback
+  images; equivalent in spirit to `/api/run?images=0`.
+- `PROVIDER_MODE=fixture` means Shopee / 1688 data comes from `seed/`, while OpenAI text and
+  image calls can still be live.
+- `AUDIT_STORAGE=local` writes audit snapshots under the local audit directory (see §10).
+
+## 17. Open-Source / Low-Work Dependencies
+
+Use these to reduce build time:
+
+- Next.js App Router for API routes and pages.
+- shadcn/ui dashboard blocks for frontend scaffolding.
+- Tailwind for styling.
+- Recharts for margin and ROI charts.
+- OpenAI official JS SDK for Responses API and image generation.
+- Zod for agent input/output schemas.
+- `zod-to-json-schema` or hand-authored JSON schema for Structured Outputs.
+- Vitest for deterministic margin, committee and harness tests.
+- Ajv for stronger runtime contract validation once dependencies exist
+  (today `scripts/check-contract.mjs` is zero-dependency on purpose).
+- `nanoid` or `crypto.randomUUID()` for `audit_run_id`.
+
+Avoid for MVP (consistent with docs/MVP-SCOPE.md "不做"):
+
+- LangChain / CrewAI orchestration.
+- A full workflow engine.
+- A database dependency before the demo path is stable.
+- Real Shopee write-back.
+
+## 18. Golden Demo Script
+
+The on-stage run, end to end:
+
+1. Seller opens Sea Launch AI.
+2. Brief is prefilled:
+   - target market: Singapore
+   - platform: Shopee
+   - product: Mini Desk Vacuum
+   - target margin: 30%
+   - risk appetite: balanced
+3. User clicks run.
+4. War Room lights up:
+   - Market finds demand and price band.
+   - Sourcing finds low-price suppliers and packaging dimensions.
+   - Margin calculates base around 28%, bad case around 12%.
+   - Risk flags the suction claim and USB / electrical review.
+   - Listing creates safe Shopee fields.
+   - Packaging generates localized prompts and live images.
+   - Committee gives Watch.
+5. Opportunity Board shows:
+   - Mini Desk Vacuum: Watch
+   - Cable organizer: Go (or a safer comparison if present)
+   - Risky product: Reject
+6. Listing Studio shows:
+   - editable Shopee fields
+   - safe title and description
+   - generated image previews
+   - compliance notes
+   - copyable JSON
+7. Audit view shows:
+   - tool calls
+   - OpenAI response ids
+   - image generation metadata
+   - risk checkpoints
+
+The story is not "AI wrote a listing." The story is:
+
+```txt
+AI acted like a small commerce company:
+market found demand,
+sourcing found supply,
+finance found margin sensitivity,
+risk stopped unsafe overconfidence,
+listing prepared the shelf,
+packaging made Shopee-ready visuals,
+committee made the business decision.
+```
