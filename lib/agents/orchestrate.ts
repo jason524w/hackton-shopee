@@ -14,6 +14,7 @@
 import type { AgentKey, Brief, Committee, RunResult, SelectedListing } from "../../contract/result";
 import { createAuditRunId, type AuditSink } from "../agent-runtime/audit";
 import type { AgentRunMode } from "../agent-runtime/run-agent";
+import { resolveAuditRoot } from "./audit-root";
 import {
   createSeedBrowserRetrievalProvider,
   createSeedFxProvider,
@@ -36,8 +37,10 @@ import {
 } from "./sourcing";
 import { assertValidRunResult, CANONICAL_AGENT_ORDER } from "./validate-run-result";
 
-/** Where FileAuditSink persists per-agent snapshots; read back by GET /api/runs/:id/audit. */
-export const AUDIT_ROOT_DIR = ".runs";
+// Absolute, writable root the FileAuditSink persists per-agent snapshots under;
+// read back by GET /api/runs/:id/audit. Falls back to a tmp dir on serverless where
+// the project directory is read-only. See resolveAuditRoot.
+export const AUDIT_ROOT_DIR = resolveAuditRoot();
 
 export interface OrchestrationOptions {
   /** Text agents (market/sourcing/listing): "live" calls OpenAI, "fixture" uses seed data. */
