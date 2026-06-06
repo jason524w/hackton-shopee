@@ -66,6 +66,9 @@ net_margin = net_profit / selling_price
 
 权重:profit 30% · demand 25% · compliance 20% · fulfillment 15% · packaging 10%。
 
+> ⚠️ **#14 实现为 pure-A**:**LLM 定 Go/Watch/Reject**,以上加权/硬拦截降级为**证据 + 失败兜底**;
+> "高风险不能 Go" 是软约束(skill + eval,非代码硬闸)。权威见 [design/committee.md](design/committee.md)。
+
 硬性拦截(直接 Reject / Human Review):禁售限售、品牌IP侵权、图文不符、
 履约无法满足平台承诺、关键字段缺失。
 
