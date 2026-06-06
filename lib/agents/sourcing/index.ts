@@ -284,7 +284,7 @@ function mergePrimaryOpportunity(current: Opportunity, output: SourcingOutput): 
   };
 }
 
-function primaryOpportunityToDirection(primary: Opportunity | undefined, ctx: AgentContext): MarketDirection {
+export function primaryOpportunityToDirection(primary: Opportunity | undefined, ctx: AgentContext): MarketDirection {
   return {
     id: primary?.id ?? "opp_desk_vacuum",
     is_primary: true,
