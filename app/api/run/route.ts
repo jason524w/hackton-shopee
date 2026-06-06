@@ -6,6 +6,7 @@ import type { Brief } from "../../../contract/result";
 import { FileAuditSink, createAuditRunId } from "../../../lib/agent-runtime/audit";
 import { AUDIT_ROOT_DIR, runOrchestration } from "../../../lib/agents/orchestrate";
 import { ContractViolationError } from "../../../lib/agents/validate-run-result";
+import { DEFAULT_BRIEF } from "./default-brief";
 
 export const runtime = "nodejs";
 
@@ -64,19 +65,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     );
   }
 }
-
-const DEFAULT_BRIEF: Brief = {
-  target_market: "Singapore",
-  target_platform: "Shopee",
-  seller_type: "light-asset reseller",
-  product_intent: "mini desk vacuum",
-  category: "Home & Living",
-  budget: 2000,
-  target_margin: 0.25,
-  max_fulfillment_days: 7,
-  risk_appetite: "balanced",
-  language: "en",
-};
 
 // The brief is optional in the body — an empty POST falls back to the demo brief so
 // the endpoint is curl-able and the frontend can drive it with a partial brief.
