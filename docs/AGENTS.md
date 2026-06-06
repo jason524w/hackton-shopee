@@ -51,16 +51,17 @@
 - **判断**:高风险→只能 human review;中风险→可生成但带 warning;低风险→可 Go。
 - **Demo 关键**:对吸尘器必须输出「⚠ 夸大吸力 / 电器安全需人工复核」。
 
-## 5. `listing` — Listing Agent
-- **职责**:把 primary 候选转成 Shopee 可上架字段(标题/描述/SKU/属性/物流)。
-- **输入**:selected product、市场、类目、recommended_price、stock、规格、`risk` 的约束。
-- **输出**:`selected_listing.shopee`(完整字段)+ bullet_points + missing_fields。
-- **判断**:必填字段缺 → 不能标 ready;Risk 有 warning → 必须写进 listing compliance。
-- **约束**:按 Risk 改写卖点,去掉夸大词(super suction / industrial / certified 等)。
+## 5. `listing` — Listing Ranker Agent
+- **职责**:用工具证据对候选商品做粗排/精排和筛选,决定哪个商品进入 Packaging handoff;不负责最终上架。
+- **输入**:opportunities、市场/类目、margin、货源/物流/FX、Shopee SG 规则、近期/本地 market context、`risk` 约束。
+- **工具**:`shopee.searchProducts`、`sourcing1688.searchOffers/getOfferDetail`、`shipping.estimateCrossBorder`、`fx.convert`、`shopee.getPolicyRules`、Singapore market context。
+- **输出**:内部 `ranked_ids`、factor scores、filters、tradeoffs + 给 Packaging 的 `selected_listing` handoff 外壳。
+- **判断**:LLM 不是数据源,只能基于工具结果做 tradeoff;硬拦截先过滤;上游 primary/用户选择若未硬拦截,可保留进入 Packaging 并带 warning。
+- **约束**:不生成最终上架、不生成图片;禁止把模型训练偏好当成新加坡近期趋势证据。
 
 ## 6. `packaging` — Packaging Agent
-- **职责**:本地化包装 + 商品图(hero/lifestyle/feature)prompt 生成、live 生成与图片合规。
-- **输入**:listing output、市场、竞品风格、产品规格、`risk` 约束、可选 source 图。
+- **职责**:接收 Listing Ranker 的 handoff,完成 Shopee-ready 上架包文案、本地化包装 + 商品图(hero/lifestyle/feature)prompt 生成、live 生成与图片合规。
+- **输入**:selected_listing handoff、市场、竞品风格、产品规格、`risk` 约束、可选 source 图。
 - **工具**:`openaiImage.generate/edit/checkCompliance`、`risk.checkpoint("packaging")`。
 - **输出**:`selected_listing.images[]`(hero/lifestyle/feature + prompt + compliance)+ 本地化卖点/风格说明。
 - **判断**:prompt 只用真实规格、不暗示不存在的功能/认证;feature 图与 listing 规格逐项对齐;可标 `needs_review`。
