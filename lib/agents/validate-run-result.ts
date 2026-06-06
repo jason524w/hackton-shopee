@@ -1,0 +1,133 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
+export const CANONICAL_AGENT_ORDER = [
+  "market",
+  "sourcing",
+  "margin",
+  "risk",
+  "listing",
+  "packaging",
+  "committee",
+] as const;
+
+interface SchemaNode {
+  $ref?: string;
+  type?: string | string[];
+  enum?: unknown[];
+  minimum?: number;
+  maximum?: number;
+  properties?: Record<string, SchemaNode>;
+  required?: string[];
+  items?: SchemaNode;
+  $defs?: Record<string, SchemaNode>;
+}
+
+let cachedSchema: SchemaNode | null = null;
+
+function loadSchema(): SchemaNode {
+  if (!cachedSchema) {
+    const raw = readFileSync(join(process.cwd(), "contract", "result.schema.json"), "utf8");
+    cachedSchema = JSON.parse(raw) as SchemaNode;
+  }
+  return cachedSchema;
+}
+
+function resolveRef(schema: SchemaNode, ref: string): SchemaNode {
+  return ref
+    .replace("#/$defs/", "")
+    .split("/")
+    .reduce<SchemaNode>(
+      (node, key) => (node as unknown as Record<string, SchemaNode>)[key],
+      schema.$defs as unknown as SchemaNode,
+    );
+}
+
+function check(schema: SchemaNode, node: unknown, sch: SchemaNode | undefined, path: string, errors: string[]): void {
+  if (!sch) {
+    return;
+  }
+  if (sch.$ref) {
+    check(schema, node, resolveRef(schema, sch.$ref), path, errors);
+    return;
+  }
+
+  const types = sch.type ? ([] as string[]).concat(sch.type) : null;
+  if (sch.enum && !sch.enum.includes(node)) {
+    errors.push(`${path}: ${JSON.stringify(node)} not in enum [${sch.enum.join(", ")}]`);
+  }
+
+  if (types) {
+    const actualType = Array.isArray(node) ? "array" : node === null ? "null" : typeof node;
+    const ok = types.some((type) => type === actualType);
+    if (!ok) {
+      errors.push(`${path}: expected ${types.join("|")}, got ${actualType}`);
+    }
+  }
+
+  if (typeof node === "number") {
+    if (!Number.isFinite(node)) {
+      errors.push(`${path}: expected finite number, got ${node}`);
+    } else {
+      if (sch.minimum !== undefined && node < sch.minimum) {
+        errors.push(`${path}: ${node} < minimum ${sch.minimum}`);
+      }
+      if (sch.maximum !== undefined && node > sch.maximum) {
+        errors.push(`${path}: ${node} > maximum ${sch.maximum}`);
+      }
+    }
+  }
+
+  if (node === null || typeof node !== "object") {
+    return;
+  }
+
+  if (sch.type === "object" || sch.properties || sch.required) {
+    for (const key of sch.required ?? []) {
+      if (!(key in (node as Record<string, unknown>))) {
+        errors.push(`${path}: missing required "${key}"`);
+      }
+    }
+
+    for (const [key, value] of Object.entries(node as Record<string, unknown>)) {
+      if (sch.properties?.[key]) {
+        check(schema, value, sch.properties[key], `${path}.${key}`, errors);
+      }
+    }
+  }
+
+  if (sch.type === "array" && sch.items && Array.isArray(node)) {
+    node.forEach((item, index) => check(schema, item, sch.items, `${path}[${index}]`, errors));
+  }
+}
+
+export function validateRunResult(value: unknown): string[] {
+  const schema = loadSchema();
+  const errors: string[] = [];
+  check(schema, value, schema, "$", errors);
+
+  const agents = (value as { agents?: { key?: string }[] } | null)?.agents ?? [];
+  const got = agents.map((agent) => agent.key);
+  if (got.length !== CANONICAL_AGENT_ORDER.length || CANONICAL_AGENT_ORDER.some((key, index) => got[index] !== key)) {
+    errors.push(`agents[]: expected exactly [${CANONICAL_AGENT_ORDER.join(", ")}], got [${got.join(", ")}]`);
+  }
+
+  return errors;
+}
+
+export function assertValidRunResult(value: unknown): void {
+  const errors = validateRunResult(value);
+  if (errors.length) {
+    throw new ContractViolationError(errors);
+  }
+}
+
+export class ContractViolationError extends Error {
+  readonly errors: string[];
+
+  constructor(errors: string[]) {
+    super(`RunResult failed contract check (${errors.length}):\n  - ${errors.join("\n  - ")}`);
+    this.name = "ContractViolationError";
+    this.errors = errors;
+  }
+}
