@@ -41,7 +41,7 @@ export interface ShippingScenarioOutput {
 export interface SourcingToolSnapshot {
   tool_name: string;
   provider: string;
-  mode: "live" | "seed";
+  mode: "live" | "seed" | "snapshot" | "browser";
   fixture_id: string;
   source_url: string;
   captured_at: string;
@@ -128,7 +128,7 @@ const agentResultSchema = makeObjectSchema({
 const snapshotSchema = makeObjectSchema({
   tool_name: { type: "string" },
   provider: { type: "string" },
-  mode: { enum: ["live", "seed"] },
+  mode: { enum: ["live", "seed", "snapshot", "browser"] },
   fixture_id: { type: "string" },
   source_url: { type: "string" },
   captured_at: { type: "string" },
@@ -167,4 +167,3 @@ export const sourcingOutputSchema: JsonSchema = makeObjectSchema({
   evidence: { type: "array", items: evidenceSchema },
   tool_snapshots: { type: "array", items: snapshotSchema },
 });
-

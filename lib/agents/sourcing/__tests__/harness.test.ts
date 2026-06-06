@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createNoopRisk, runPipeline, type AgentContext } from "../../contracts";
 import {
+  createSeedBrowserRetrievalProvider,
   createSeedFxProvider,
   createSeedOpenAIImageProvider,
   createSeedShippingProvider,
@@ -10,6 +11,7 @@ import {
 import { marketAgent } from "../../market";
 import { assertOutput, replayFixture } from "../harness";
 import { sourcingAgent } from "../index";
+import { createSourcingTools } from "../tools";
 
 const brief = {
   target_market: "Singapore",
@@ -34,6 +36,7 @@ function createContext(): AgentContext {
       shipping: createSeedShippingProvider(),
       fx: createSeedFxProvider(),
       openaiImage: createSeedOpenAIImageProvider(),
+      browser: createSeedBrowserRetrievalProvider(),
     },
     risk: createNoopRisk(),
   };
@@ -62,5 +65,15 @@ describe("sourcing harness", () => {
     expect(result.results.agents?.map((agent) => agent.key)).toEqual(["market", "sourcing"]);
     expect(primary?.source_price).toBeGreaterThan(0);
     expect(primary?.fulfillment_days).toBe(12);
+  });
+
+  it("exposes controlled browser retrieval tools for no-API sourcing evidence", () => {
+    const toolNames = createSourcingTools(createContext().providers).map((tool) => tool.name);
+
+    expect(toolNames).toContain("browser_retrieve_page_snapshot");
+    expect(toolNames).toContain("browser_extract_1688_search");
+    expect(toolNames).toContain("browser_extract_1688_offer");
+    expect(toolNames).toContain("browser_refresh_offer_stock");
+    expect(toolNames).toContain("browser_extract_supplier_signals");
   });
 });

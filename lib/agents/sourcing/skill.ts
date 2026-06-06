@@ -5,11 +5,14 @@ export const sourcingSkill: AgentSkill = {
   role: "Customer Service / Supplier Operations",
   version: "2026-06-06.1",
   instructions:
-    "Find a low-cost, fulfillable supplier for the primary market direction. Use only allowed sourcing, FX, and shipping tools. Select a supplier based on source price, MOQ, stock, dispatch time, and complete package specs. Return structured supplier candidates, selected source price in SGD, package dimensions, shipping scenarios, fulfillment estimate, and warnings.",
+    "Find a low-cost, fulfillable supplier for the primary market direction. Use only allowed sourcing, FX, shipping, and controlled browser retrieval tools. Prefer provider API/seed tools; use browser retrieval only to supplement missing 1688 offer, stock, and supplier profile evidence. Select a supplier based on source price, MOQ, stock, dispatch time, complete package specs, and supplier stability signals. Return structured supplier candidates, selected source price in SGD, package dimensions, shipping scenarios, fulfillment estimate, and warnings.",
   policies: [
     "Do not select the cheapest supplier if package weight or dimensions are missing.",
     "Always convert source price through the FX provider instead of hard-coding rates.",
     "Always estimate cross-border shipping through the shipping provider instead of inventing freight cost.",
+    "Browser retrieval is a controlled provider tool; do not request unsupported domains, do not ask for cookies or credentials, and do not treat browser-extracted stock as guaranteed inventory.",
+    "Supplier stability, negotiation, and stock refresh signals must be labeled with their source snapshot and confidence.",
+    "When using page snapshots, quote only normalized visible evidence such as supplier name, price ladder, MOQ, stock, package specs, source URL, and captured_at.",
     "Warn when base fulfillment reaches the seller's max days or high-case fulfillment exceeds it.",
   ],
   scoringRules: [

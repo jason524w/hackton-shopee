@@ -1,6 +1,11 @@
 import type { AgentTool } from "../../agent-runtime/tool-runner";
 import { makeObjectSchema } from "../../agent-runtime/schemas";
 import type {
+  Browser1688OfferInput,
+  Browser1688SearchInput,
+  BrowserOfferStockInput,
+  BrowserRetrievePageSnapshotInput,
+  BrowserSupplierSignalsInput,
   FxConvertInput,
   ShippingEstimateInput,
   SourcingOfferDetailInput,
@@ -60,6 +65,72 @@ export function createSourcingTools(providers: AgentProviders): AgentTool[] {
         return providers.shipping.estimateCrossBorder(input as ShippingEstimateInput);
       },
     },
+    {
+      name: "browser_retrieve_page_snapshot",
+      description:
+        "Capture a controlled browser page snapshot for an allowed sourcing URL. Returns redacted text excerpt, links, source metadata, and audit snapshot ids.",
+      parameters: makeObjectSchema({
+        url: { type: "string" },
+        purpose: {
+          enum: ["sourcing_1688_search", "sourcing_1688_offer", "sourcing_supplier_profile"],
+        },
+      }),
+      execute(input: unknown) {
+        return providers.browser.retrievePageSnapshot(input as BrowserRetrievePageSnapshotInput);
+      },
+    },
+    {
+      name: "browser_extract_1688_search",
+      description:
+        "Use the controlled browser retrieval provider to extract 1688 search offer signals when direct API access is unavailable.",
+      parameters: makeObjectSchema({
+        query: { type: "string" },
+        limit: { type: "number", minimum: 1, maximum: 20 },
+      }),
+      execute(input: unknown) {
+        return providers.browser.extract1688Search(input as Browser1688SearchInput);
+      },
+    },
+    {
+      name: "browser_extract_1688_offer",
+      description:
+        "Use the controlled browser retrieval provider to extract a 1688 offer page by offer id or URL.",
+      parameters: makeObjectSchema(
+        {
+          offerId: { type: "string" },
+          url: { type: "string" },
+        },
+        [],
+      ),
+      execute(input: unknown) {
+        return providers.browser.extract1688Offer(input as Browser1688OfferInput);
+      },
+    },
+    {
+      name: "browser_refresh_offer_stock",
+      description:
+        "Use the controlled browser retrieval provider to refresh currently visible stock for a 1688 offer.",
+      parameters: makeObjectSchema({
+        offerId: { type: "string" },
+      }),
+      execute(input: unknown) {
+        return providers.browser.refreshOfferStock(input as BrowserOfferStockInput);
+      },
+    },
+    {
+      name: "browser_extract_supplier_signals",
+      description:
+        "Use the controlled browser retrieval provider to extract supplier stability and negotiation signals.",
+      parameters: makeObjectSchema(
+        {
+          offerId: { type: "string" },
+          supplierName: { type: "string" },
+        },
+        [],
+      ),
+      execute(input: unknown) {
+        return providers.browser.extractSupplierSignals(input as BrowserSupplierSignalsInput);
+      },
+    },
   ];
 }
-

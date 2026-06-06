@@ -48,7 +48,7 @@ export interface MarketDirection {
 export interface ToolSnapshot {
   tool_name: string;
   provider: string;
-  mode: "live" | "seed";
+  mode: "live" | "seed" | "snapshot" | "browser";
   fixture_id: string;
   source_url: string;
   captured_at: string;
@@ -127,7 +127,7 @@ const directionSchema = makeObjectSchema({
 const toolSnapshotSchema = makeObjectSchema({
   tool_name: { type: "string" },
   provider: { type: "string" },
-  mode: { enum: ["live", "seed"] },
+  mode: { enum: ["live", "seed", "snapshot", "browser"] },
   fixture_id: { type: "string" },
   source_url: { type: "string" },
   captured_at: { type: "string" },
@@ -148,4 +148,3 @@ export const marketOutputSchema: JsonSchema = makeObjectSchema({
   rating_distribution: ratingDistributionSchema,
   tool_snapshots: { type: "array", items: toolSnapshotSchema },
 });
-

@@ -12,3 +12,10 @@ export type * from "./fx/types";
 
 export { openaiImageProvider, createSeedOpenAIImageProvider } from "./openai-image/index";
 export type * from "./openai-image/types";
+
+export {
+  browserRetrievalProvider,
+  createChromeBrowserRetrievalProvider,
+  createSeedBrowserRetrievalProvider,
+} from "./browser-retrieval/index";
+export type * from "./browser-retrieval/types";

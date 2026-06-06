@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createNoopRisk, type AgentContext } from "../../contracts";
 import {
+  createSeedBrowserRetrievalProvider,
   createSeedFxProvider,
   createSeedOpenAIImageProvider,
   createSeedShippingProvider,
@@ -8,6 +9,7 @@ import {
   createSeedSourcing1688Provider,
 } from "../../../providers";
 import { assertOutput, replayFixture } from "../harness";
+import { createMarketTools } from "../tools";
 
 const brief = {
   target_market: "Singapore",
@@ -32,6 +34,7 @@ function createContext(): AgentContext {
       shipping: createSeedShippingProvider(),
       fx: createSeedFxProvider(),
       openaiImage: createSeedOpenAIImageProvider(),
+      browser: createSeedBrowserRetrievalProvider(),
     },
     risk: createNoopRisk(),
   };
@@ -49,5 +52,14 @@ describe("market harness", () => {
     expect(output.price_band.high).toBeGreaterThanOrEqual(output.price_band.low);
     expect(output.agent_result.key_judgment).not.toMatch(/monthly sales|units sold per month/i);
     expect(output.tool_snapshots.every((snapshot) => snapshot.fixture_id)).toBe(true);
+  });
+
+  it("exposes controlled browser retrieval tools for no-API market evidence", () => {
+    const toolNames = createMarketTools(createContext().providers).map((tool) => tool.name);
+
+    expect(toolNames).toContain("browser_retrieve_page_snapshot");
+    expect(toolNames).toContain("browser_extract_shopee_search");
+    expect(toolNames).toContain("browser_extract_shopee_ads_signals");
+    expect(toolNames).toContain("browser_extract_web_trend");
   });
 });
