@@ -1,159 +1,151 @@
 {
-  "fixture_id": "shopee-sg-mini-desk-vacuum-search-2026-06-06",
+  "fixture_id": "market-shopee-sg-mini-desk-vacuum-search-2026-06-06",
   "captured_at": "2026-06-06T00:00:00+08:00",
+  "market": "Singapore",
+  "platform": "Shopee",
+  "query": "desk vacuum",
   "source_url": "https://shopee.sg/list/desk%20vacuum",
   "source_urls": [
     "https://shopee.sg/list/desk%20vacuum",
     "https://shopee.sg/list/mini%20vacuum%20cleaner",
+    "https://shopee.sg/list/Desktop/vacuum%20cleaner",
     "https://shopee.sg/%E3%80%90SG-Seller%E3%80%91Portable-Mini-Desktop-Cleaner-Desk-Vacuum-Cleaner-Dust-Collector-for-Home-Office-School-Keyboard-Cleaning-i.509512140.15123682897"
   ],
-  "market": "Singapore",
   "category": "Home Appliances > Small Household Appliances > Portable / Handheld Vacuum Cleaner",
-  "capture_notes": [
-    "Rows were transcribed from crawled Shopee SG list/product pages.",
-    "Shopee list snippets exposed price and rating for most rows but not product review counts, so review_count is 0 when not visible.",
-    "Do not treat these rows as monthly sales, sold units, or verified stock."
-  ],
+  "field_notes": {
+    "review_count": "0 means review count was not visible in the crawled search snippets; see review_count_observed.",
+    "sales_label": "Only visible sale badges are recorded; no monthly sales inference is made."
+  },
   "products": [
     {
+      "id": "market_row_sg_desk_vac_001",
       "item_id": "sg-desk-vac-001",
       "title": "Portable Mini Desktop Cleaner Desk Vacuum Cleaner Dust Collector for Home Office School Keyboard Cleaning",
       "price_sgd": 6.9,
       "rating": 4.7,
       "review_count": 0,
       "review_count_observed": false,
-      "sold_label": "not visible in crawled search snippet",
+      "sales_label": "not visible",
       "shop_type": "marketplace",
-      "image_url": "/seed/images/desk-vacuum-hero.svg",
       "product_url": "https://shopee.sg/%E3%80%90SG-Seller%E3%80%91Portable-Mini-Desktop-Cleaner-Desk-Vacuum-Cleaner-Dust-Collector-for-Home-Office-School-Keyboard-Cleaning-i.509512140.15123682897",
-      "category_id": 100636,
-      "evidence_label": "Shopee SG listing row: SGD 6.90 entry price, 4.7 rating, 12 variations visible on product page"
+      "evidence_label": "SGD 6.90 entry price, 4.7 rating, 12 variations visible on product page"
     },
     {
+      "id": "market_row_sg_desk_vac_002",
       "item_id": "sg-desk-vac-002",
       "title": "Xiaomi NUSIGN Desktop Cleaner Desk Cleaner Lightweight Durable Vacuum Cleaner for School Classroom Office",
       "price_sgd": 14.16,
       "rating": 4.8,
       "review_count": 0,
       "review_count_observed": false,
-      "sold_label": "not visible in crawled search snippet",
+      "sales_label": "not visible",
       "shop_type": "marketplace",
-      "image_url": "/seed/images/desk-vacuum-lifestyle.svg",
       "product_url": "https://shopee.sg/list/desk%20vacuum",
-      "category_id": 100636,
-      "evidence_label": "Shopee SG desk vacuum list row: Xiaomi/NUSIGN school-office positioning at SGD 14.16"
+      "evidence_label": "Desk vacuum list row, school-office positioning"
     },
     {
+      "id": "market_row_sg_desk_vac_003",
       "item_id": "sg-desk-vac-003",
       "title": "Portable USB Home Cleaner Wireless Cleaner Mini Handheld Desktop Vacuum Cleaner for Desk Keyboard Cleaning",
       "price_sgd": 10.78,
       "rating": 4.8,
       "review_count": 0,
       "review_count_observed": false,
-      "sold_label": "not visible in crawled search snippet",
+      "sales_label": "not visible",
       "shop_type": "marketplace",
-      "image_url": "/seed/images/desk-vacuum-feature.svg",
       "product_url": "https://shopee.sg/list/desk%20vacuum",
-      "category_id": 100636,
-      "evidence_label": "Shopee SG desk vacuum list row: USB wireless desk/keyboard cleaner at SGD 10.78"
+      "evidence_label": "USB wireless desk/keyboard cleaner at SGD 10.78"
     },
     {
+      "id": "market_row_sg_desk_vac_004",
       "item_id": "sg-desk-vac-004",
       "title": "Mini Cute Cartoon Vacuum Cleaner Dust Cleaning Creative Portable Desktop Corner Dirt Sweeper Vacuum Cleaner For Desk Keyboard Office",
       "price_sgd": 15.0,
       "rating": 4.8,
       "review_count": 0,
       "review_count_observed": false,
-      "sold_label": "free gift visible in crawled search snippet",
+      "sales_label": "free gift badge visible",
       "shop_type": "marketplace",
-      "image_url": "/seed/images/desk-vacuum-hero.svg",
       "product_url": "https://shopee.sg/list/desk%20vacuum",
-      "category_id": 100636,
-      "evidence_label": "Shopee SG desk vacuum list row: cute/cartoon giftable positioning at SGD 15.00"
+      "evidence_label": "Cute/cartoon giftable positioning at SGD 15.00"
     },
     {
+      "id": "market_row_sg_desk_vac_005",
       "item_id": "sg-desk-vac-005",
       "title": "Mini Cute Cartoon Vacuum Cleaner Dust Cleaning Creative Portable Desktop Corner Dirt Sweeper Vacuum Cleaner For Desk Keyboard Office",
       "price_sgd": 13.51,
       "rating": 4.8,
       "review_count": 0,
       "review_count_observed": false,
-      "sold_label": "free gift visible in crawled search snippet",
+      "sales_label": "free gift badge visible",
       "shop_type": "marketplace",
-      "image_url": "/seed/images/desk-vacuum-lifestyle.svg",
       "product_url": "https://shopee.sg/list/desk%20vacuum",
-      "category_id": 100636,
-      "evidence_label": "Shopee SG desk vacuum list row: same cute angle with lower visible price at SGD 13.51"
+      "evidence_label": "Same cute angle with lower visible price at SGD 13.51"
     },
     {
+      "id": "market_row_sg_desk_vac_006",
       "item_id": "sg-desk-vac-006",
       "title": "Desk Vacuum Cleaner Eraser Dust Vacuum Tabletop Vacuum Cleaner Cordless Energy Saving Design",
       "price_sgd": 9.5,
       "rating": 4.8,
       "review_count": 0,
       "review_count_observed": false,
-      "sold_label": "not visible in crawled search snippet",
+      "sales_label": "not visible",
       "shop_type": "marketplace",
-      "image_url": "/seed/images/desk-vacuum-feature.svg",
       "product_url": "https://shopee.sg/list/desk%20vacuum",
-      "category_id": 100636,
-      "evidence_label": "Shopee SG desk vacuum list row: eraser-dust/tabletop use case at SGD 9.50"
+      "evidence_label": "Eraser-dust/tabletop use case at SGD 9.50"
     },
     {
+      "id": "market_row_sg_desk_vac_007",
       "item_id": "sg-desk-vac-007",
       "title": "Xiaomi NUSIGN Desktop Cleaner School Classroom Office Desk Cleaner Portable Lightweight Durable Vacuum Cleaner",
       "price_sgd": 13.08,
       "rating": 3.3,
       "review_count": 0,
       "review_count_observed": false,
-      "sold_label": "not visible in crawled search snippet",
+      "sales_label": "not visible",
       "shop_type": "marketplace",
-      "image_url": "/seed/images/desk-vacuum-hero.svg",
       "product_url": "https://shopee.sg/list/desk%20vacuum",
-      "category_id": 100636,
-      "evidence_label": "Shopee SG desk vacuum list row: lower-rated NUSIGN variant at SGD 13.08"
+      "evidence_label": "Lower-rated NUSIGN variant at SGD 13.08"
     },
     {
+      "id": "market_row_sg_desk_vac_008",
       "item_id": "sg-desk-vac-008",
       "title": "Desk Vacuum Cleaner Home Tabletop Duster Portable High Suction Desktop Vacuum Cleaner for Home Travel School",
       "price_sgd": 16.72,
       "rating": 5.0,
       "review_count": 0,
       "review_count_observed": false,
-      "sold_label": "not visible in crawled search snippet",
+      "sales_label": "not visible",
       "shop_type": "marketplace",
-      "image_url": "/seed/images/desk-vacuum-lifestyle.svg",
       "product_url": "https://shopee.sg/list/desk%20vacuum",
-      "category_id": 100636,
-      "evidence_label": "Shopee SG desk vacuum list row: high-suction claim appears and should be reviewed"
+      "evidence_label": "High-suction claim appears and should be reviewed"
     },
     {
+      "id": "market_row_sg_desk_vac_009",
       "item_id": "sg-desk-vac-009",
       "title": "Desk Vacuum Cleaner Mini Table Dust Vacuum Cleaner Rechargeable Table Dust Sweeper Handheld Dust Cleaner Table Easy Install Easy to Use - White",
       "price_sgd": 11.0,
       "rating": 4.7,
       "review_count": 0,
       "review_count_observed": false,
-      "sold_label": "any 2 enjoy 2% off visible in crawled search snippet",
+      "sales_label": "any 2 enjoy 2% off",
       "shop_type": "marketplace",
-      "image_url": "/seed/images/desk-vacuum-feature.svg",
       "product_url": "https://shopee.sg/list/desk%20vacuum",
-      "category_id": 100636,
-      "evidence_label": "Shopee SG desk vacuum list row: rechargeable table sweeper at SGD 11.00"
+      "evidence_label": "Rechargeable table sweeper at SGD 11.00"
     },
     {
+      "id": "market_row_sg_desk_vac_010",
       "item_id": "sg-desk-vac-010",
       "title": "Mini Portable Desktop Vacuum Cleaner School Office Supplies Birthday Gift",
       "price_sgd": 8.59,
       "rating": 5.0,
       "review_count": 0,
       "review_count_observed": false,
-      "sold_label": "5.5 price badge visible in crawled search snippet",
+      "sales_label": "5.5 price badge visible",
       "shop_type": "marketplace",
-      "image_url": "/seed/images/desk-vacuum-hero.svg",
       "product_url": "https://shopee.sg/list/Desktop/vacuum%20cleaner",
-      "category_id": 100636,
-      "evidence_label": "Shopee SG desktop vacuum list row: school/office birthday-gift angle at SGD 8.59"
+      "evidence_label": "School/office birthday-gift angle at SGD 8.59"
     }
   ]
 }

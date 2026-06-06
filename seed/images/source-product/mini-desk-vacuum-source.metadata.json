@@ -1,0 +1,13 @@
+{
+  "fixture_id": "source-product-mini-desk-vacuum-reference-image-2026-06-06",
+  "captured_at": "2026-06-06T00:00:00+08:00",
+  "file": "seed/images/source-product/mini-desk-vacuum-source.png",
+  "source_file": "public/seed/images/desk-vacuum-hero.svg",
+  "source_url": "seed://public/seed/images/desk-vacuum-hero.svg",
+  "usage": "Reference image for Packaging Agent image prompting/editing tests.",
+  "notes": [
+    "Generated from the repo's existing SVG seed asset using macOS Quick Look.",
+    "Not a scraped Shopee or 1688 product photo.",
+    "Use only as a visual placeholder until a licensed source product image is added."
+  ]
+}

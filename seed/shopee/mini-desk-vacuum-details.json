@@ -1,43 +1,55 @@
 {
   "fixture_id": "shopee-sg-mini-desk-vacuum-details-2026-06-06",
   "captured_at": "2026-06-06T00:00:00+08:00",
+  "source_urls": [
+    "https://shopee.sg/%E3%80%90SG-Seller%E3%80%91Portable-Mini-Desktop-Cleaner-Desk-Vacuum-Cleaner-Dust-Collector-for-Home-Office-School-Keyboard-Cleaning-i.509512140.15123682897",
+    "https://shopee.sg/list/desk%20vacuum",
+    "https://shopee.sg/list/Desktop/vacuum%20cleaner"
+  ],
+  "capture_notes": [
+    "Product detail fields mix visible Shopee product-page facts with conservative structured notes for fixture replay.",
+    "Logistics dimensions are fixture estimates for margin/shipping replay, not supplier-verified Shopee logistics data.",
+    "Avoid unsupported suction, battery, HEPA, wet/dry, or certification claims unless the seller verifies them."
+  ],
   "products": [
     {
       "item_id": "sg-desk-vac-001",
-      "title": "Mini Desk Vacuum Cleaner USB Cordless Keyboard Cleaner",
-      "price_sgd": 12.9,
+      "title": "Portable Mini Desktop Cleaner Desk Vacuum Cleaner Dust Collector for Home Office School Keyboard Cleaning",
+      "price_sgd": 6.9,
       "rating": 4.7,
-      "review_count": 186,
-      "sold_label": "seed: visible sales label",
-      "shop_type": "preferred",
+      "review_count": 0,
+      "review_count_observed": false,
+      "sold_label": "not visible in crawled search snippet",
+      "shop_type": "marketplace",
       "image_url": "/seed/images/desk-vacuum-hero.svg",
-      "product_url": "seed://shopee/mini-desk-vacuum-001",
+      "product_url": "https://shopee.sg/%E3%80%90SG-Seller%E3%80%91Portable-Mini-Desktop-Cleaner-Desk-Vacuum-Cleaner-Dust-Collector-for-Home-Office-School-Keyboard-Cleaning-i.509512140.15123682897",
       "category_id": 100636,
-      "evidence_label": "Detailed competitor seed for Mini Desk Vacuum",
-      "description": "Compact mini desk vacuum for dry crumbs, keyboard dust and desktop cleaning. USB rechargeable. Not for wet mess or heavy debris.",
+      "evidence_label": "Detailed competitor seed: SG seller desktop cleaner row with SGD 6.90-11.90 visible price range and 12 variations",
+      "description": "Compact mini desktop cleaner for dry desk crumbs, eraser dust, keyboard gaps, home office, school and stationery use. The crawled page positions it as a small desktop dust collector rather than a full home vacuum.",
       "bullet_points": [
-        "Compact size for desk, keyboard and study table",
-        "USB rechargeable cordless use",
-        "Dry crumbs and light dust only",
-        "Removable bottom dust container"
+        "Compact tabletop format for desk, keyboard and school stationery crumbs",
+        "Entry price band leaves room for a low-risk test listing",
+        "Use dry crumbs and eraser dust scenarios; do not promise wet cleaning",
+        "Visible product page signals include pre-order shipping and 15-day free returns"
       ],
       "attributes": {
-        "Power Source": "USB rechargeable",
-        "Use Case": "Desk and keyboard cleaning",
-        "Material": "ABS plastic",
-        "Color": "White"
+        "Power Source": "Battery or USB-powered, supplier confirmation needed",
+        "Use Case": "Desk, keyboard, eraser dust and light dry crumbs",
+        "Material": "ABS plastic, supplier confirmation needed",
+        "Color": "Assorted variants visible; exact SKU to confirm",
+        "Claim Risk": "High suction and wet/dry claims require evidence"
       },
       "logistics": {
-        "weight_g": 180,
-        "length_cm": 9,
-        "width_cm": 9,
-        "height_cm": 7
+        "weight_g": 220,
+        "length_cm": 10,
+        "width_cm": 10,
+        "height_cm": 8
       },
       "seller_location": "Singapore",
       "style_notes": [
-        "Clean white-background hero image",
-        "Keyboard crumb lifestyle scene",
-        "Simple feature callouts, avoid exaggerated suction claims"
+        "White-background product hero is common and should stay clean",
+        "Lifestyle scene should show desk, keyboard, eraser crumbs or light dry dust",
+        "Feature image should use factual callouts only, avoiding exaggerated suction effects"
       ]
     }
   ]

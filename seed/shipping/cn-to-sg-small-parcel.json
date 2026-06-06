@@ -1,0 +1,41 @@
+{
+  "fixture_id": "shipping-cn-to-sg-small-parcel-2026-06-06",
+  "captured_at": "2026-06-06T00:00:00+08:00",
+  "source_url": "seed://shipping/cn-to-sg-small-parcel",
+  "from": "CN",
+  "to": "SG",
+  "unit": "SGD",
+  "method_family": "cross-border small parcel",
+  "volumetric_divisor": 6000,
+  "rate_card": {
+    "base_fee_sgd": 1.2,
+    "per_100g_sgd": 0.48,
+    "chargeable_weight_rule": "max(actual_weight_g, ceil(length_cm * width_cm * height_cm / 6000)) rounded up to next 100g for fee calculation"
+  },
+  "scenarios": {
+    "low": {
+      "method": "Seed economy cross-border small parcel",
+      "cost_multiplier": 0.85,
+      "days_min": 6,
+      "days_max": 9
+    },
+    "base": {
+      "method": "Seed economy cross-border small parcel",
+      "cost_multiplier": 1.0,
+      "days_min": 6,
+      "days_max": 10
+    },
+    "high": {
+      "method": "Seed economy cross-border small parcel",
+      "cost_multiplier": 1.35,
+      "days_min": 7,
+      "days_max": 13
+    }
+  },
+  "assumptions": [
+    "Estimate for small cross-border parcel from China to Singapore.",
+    "Final rate depends on chosen forwarder and platform logistics program.",
+    "Mini desk vacuum package specs are supplier-confirmation inputs, not seller promises.",
+    "Use the high scenario for stress-testing return and shipping-cost sensitivity."
+  ]
+}

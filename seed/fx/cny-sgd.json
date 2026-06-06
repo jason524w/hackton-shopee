@@ -1,18 +1,34 @@
 {
   "fixture_id": "fx-cny-sgd-2026-06-06",
   "captured_at": "2026-06-06T00:00:00+08:00",
+  "source_urls": [
+    "https://www.forbes.com/advisor/money-transfer/currency-converter/cny-sgd/",
+    "https://www.investing.com/currencies/cny-sgd-historical-data",
+    "https://www.1688wholesale.com/en/1688/china_alibaba_item/608625009903.html"
+  ],
+  "notes": [
+    "Forbes Advisor snippet showed 1 CNY = 0.188453 SGD on 2026-05-23.",
+    "Investing.com snippet showed current CNY/SGD around 0.1884 with previous close 0.1878.",
+    "1688wholesale page exchange table showed 1 SGD = 5.13 CNY, implying about 0.195 SGD/CNY; fixture keeps a conservative 0.1884 for margin."
+  ],
   "rates": [
     {
       "from": "CNY",
       "to": "SGD",
-      "rate": 0.184,
-      "source_url": "seed://fx/cny-sgd"
+      "rate": 0.1884,
+      "source_url": "https://www.investing.com/currencies/cny-sgd-historical-data"
     },
     {
       "from": "SGD",
       "to": "CNY",
-      "rate": 5.435,
-      "source_url": "seed://fx/sgd-cny"
+      "rate": 5.3079,
+      "source_url": "https://www.investing.com/currencies/cny-sgd-historical-data"
+    },
+    {
+      "from": "USD",
+      "to": "CNY",
+      "rate": 6.56,
+      "source_url": "https://www.1688wholesale.com/en/1688/china_alibaba_item/608625009903.html"
     }
   ]
 }

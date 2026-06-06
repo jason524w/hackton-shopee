@@ -1,0 +1,61 @@
+{
+  "fixture_id": "shopee-sg-listing-violations-mini-appliance-2026-06-06",
+  "captured_at": "2026-06-06T00:00:00+08:00",
+  "market": "Singapore",
+  "platform": "Shopee",
+  "source_urls": [
+    "https://cdngarenanow-a.akamaihd.net/shopee/seller/seller_cms/57eedfed7dfd35ddb5700002da951ac0/%5BSG%5D%20Listing%20Violations%20Guide.pdf",
+    "https://help.shopee.sg/portal/4/article/77151",
+    "https://seller.shopee.sg/edu/article/6858/shopee-listing-violation-policy"
+  ],
+  "rules": [
+    {
+      "id": "sg-listing-title-keyword-spam",
+      "title": "Avoid keyword spam in listing title",
+      "severity": "warning",
+      "applies_to": ["title"],
+      "bad_patterns": ["repeated platform keywords", "unrelated brand names", "unrelated product categories"],
+      "safe_guidance": "Keep title focused on mini desk vacuum, desktop cleaner, keyboard dust and dry crumbs. Do not stuff unrelated car, robot, wet/dry, HEPA or branded terms."
+    },
+    {
+      "id": "sg-listing-unverified-suction",
+      "title": "Do not use unverified suction or power claims",
+      "severity": "warning",
+      "applies_to": ["title", "description", "feature_image"],
+      "bad_patterns": ["super suction", "industrial power", "65000Pa", "strongest", "deep clean guaranteed"],
+      "safe_guidance": "Use factual use cases such as dry crumbs, keyboard dust and eraser shavings unless supplier specs support a numeric suction value."
+    },
+    {
+      "id": "sg-listing-wet-dry-mismatch",
+      "title": "Avoid wet/dry or heavy-debris claims unless source product supports them",
+      "severity": "warning",
+      "applies_to": ["title", "description", "image"],
+      "bad_patterns": ["wet and dry", "liquid spills", "bathroom water", "pet hair deep clean"],
+      "safe_guidance": "For the MVP mini desk vacuum, describe dry desktop crumbs and light dust only."
+    },
+    {
+      "id": "sg-listing-certification-claims",
+      "title": "Do not imply safety, HEPA or official certification without documents",
+      "severity": "hard_block",
+      "applies_to": ["description", "feature_image", "attributes"],
+      "bad_patterns": ["certified safe", "SG approved", "HEPA", "H13", "medical grade", "official warranty"],
+      "safe_guidance": "Only include certifications, filtration grades, safety marks or warranty statements when the seller has supplier documentation."
+    },
+    {
+      "id": "sg-listing-image-text-mismatch",
+      "title": "Images must match the listed SKU and claims",
+      "severity": "warning",
+      "applies_to": ["image", "sku", "description"],
+      "bad_patterns": ["showing car vacuum when SKU is desk vacuum", "showing liquid cleanup", "showing branded character without authorization"],
+      "safe_guidance": "Use product visuals that match the selected SKU; hero/lifestyle/feature images should show one compact desk vacuum and dry desk-cleaning contexts."
+    },
+    {
+      "id": "sg-listing-ip-character-risk",
+      "title": "Avoid protected character, logo, or brand usage",
+      "severity": "hard_block",
+      "applies_to": ["title", "image", "brand", "description"],
+      "bad_patterns": ["Pokemon", "Sanrio", "Disney", "Xiaomi-like brand use without authorization"],
+      "safe_guidance": "Use generic color/style descriptions. Do not reference protected brands or characters unless seller authorization is documented."
+    }
+  ]
+}
