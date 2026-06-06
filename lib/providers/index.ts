@@ -4,7 +4,12 @@ export type * from "./shopee/types";
 export { sourcing1688Provider, createSeedSourcing1688Provider } from "./sourcing-1688/index";
 export type * from "./sourcing-1688/types";
 
-export { shippingProvider, createSeedShippingProvider } from "./shipping/index";
+export {
+  shippingProvider,
+  createSeedShippingProvider,
+  createShippingProviderFromEnv,
+  createEasyshipShippingProvider,
+} from "./shipping/index";
 export type * from "./shipping/types";
 
 export { fxProvider, createSeedFxProvider } from "./fx/index";

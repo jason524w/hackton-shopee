@@ -15,11 +15,10 @@ import type {
   FxConvertInput,
   FxConvertResult,
   FxProvider,
-  ShippingEstimateInput,
   ShippingEstimateResult,
   ShippingProvider,
-  ShippingScenario,
 } from "../../providers";
+import { createShippingProviderFromEnv } from "../../providers";
 import {
   createCdpChromeBrowserController,
   createChromeBrowserRetrievalProvider,
@@ -39,6 +38,7 @@ const PRODUCT_CODE = process.env.LIVE_PRODUCT_CODE ?? "SEA-MDV-SG-001";
 const OPPORTUNITY_ID = "opp_sea_mdv_sg_001";
 const TARGET_MARKET = "Singapore";
 const TARGET_PLATFORM = "Shopee";
+const LOGISTICS_PROVIDER = process.env.LOGISTICS_PROVIDER ?? "seed";
 const LOGISTICS_QUOTE_MODE = process.env.LOGISTICS_QUOTE_MODE ?? "freight_only";
 const AUDIT_ROOT = process.env.LIVE_AUDIT_ROOT ?? "/private/tmp/sea-launch-live-audit";
 const SCREENSHOT_ROOT = process.env.LIVE_BROWSER_SCREENSHOT_DIR ?? "/private/tmp/sea-launch-browser-screens";
@@ -71,7 +71,7 @@ describe.skipIf(!live)("pre-committee live real-data integration", () => {
       const brief = buildBrief();
       const browser = createBrowserProvider(runId);
       const fx = createFrankfurterFxProvider();
-      const shipping = createShippoShippingProvider();
+      const shipping = createShippingProviderFromEnv();
       const risk = createRiskSupervisor();
 
       await writer.write(
@@ -83,9 +83,12 @@ describe.skipIf(!live)("pre-committee live real-data integration", () => {
           product_query_zh: PRODUCT_QUERY_ZH,
           product_code: PRODUCT_CODE,
           openai_key_present: Boolean(process.env.OPENAI_API_KEY),
-          shippo_key_present: Boolean(process.env.SHIPPO_API_KEY),
+          logistics_provider: LOGISTICS_PROVIDER,
+          easyship_key_present: Boolean(process.env.EASYSHIP_API_KEY),
           demo_mock_only: process.env.DEMO_MOCK_ONLY ?? "",
           logistics_quote_mode: LOGISTICS_QUOTE_MODE,
+          hs_code_provider: process.env.HS_CODE_PROVIDER ?? "",
+          tax_duty_provider: process.env.TAX_DUTY_PROVIDER ?? "",
           chrome_endpoint: CHROME_ENDPOINT,
           audit_dir: writer.auditDir,
           real_data_policy: "seed, fixture, mock, and image fallback outputs are blockers for this live test.",
@@ -156,7 +159,7 @@ describe.skipIf(!live)("pre-committee live real-data integration", () => {
         selected_listing_ready: Boolean(listing && packaging),
         known_code_gaps: [
           "app/api/run live route is still not wired.",
-          "Main shipping provider is seed-only; this live harness uses a Shippo test adapter.",
+          "Live harness uses the configured shipping provider; set LOGISTICS_PROVIDER=easyship for live rates.",
           "Main FX provider is seed-only; this live harness uses Frankfurter.",
           "1688/Taobao offer detail parser can block package dimensions if they are not visible.",
         ],
@@ -387,14 +390,14 @@ async function runShippingStage(
       to: "SG",
     });
     assertLiveSource(result.source, "shipping");
-    await writer.write("shipping", "passed", result as unknown as Record<string, unknown>, "Shippo live shipment rates returned.");
+    await writer.write("shipping", "passed", result as unknown as Record<string, unknown>, "Live shipping provider returned cross-border rates.");
     return result;
   } catch (error) {
     await writer.write(
       "shipping",
       "blocked",
       { error: errorMessage(error), weight_g: weightG, dimensions_cm: dimensionsCm },
-      "Shippo live shipping request did not produce usable CN->SG rates.",
+      "Live shipping request did not produce usable CN->SG rates.",
       [errorMessage(error)],
     );
     return undefined;
@@ -474,7 +477,7 @@ async function runMarginStage(
     "margin",
     "passed",
     { opportunity, margin, inputs: { market: market.source, fx: fxQuote.source, shipping: shippingQuote.source } },
-    `Deterministic margin computed from live source price, FX, and Shippo ${LOGISTICS_QUOTE_MODE} shipping.`,
+    `Deterministic margin computed from live source price, FX, and ${LOGISTICS_PROVIDER} ${LOGISTICS_QUOTE_MODE} shipping.`,
   );
   return opportunity;
 }
@@ -774,109 +777,6 @@ function createFrankfurterFxProvider(): FxProvider {
   };
 }
 
-function createShippoShippingProvider(): ShippingProvider {
-  return {
-    async estimateCrossBorder(input: ShippingEstimateInput): Promise<ShippingEstimateResult> {
-      const token = process.env.SHIPPO_API_KEY;
-      if (!token) {
-        throw new Error("SHIPPO_API_KEY is missing.");
-      }
-      const sourceUrl = "https://api.goshippo.com/shipments/";
-      const response = await fetch(sourceUrl, {
-        method: "POST",
-        headers: {
-          Authorization: `ShippoToken ${token}`,
-          "Content-Type": "application/json",
-          "SHIPPO-API-VERSION": "2018-02-08",
-        },
-        body: JSON.stringify({
-          address_from: {
-            name: "Sea Launch Test Supplier",
-            street1: "Huaqiangbei",
-            city: "Shenzhen",
-            state: "Guangdong",
-            zip: "518000",
-            country: "CN",
-            phone: "+8613800000000",
-            email: "supplier@example.com",
-          },
-          address_to: {
-            name: "Sea Launch Test Buyer",
-            street1: "1 Raffles Place",
-            city: "Singapore",
-            state: "Singapore",
-            zip: "048616",
-            country: "SG",
-            phone: "+6590000000",
-            email: "buyer@example.com",
-          },
-          parcels: [
-            {
-              length: String(input.dimensions_cm.length),
-              width: String(input.dimensions_cm.width),
-              height: String(input.dimensions_cm.height),
-              distance_unit: "cm",
-              weight: String(input.weight_g),
-              mass_unit: "g",
-            },
-          ],
-          async: false,
-        }),
-      });
-      const body = (await response.json()) as { object_id?: string; rates?: Array<Record<string, unknown>>; messages?: unknown };
-      if (!response.ok) {
-        throw new Error(`Shippo failed: ${response.status} ${JSON.stringify(body.messages ?? body).slice(0, 500)}`);
-      }
-      const rates = (body.rates ?? [])
-        .map((rate) => ({
-          amount: Number(rate.amount_local ?? rate.amount),
-          currency: String(rate.currency_local ?? rate.currency ?? ""),
-          provider: String(rate.provider ?? "Shippo carrier"),
-          service: typeof rate.servicelevel === "object" && rate.servicelevel
-            ? String((rate.servicelevel as Record<string, unknown>).name ?? "")
-            : "",
-          days: typeof rate.estimated_days === "number" ? rate.estimated_days : 7,
-        }))
-        .filter((rate) => rate.amount > 0 && (!rate.currency || rate.currency === "SGD" || rate.currency === "USD"));
-      if (!rates.length) {
-        throw new Error(`Shippo returned no usable rates for shipment ${body.object_id ?? "unknown"}.`);
-      }
-      const sorted = rates.sort((left, right) => left.amount - right.amount);
-      const low = sorted[0];
-      const base = sorted[Math.floor(sorted.length / 2)] ?? low;
-      const high = sorted[sorted.length - 1] ?? base;
-      const scenario = (rate: typeof low): ShippingScenario => ({
-        cost_sgd: roundMoney(rate.amount),
-        days_min: Math.max(1, rate.days - 1),
-        days_max: Math.max(1, rate.days + 2),
-        method: [rate.provider, rate.service].filter(Boolean).join(" "),
-      });
-
-      return {
-        source: {
-          provider: "shippo",
-          mode: "live",
-          source_url: sourceUrl,
-          raw_snapshot_id: body.object_id,
-          captured_at: nowIso(),
-        },
-        from: input.from,
-        to: input.to,
-        chargeable_weight_g: input.weight_g,
-        scenarios: {
-          low: scenario(low),
-          base: scenario(base),
-          high: scenario(high),
-        },
-        assumptions: [
-          `Shippo test-mode shipment request; quote mode=${LOGISTICS_QUOTE_MODE}.`,
-          "Carrier coverage depends on account configuration.",
-        ],
-      };
-    },
-  };
-}
-
 interface ProductSpecs {
   weight_g: number;
   dimensions_cm: { length: number; width: number; height: number };
@@ -1020,7 +920,8 @@ function preflightStatus(): StageStatus {
 function preflightBlockers(): string[] {
   return [
     process.env.OPENAI_API_KEY ? "" : "OPENAI_API_KEY missing.",
-    process.env.SHIPPO_API_KEY ? "" : "SHIPPO_API_KEY missing.",
+    process.env.LOGISTICS_PROVIDER === "easyship" && !process.env.EASYSHIP_API_KEY ? "EASYSHIP_API_KEY missing." : "",
+    process.env.LOGISTICS_PROVIDER !== "easyship" ? "LOGISTICS_PROVIDER must be easyship for live shipping rates." : "",
     process.env.DEMO_MOCK_ONLY === "true" ? "DEMO_MOCK_ONLY=true; live test requires disabling mock-only mode." : "",
   ].filter(Boolean);
 }

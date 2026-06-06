@@ -763,7 +763,7 @@ function toBrowserOfferDetail(offer: SourcingSeed["offers"][number], capturedAt:
     last_seen_at: capturedAt,
     negotiation_notes: [
       "Confirm current stock before committing test order.",
-      "Ask supplier to verify packed weight and dimensions for Shippo shipping estimate.",
+      "Ask supplier to verify packed weight and dimensions for the logistics rate estimate.",
       "Ask whether USB electrical safety notes or documentation are available.",
     ],
   };
