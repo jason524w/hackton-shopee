@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Zero-dependency contract checker.
-// Verifies contract/mock-result.json satisfies contract/result.schema.json
+// Verifies contract/fixtures/sample-result.json satisfies contract/result.schema.json
 // (required fields via $ref, type, and enum). Run: node scripts/check-contract.mjs
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -8,7 +8,7 @@ import { dirname, join } from "node:path";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const schema = JSON.parse(readFileSync(join(root, "contract/result.schema.json"), "utf8"));
-const data = JSON.parse(readFileSync(join(root, "contract/mock-result.json"), "utf8"));
+const data = JSON.parse(readFileSync(join(root, "contract/fixtures/sample-result.json"), "utf8"));
 
 const errors = [];
 const resolve = (ref) => ref.replace("#/$defs/", "").split("/").reduce((o, k) => o[k], schema.$defs);
@@ -55,4 +55,4 @@ if (errors.length) {
   for (const e of errors) console.error("  - " + e);
   process.exit(1);
 }
-console.log("✓ mock-result.json conforms to result.schema.json");
+console.log("✓ fixtures/sample-result.json conforms to result.schema.json");

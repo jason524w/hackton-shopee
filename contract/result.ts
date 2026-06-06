@@ -1,6 +1,6 @@
 // Sea Launch AI — shared result contract.
 // Frontend renders against this; backend's /api/run must return this shape.
-// Source of truth alongside contract/mock-result.json.
+// Source of truth alongside contract/fixtures/sample-result.json.
 
 export type Decision = "Go" | "Watch" | "Reject";
 export type RiskLevel = "low" | "medium" | "high";

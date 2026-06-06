@@ -56,7 +56,7 @@ Changing the agent list triggers the contract-first rule. Update all three files
 
 - `contract/result.ts`
 - `contract/result.schema.json`
-- `contract/mock-result.json`
+- `contract/fixtures/sample-result.json`(测试 fixture)
 
 ### Required Type Changes
 
@@ -127,9 +127,9 @@ For MVP, avoid expanding `SelectedListing` unless the frontend explicitly needs 
 - Prefer `additionalProperties: false` for every contract object that is not explicitly a free-form map.
 - Keep `attributes` and `committee.weights` flexible only where necessary.
 
-### Mock Update Rules
+### Fixture Update Rules
 
-`contract/mock-result.json` must remain the frontend and demo fallback source:
+`contract/fixtures/sample-result.json` is a test-only fixture (schema regression + UI unit tests). It must never be imported by runtime code:
 
 - Add `audit_run_id`.
 - Add a Packaging Agent card.
@@ -781,7 +781,7 @@ Business rules:
 
 Harness assertions:
 
-- base net margin around 28% for Mini Desk Vacuum mock assumptions
+- base net margin around 28% for Mini Desk Vacuum seed assumptions
 - bad / high-return net margin around 12%
 - cost breakdown sum equals net profit within rounding tolerance
 - every cost line has label, amount, and type
@@ -1096,7 +1096,6 @@ Main live pipeline.
 Query params:
 
 ```txt
-?mock=1      return contract/mock-result.json immediately
 ?images=0    run text agents and packaging prompt dry-run, skip live image generation
 ?replay=<audit_run_id> replay from audit snapshot when supported
 ```
@@ -1180,9 +1179,9 @@ If `.runs/` should not be committed, add it to `.gitignore` once the app skeleto
 
 ### Contract Tests
 
-- `contract/mock-result.json` validates against schema.
+- `contract/fixtures/sample-result.json`(测试 fixture) validates against schema.
 - A captured live result validates against schema.
-- Every `AgentKey` in mock is valid.
+- Every `AgentKey` in the fixture is valid.
 - `agents[]` includes exactly seven expected agent keys.
 
 ### Unit Tests
@@ -1236,7 +1235,6 @@ Risk:
 Run before demo:
 
 ```txt
-POST /api/run?mock=1
 POST /api/run?images=0
 POST /api/run
 GET /api/runs/:audit_run_id/audit
@@ -1244,7 +1242,6 @@ GET /api/runs/:audit_run_id/audit
 
 Acceptance:
 
-- mock path returns immediately
 - text-only live path completes
 - full live path generates or gracefully falls back on images
 - audit endpoint can explain the run
@@ -1259,13 +1256,13 @@ Tasks:
 
 - Add Packaging Agent to contract.
 - Add `audit_run_id`.
-- Update mock.
+- Update the fixture.
 - Validate contract.
 
 Done when:
 
-- Mock validates.
-- Frontend can render seven agents from mock.
+- Fixture validates.
+- Frontend unit tests can render seven agents from the fixture.
 
 ### Phase 1: Runtime Skeleton
 
@@ -1385,7 +1382,7 @@ Tasks:
 
 - Wire `POST /api/run`.
 - Wire `GET /api/runs/:id/audit`.
-- Add `mock`, `images=0`, and live modes.
+- Add `images=0` and live modes (live is the only path).
 - Validate final result.
 
 Done when:
@@ -1401,7 +1398,6 @@ Tasks:
 - Run live rehearsal at least five times.
 - Capture one successful audit.
 - Capture one fallback audit.
-- Prepare mock fallback.
 - Prepare screenshot / recording fallback.
 
 Done when:
@@ -1460,7 +1456,7 @@ Use separate branches / PRs to avoid file conflicts.
 - Committee must not silently override Risk hard gates.
 - Packaging must not silently accept generated images that fail compliance.
 - Audit must be on for live demo runs.
-- Do not remove `/api/run?mock=1`.
+- Single real path: no mock parameter, no canned responses (see REFACTOR.md).
 
 ## 15. Definition Of Done
 
@@ -1478,8 +1474,7 @@ Backend is MVP-ready when:
 
 Demo / frontend is MVP-ready when:
 
-- `node scripts/check-contract.mjs` passes (7 agents agree across `result.ts`, `result.schema.json`, `mock-result.json`).
-- `/api/run?mock=1` returns instantly.
+- `node scripts/check-contract.mjs` passes (7 agents agree across `result.ts`, `result.schema.json`, `fixtures/sample-result.json`).
 - `/api/run?images=0` runs the text pipeline with a prompt-only Packaging Agent.
 - Risk Agent flags Mini Desk Vacuum exaggerated suction and electrical/USB safety review.
 - Committee Agent deterministically returns `Watch` for Mini Desk Vacuum.
@@ -1495,7 +1490,6 @@ Demo / frontend is MVP-ready when:
 OPENAI_API_KEY=
 OPENAI_TEXT_MODEL=gpt-5.5
 OPENAI_IMAGE_MODEL=gpt-image-2
-DEMO_MOCK_ONLY=false
 LIVE_IMAGE_GENERATION=true
 PROVIDER_MODE=fixture
 AUDIT_STORAGE=local
@@ -1503,8 +1497,7 @@ AUDIT_STORAGE=local
 
 Notes:
 
-- `DEMO_MOCK_ONLY=true` forces `/api/run` to behave like `?mock=1` for an emergency demo
-  (the永不可移除的安全网, see CLAUDE.md 铁律 3).
+- No demo fallback env vars: the live pipeline is the only path (CLAUDE.md 铁律 3).
 - `LIVE_IMAGE_GENERATION=false` makes the Packaging Agent dry-run prompts and use fallback
   images; equivalent in spirit to `/api/run?images=0`.
 - `PROVIDER_MODE=fixture` means Shopee / 1688 data comes from `seed/`, while OpenAI text and

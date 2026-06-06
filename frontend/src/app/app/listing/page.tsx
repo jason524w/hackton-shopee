@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { LISTING, OPPORTUNITIES } from "@/lib/mock-data";
 import { useAppStore } from "@/lib/store";
 import Image from "next/image";
 import Link from "next/link";
@@ -19,13 +18,32 @@ async function imageToDataUrl(src: string) {
 }
 
 export default function ListingPage() {
-  const l = useAppStore((s) => s.listing) ?? LISTING;
+  const l = useAppStore((s) => s.listing);
   const selectedProductId = useAppStore((s) => s.selectedProductId);
+  const OPPORTUNITIES = useAppStore((s) => s.opportunities);
   const opportunity =
-    OPPORTUNITIES.find((o) => o.id === selectedProductId || o.id === l.productId) ??
+    OPPORTUNITIES.find((o) => o.id === selectedProductId || o.id === l?.productId) ??
     OPPORTUNITIES[0];
-  const marketplaceLinks = opportunity.evidenceLinks.filter((link) => link.type === "marketplace");
   const [isGenerating, setIsGenerating] = useState(false);
+
+  if (!l || !opportunity) {
+    return (
+      <div className="px-6 py-10">
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-faint mb-3.5">
+          Shopee Listing Fields
+        </p>
+        <p className="font-display text-[15px] font-light italic text-ink-faint">
+          No listing yet — run a brief first, then open the primary opportunity.
+        </p>
+        <Link href="/app/brief" className="font-mono text-[11px] text-orange mt-4 inline-block">
+          ← Start from a brief
+        </Link>
+      </div>
+    );
+  }
+
+  const marketplaceLinks = opportunity.evidenceLinks.filter((link) => link.type === "marketplace");
+  const listingData = l;
 
   async function downloadLaunchPack() {
     setIsGenerating(true);
@@ -73,11 +91,17 @@ export default function ListingPage() {
       doc.setTextColor(soft);
       doc.text(`${opportunity.targetMarkets.join(" + ")} · ${opportunity.decision.toUpperCase()} · ${opportunity.confidenceScore}% confidence`, margin, 142);
 
-      const image = await imageToDataUrl(opportunity.galleryImages.main);
       doc.setDrawColor("#e8e0d5");
       doc.setFillColor("#ffffff");
       doc.rect(margin, 166, 176, 176, "FD");
-      doc.addImage(image, "PNG", margin + 8, 174, 160, 160);
+      if (opportunity.galleryImages.main) {
+        try {
+          const image = await imageToDataUrl(opportunity.galleryImages.main);
+          doc.addImage(image, "PNG", margin + 8, 174, 160, 160);
+        } catch {
+          // Image unavailable — leave the placeholder frame.
+        }
+      }
 
       const metrics = [
         ["Source", opportunity.sourcePrice],
@@ -112,7 +136,7 @@ export default function ListingPage() {
       doc.text("Shopee Listing Fields", margin, 396);
 
       let rowY = 420;
-      for (const field of l.fields) {
+      for (const field of listingData.fields) {
         const lines = doc.splitTextToSize(field.value, pageW - margin * 2 - 130);
         const rowHeight = Math.max(34, Math.min(lines.length, 3) * 11 + 18);
         rowY = ensureSpace(rowY, rowHeight + 4);

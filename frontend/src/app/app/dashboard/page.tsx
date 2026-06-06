@@ -1,16 +1,7 @@
 "use client";
 
 import { CountUp } from "@/components/primitives/count-up";
-import { BOARD_SUMMARY } from "@/lib/mock-data";
-
-const METRICS = [
-  { value: BOARD_SUMMARY.found, label: "opportunities found" },
-  { value: BOARD_SUMMARY.go, label: "Go decisions" },
-  { value: 1, label: "launch packs generated" },
-  { value: BOARD_SUMMARY.riskFlags, label: "risks blocked" },
-  { value: 1, label: "human reviews required" },
-  { value: 6, label: "reusable templates" },
-];
+import { useAppStore } from "@/lib/store";
 
 const PANELS: [string, string[]][] = [
   ["Workflow Summary", [
@@ -40,6 +31,16 @@ const PANELS: [string, string[]][] = [
 ];
 
 export default function DashboardPage() {
+  const summary = useAppStore((s) => s.boardSummary);
+  const listing = useAppStore((s) => s.listing);
+  const METRICS = [
+    { value: summary?.found ?? 0, label: "opportunities found" },
+    { value: summary?.go ?? 0, label: "Go decisions" },
+    { value: listing ? 1 : 0, label: "launch packs generated" },
+    { value: summary?.riskFlags ?? 0, label: "risks blocked" },
+    { value: summary && summary.riskFlags > 0 ? 1 : 0, label: "human reviews required" },
+    { value: 6, label: "reusable templates" },
+  ];
   return (
     <div className="px-14 py-7">
       <h1 className="font-display text-[34px] font-black tracking-tight text-ink mb-1">

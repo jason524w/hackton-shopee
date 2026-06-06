@@ -3,7 +3,7 @@
 import { use } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { DEPARTMENTS } from "@/lib/mock-data";
+import { useAppStore } from "@/lib/store";
 import { StatusText } from "@/components/primitives/status";
 
 export default function DeptDetailPage({
@@ -12,6 +12,7 @@ export default function DeptDetailPage({
   params: Promise<{ dept: string }>;
 }) {
   const { dept } = use(params);
+  const DEPARTMENTS = useAppStore((s) => s.departments);
   const d = DEPARTMENTS.find((x) => x.id === dept);
   if (!d) notFound();
 

@@ -13,5 +13,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Validate contract (mock-result.json vs schema)
+      - name: Validate contract (fixtures/sample-result.json vs schema)
         run: node scripts/check-contract.mjs

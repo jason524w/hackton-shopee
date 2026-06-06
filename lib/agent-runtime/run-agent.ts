@@ -13,7 +13,8 @@ import { createResponseTextFormat, parseJsonObject, validateJsonSchema } from ".
 import type { AgentTool, ToolCallRequest } from "./tool-runner";
 import { executeAllowedTool, toOpenAIToolDefinitions } from "./tool-runner";
 
-export type AgentRunMode = "fixture" | "live" | "mock";
+// "live" is the only production mode; "fixture" exists for tests and replay only.
+export type AgentRunMode = "fixture" | "live";
 
 export interface AgentSkill {
   name: string;

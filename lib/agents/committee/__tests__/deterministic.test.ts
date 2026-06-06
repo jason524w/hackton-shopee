@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import mock from "../../../../contract/mock-result.json";
+import mock from "../../../../contract/fixtures/sample-result.json";
 import type { Brief, Opportunity } from "../../../../contract/result";
 import { COMMITTEE_WEIGHTS, computeOverall } from "../weights";
 import { baseDecision, fallbackDecision, type FallbackSignals } from "../gates";

@@ -10,9 +10,8 @@
 | Agent War Room | 渲染 6 个 agent,status 渐进点亮 + evidence + score |
 | Opportunity Board | 3 张候选卡 + 主卡利润瀑布 + Committee 排序/tradeoff |
 | Listing Studio | Shopee 一份 listing + 预生成图 + compliance 警告 |
-| `/api/run` 真实 7-agent 管道 + live 图 | **主 demo 路径**,输出符合 schema,详见 [IMPLEMENTATION-ROADMAP](IMPLEMENTATION-ROADMAP.md) |
-| `/api/run?mock=1` + 缓存 | **必达安全网**:零延迟零失败,live 失败一键切回;**永不移除** |
-| `/api/run?images=0` | 纯文本快速彩排 |
+| `/api/run` 真实 7-agent 管道 + live 图 | **唯一路径**,输出符合 schema,详见 [IMPLEMENTATION-ROADMAP](IMPLEMENTATION-ROADMAP.md) |
+| `/api/run?images=0` | 纯文本快速彩排(走真实文本管道) |
 | seed 真实数据 | 吸尘器的 Shopee + 1688 种子数据 |
 | 后端 7-agent + runtime/audit/providers | 按 [IMPLEMENTATION-ROADMAP](IMPLEMENTATION-ROADMAP.md) 完整建(团队已选完整路线) |
 

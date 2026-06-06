@@ -83,5 +83,7 @@
 ---
 
 ## 实现顺序建议(P1)
-先 `mock` 跑通整条管道接线(每个 agent 先返回 mock 片段),再逐个换成真实 OpenAI 调用。
+先实现管道调度器 + 各 agent 的 strict json_schema 定义,再按 market → sourcing → margin →
+risk → listing → packaging → committee 顺序逐个实现真实调用;每实现一个,跑一次端到端。
+fixture 注入只允许出现在测试代码(`__tests__/`)。
 **任何时候 `/api/run` 的整体输出都要能通过 `contract/result.schema.json`。**

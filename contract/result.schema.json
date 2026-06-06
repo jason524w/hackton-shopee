@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Sea Launch AI RunResult",
-  "description": "Contract returned by POST /api/run. contract/result.ts is the CANONICAL type; this schema is the backend validation target kept in sync with it. Frontend renders against result.ts + mock-result.json. Run scripts/check-contract.mjs to verify mock-result.json conforms.",
+  "description": "Contract returned by POST /api/run. contract/result.ts is the CANONICAL type; this schema is the backend validation target kept in sync with it. Frontend renders against result.ts + fixtures/sample-result.json. Run scripts/check-contract.mjs to verify fixtures/sample-result.json conforms.",
   "type": "object",
   "required": ["run_id", "audit_run_id", "created_at", "currency", "brief", "agents", "opportunities", "committee", "selected_listing"],
   "additionalProperties": false,

@@ -1,4 +1,4 @@
-import mockResult from "../../../contract/mock-result.json";
+import mockResult from "../../../contract/fixtures/sample-result.json";
 import type { RunResult } from "../../../contract/result";
 import {
   createSeedBrowserRetrievalProvider,

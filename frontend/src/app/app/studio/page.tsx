@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ExternalLink } from "lucide-react";
-import { OPPORTUNITIES, PACKAGING_OUTPUT, PACKAGING_TABS, LISTING } from "@/lib/mock-data";
+import { PACKAGING_TABS } from "@/lib/static-content";
 import { useAppStore } from "@/lib/store";
 
 function dot(status: string, active: boolean) {
@@ -96,13 +96,13 @@ function ImageModule({
 export default function StudioPage() {
   const router = useRouter();
   const [active, setActive] = useState(PACKAGING_TABS[0].id);
-  const p = useAppStore((s) => s.packaging) ?? PACKAGING_OUTPUT;
-  const listing = useAppStore((s) => s.listing) ?? LISTING;
+  const p = useAppStore((s) => s.packaging);
+  const listing = useAppStore((s) => s.listing);
   const selectedProductId = useAppStore((s) => s.selectedProductId);
+  const OPPORTUNITIES = useAppStore((s) => s.opportunities);
   const opportunity =
-    OPPORTUNITIES.find((o) => o.id === selectedProductId || o.id === p.productId) ??
+    OPPORTUNITIES.find((o) => o.id === selectedProductId || o.id === p?.productId) ??
     OPPORTUNITIES[0];
-  const marketplaceLinks = opportunity.evidenceLinks.filter((link) => link.type === "marketplace");
 
   const tabMap = useMemo(() => new Map(PACKAGING_TABS.map((t) => [t.id, t])), []);
 
@@ -124,6 +124,28 @@ export default function StudioPage() {
   function jump(id: string) {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
+
+  if (!p || !listing || !opportunity) {
+    return (
+      <div className="px-14 py-10">
+        <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-ink-faint mb-2">
+          Listing Studio
+        </p>
+        <h1 className="font-display text-[34px] font-black tracking-tight text-ink mb-2">
+          Nothing to package yet.
+        </h1>
+        <p className="font-display text-[15px] font-light italic text-ink-faint">
+          Run a brief and pick an opportunity from the board — the studio renders the live
+          packaging and listing output here.
+        </p>
+        <Link href="/app/board" className="font-mono text-[11px] text-orange mt-4 inline-block">
+          ← Back to the board
+        </Link>
+      </div>
+    );
+  }
+
+  const marketplaceLinks = opportunity.evidenceLinks.filter((link) => link.type === "marketplace");
 
   return (
     <div className="grid min-h-[70vh] grid-cols-[232px_1fr]">
