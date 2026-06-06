@@ -1,5 +1,6 @@
 import mockResult from "../../../contract/mock-result.json";
 import type { RunResult } from "../../../contract/result";
+import { AFFIRMATIVE_PROMPT_REVIEW_TERMS } from "../../compliance/claims";
 import { createNoopRisk, type AgentContext } from "../contracts";
 import {
   createSeedFxProvider,
@@ -10,8 +11,6 @@ import {
 } from "../../providers";
 import { runPackaging, type RunPackagingAgentOptions, buildPackagingInput } from "./index";
 import type { PackagingOutput } from "./schema";
-
-const BANNED_PROMPT_TERMS = ["super suction", "industrial grade", "certified safe", "wet mess"];
 
 export async function replayFixture(options: RunPackagingAgentOptions = {}): Promise<PackagingOutput> {
   const ctx = createFixtureContext();
@@ -31,8 +30,8 @@ export function assertOutput(output: PackagingOutput): void {
 
   for (const prompt of output.prompts) {
     const normalized = prompt.prompt.toLowerCase();
-    for (const term of BANNED_PROMPT_TERMS) {
-      if (normalized.includes(term)) {
+    for (const term of AFFIRMATIVE_PROMPT_REVIEW_TERMS) {
+      if (containsAffirmativePromptTerm(normalized, term)) {
         throw new Error(`Packaging prompt includes banned term "${term}"`);
       }
     }
@@ -59,6 +58,21 @@ export function assertOutput(output: PackagingOutput): void {
   if (!output.compliance.human_review_required) {
     throw new Error("Mini Desk Vacuum packaging should require human review for image/spec checks.");
   }
+}
+
+function containsAffirmativePromptTerm(normalizedPrompt: string, term: string): boolean {
+  const normalizedTerm = term.toLowerCase();
+  let index = normalizedPrompt.indexOf(normalizedTerm);
+
+  while (index >= 0) {
+    const prefix = normalizedPrompt.slice(Math.max(0, index - 32), index);
+    if (!/\b(no|not|without|avoid|unsupported)\s+$/i.test(prefix)) {
+      return true;
+    }
+    index = normalizedPrompt.indexOf(normalizedTerm, index + normalizedTerm.length);
+  }
+
+  return false;
 }
 
 function createFixtureContext(): AgentContext {

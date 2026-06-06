@@ -98,7 +98,7 @@ export async function buildPackagingInput(
     selected_listing: selectedListing,
     opportunity,
     competitor_signals: competitorSignals,
-    product_specs: options.productSpecs ?? collectProductSpecs(selectedListing, opportunity),
+    product_specs: options.productSpecs ?? collectProductSpecs(selectedListing),
     policy_rules: policyRules,
     risk_warnings: options.riskWarnings ?? collectRiskWarnings(ctx, selectedListing),
     source_image: options.sourceImage,
@@ -155,18 +155,15 @@ async function collectPolicyRules(ctx: AgentContext): Promise<string[]> {
   }
 }
 
-function collectProductSpecs(listing: SelectedListing, opportunity: Opportunity | undefined): Record<string, string | number | boolean> {
+function collectProductSpecs(listing: SelectedListing): Record<string, string | number | boolean> {
   return {
     item_name: listing.shopee.item_name,
     category: listing.shopee.category,
     brand: listing.shopee.brand,
-    price: listing.shopee.price,
     weight_g: listing.shopee.logistics.weight_g,
     length_cm: listing.shopee.logistics.length_cm,
     width_cm: listing.shopee.logistics.width_cm,
     height_cm: listing.shopee.logistics.height_cm,
-    source_price: opportunity?.source_price ?? "",
-    fulfillment_days: opportunity?.fulfillment_days ?? "",
     ...listing.shopee.attributes,
   };
 }

@@ -9,6 +9,7 @@ import {
   createSeedSourcing1688Provider,
 } from "../../../providers";
 import type { ImageComplianceStatus, OpenAIImageProvider } from "../../../providers/openai-image/types";
+import { assertOutput } from "../harness";
 import { buildPackagingInput, runPackaging, runPackagingAgent } from "../index";
 import { createPackagingTools } from "../tools";
 
@@ -95,6 +96,51 @@ describe("packaging agent", () => {
     expect(output.preference_profile.evidence.find((item) => item.label === "Preference research tools")?.value).toContain(
       "competitor_style_extractor",
     );
+  });
+
+  it("does not leak internal supplier economics into public copy, prompts, or evidence", async () => {
+    const ctx = createContext(createSpyImageProvider(), createNoopRisk());
+    const input = await buildPackagingInput(ctx, {
+      imageMode: "dry-run",
+      productSpecs: {
+        source_price: 3.2,
+        internal_cost: 2.4,
+        supplier_margin: 0.28,
+        fulfillment_days: 8,
+        weight_g: 180,
+        power_source: "USB Rechargeable",
+      },
+    });
+    const output = await runPackaging(input, ctx);
+    const publicText = [
+      ...output.prompts.flatMap((prompt) => [
+        prompt.prompt,
+        prompt.constraints.product_attributes.join(" "),
+      ]),
+      output.selling_copy.item_name,
+      output.selling_copy.description,
+      output.selling_copy.bullet_points.join(" "),
+      output.preference_profile.grounded_product_facts.allowed_claims.join(" "),
+      output.agent.evidence.map((item) => item.value).join(" "),
+    ].join("\n");
+
+    expect(publicText).toContain("weight_g: 180");
+    expect(publicText).toContain("power_source: USB Rechargeable");
+    expect(publicText).not.toContain("source_price");
+    expect(publicText).not.toContain("internal_cost");
+    expect(publicText).not.toContain("supplier_margin");
+    expect(publicText).not.toContain("fulfillment_days");
+    expect(publicText).not.toContain("3.2");
+    expect(publicText).not.toContain("2.4");
+  });
+
+  it("harness accepts negative prompt constraints for unsupported use cases", async () => {
+    const ctx = createContext(createSpyImageProvider(), createNoopRisk());
+    const input = await buildPackagingInput(ctx, { imageMode: "dry-run" });
+    const output = await runPackaging(input, ctx);
+
+    expect(output.prompts.map((prompt) => prompt.prompt).join(" ")).toContain("No wet mess");
+    expect(() => assertOutput(output)).not.toThrow();
   });
 
   it("keeps local preference low-confidence when competitor evidence is missing", async () => {

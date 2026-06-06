@@ -54,7 +54,8 @@ export function createPackagingTools(openaiImage: OpenAIImageProvider): AgentToo
     },
     {
       name: "edit_product_image",
-      description: "Edit a source product image into a localized ecommerce asset through the OpenAI image provider.",
+      description:
+        "Create a localized ecommerce asset with an optional source image reference through the OpenAI image provider; provider warnings disclose any reference-only fallback.",
       parameters: {
         type: "object",
         properties: {

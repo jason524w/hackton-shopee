@@ -1,5 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { UNSUPPORTED_PRODUCT_CLAIMS } from "../../compliance/claims";
 import { getOpenAIClient, OPENAI_IMAGE_MODEL } from "../../openai";
 import { includesQuery, normalizeQuery, nowIso, readSeedJson } from "../shared";
 import type {
@@ -23,15 +24,6 @@ const DEFAULT_IMAGE_MODEL = "gpt-image-2";
 const DEFAULT_IMAGE_SIZE = "1024x1024";
 const DEFAULT_IMAGE_QUALITY = "low";
 const DEFAULT_IMAGE_FORMAT = "jpeg";
-const DEFAULT_BANNED_CLAIMS = [
-  "super suction",
-  "industrial grade",
-  "medical grade",
-  "certified safe",
-  "guaranteed deep clean",
-  "safety certified",
-];
-
 interface ImageSeed {
   fixture_id: string;
   captured_at: string;
@@ -125,7 +117,7 @@ export function createSeedOpenAIImageProvider(): OpenAIImageProvider {
       const seed = await readSeedJson<ImageSeed>("seed/openai-image/mini-desk-vacuum-images.json");
       const matchedAsset = seed.assets.find((asset) => asset.url === input.imageUrl);
       const text = normalizeQuery(`${input.prompt ?? ""} ${matchedAsset?.prompt ?? ""}`);
-      const bannedClaims = [...DEFAULT_BANNED_CLAIMS, ...(input.rules ?? [])].filter(Boolean);
+      const bannedClaims = [...UNSUPPORTED_PRODUCT_CLAIMS, ...(input.rules ?? [])].filter(Boolean);
       const flags = bannedClaims.filter((claim) => text.includes(normalizeQuery(claim)));
       const status: ImageComplianceStatus =
         flags.length > 0 ? "needs_review" : matchedAsset?.compliance ?? "needs_review";
@@ -266,8 +258,18 @@ export function createLiveOpenAIImageProvider(options: CreateOpenAIImageProvider
 
       return {
         ...generated,
+        warnings: [
+          ...(generated.warnings ?? []),
+          {
+            code: "live_image_edit_reference_only",
+            severity: "warning",
+            message:
+              "Live image edit is reference-only in this MVP; source image was redacted and not uploaded to an image edit endpoint.",
+          },
+        ],
         image: {
           ...generated.image,
+          compliance: "needs_review",
           prompt: input.prompt,
           metadata: {
             ...generated.image.metadata,
@@ -363,7 +365,7 @@ async function checkImageCompliance(input: CheckImageComplianceInput): Promise<C
   const seed = await readSeedJson<ImageSeed>("seed/openai-image/mini-desk-vacuum-images.json");
   const matchedAsset = seed.assets.find((asset) => asset.url === input.imageUrl);
   const text = normalizeQuery(`${input.prompt ?? ""} ${matchedAsset?.prompt ?? ""}`);
-  const bannedClaims = [...DEFAULT_BANNED_CLAIMS, ...(input.rules ?? [])].filter(Boolean);
+  const bannedClaims = [...UNSUPPORTED_PRODUCT_CLAIMS, ...(input.rules ?? [])].filter(Boolean);
   const flags = bannedClaims.filter((claim) => text.includes(normalizeQuery(claim)));
   const featureNeedsReview = text.includes("feature") || text.includes("callout") || text.includes("infographic");
   const status: ImageComplianceStatus =

@@ -1,4 +1,5 @@
 import type { Evidence, SelectedListing } from "../../../contract/result";
+import { UNSUPPORTED_PRODUCT_CLAIMS } from "../../compliance/claims";
 import type {
   CopyPattern,
   GroundedProductFacts,
@@ -8,31 +9,6 @@ import type {
   PreferenceEvidenceItem,
   TitlePattern,
 } from "./schema";
-
-const DEFAULT_UNSUPPORTED_CLAIMS = [
-  "super suction",
-  "strong suction",
-  "industrial grade",
-  "medical grade",
-  "certified safe",
-  "safety certified",
-  "guaranteed deep clean",
-  "hepa",
-  "kills germs",
-  "removes mites",
-  "waterproof",
-  "wet and dry",
-  "wet mess",
-  "floor cleaner",
-  "car vacuum",
-  "sofa vacuum",
-  "official",
-  "local stock",
-  "local warranty",
-  "ce",
-  "ul",
-  "psb",
-];
 
 const FEATURE_SIGNAL_TERMS = [
   "usb",
@@ -46,6 +22,19 @@ const FEATURE_SIGNAL_TERMS = [
   "container",
   "portable",
   "rechargeable",
+];
+
+const INTERNAL_SPEC_KEY_PATTERNS = [
+  /(^|_)cost($|_)/i,
+  /(^|_)margin($|_)/i,
+  /(^|_)profit($|_)/i,
+  /^source($|_)/i,
+  /(^|_)supplier($|_)/i,
+  /(^|_)fulfillment($|_)/i,
+  /(^|_)delivery($|_)/i,
+  /(^|_)price($|_)/i,
+  /(^|_)moq($|_)/i,
+  /(^|_)stock($|_)/i,
 ];
 
 export interface CompetitorStyleExtraction {
@@ -228,20 +217,21 @@ export function extractCompetitorStyle(input: PackagingInput): CompetitorStyleEx
 
 export function extractProductFacts(input: PackagingInput): ProductFactExtraction {
   const listing = input.selected_listing.shopee;
+  const publicProductSpecs = Object.entries(input.product_specs).filter(([key, value]) => isBuyerSafeProductSpec(key, value));
   const evidenceItems = uniqueEvidenceItems([
     createEvidenceItem("product", "listing.item_name", listing.item_name, "Listing title"),
     ...listing.bullet_points.map((point, index) =>
       createEvidenceItem("product", `listing.bullet_points.${index}`, point, `Listing bullet ${index + 1}`),
     ),
-    ...Object.entries(input.product_specs).map(([key, value]) =>
+    ...publicProductSpecs.map(([key, value]) =>
       createEvidenceItem("product", `product_specs.${key}`, `${key}: ${String(value)}`, `Product spec ${key}`),
     ),
   ]);
   const allowedClaims = uniqueList(evidenceItems.map((item) => item.quote_or_fact))
-    .filter((claim) => !containsAny(claim, DEFAULT_UNSUPPORTED_CLAIMS))
+    .filter((claim) => !containsAny(claim, UNSUPPORTED_PRODUCT_CLAIMS))
     .slice(0, 16);
   const allowedText = normalize(allowedClaims.join(" "));
-  const uncertainOrMissing = DEFAULT_UNSUPPORTED_CLAIMS.filter((claim) => !includesTerm(allowedText, claim)).filter((claim) =>
+  const uncertainOrMissing = UNSUPPORTED_PRODUCT_CLAIMS.filter((claim) => !includesTerm(allowedText, claim)).filter((claim) =>
     shouldTrackMissingClaim(input, claim),
   );
   const featureCallouts = allowedClaims
@@ -271,10 +261,10 @@ export function extractPolicyConstraints(input: PackagingInput): PolicyConstrain
     ),
   );
   const sourceText = normalize(values.join(" "));
-  const explicitBannedClaims = DEFAULT_UNSUPPORTED_CLAIMS.filter((claim) => includesTerm(sourceText, claim));
+  const explicitBannedClaims = UNSUPPORTED_PRODUCT_CLAIMS.filter((claim) => includesTerm(sourceText, claim));
   const listingText = normalize(selectedListingText(input.selected_listing));
-  const safetyBannedClaims = DEFAULT_UNSUPPORTED_CLAIMS.filter((claim) => includesTerm(listingText, claim));
-  const missingSafetyProofClaims = DEFAULT_UNSUPPORTED_CLAIMS.filter((claim) => shouldTrackMissingClaim(input, claim));
+  const safetyBannedClaims = UNSUPPORTED_PRODUCT_CLAIMS.filter((claim) => includesTerm(listingText, claim));
+  const missingSafetyProofClaims = UNSUPPORTED_PRODUCT_CLAIMS.filter((claim) => shouldTrackMissingClaim(input, claim));
   const bannedClaims = uniqueList([...explicitBannedClaims, ...safetyBannedClaims, ...missingSafetyProofClaims]);
 
   return {
@@ -538,6 +528,13 @@ function shouldTrackMissingClaim(input: PackagingInput, claim: string): boolean 
     ...input.policy_rules,
   ].join(" "));
   return includesTerm(text, claim);
+}
+
+function isBuyerSafeProductSpec(key: string, value: string | number | boolean): boolean {
+  if (value === "" || value === false || value === null || value === undefined) {
+    return false;
+  }
+  return !INTERNAL_SPEC_KEY_PATTERNS.some((pattern) => pattern.test(key));
 }
 
 function createEvidenceItem(kind: string, source: string, quoteOrFact: string, label: string): PreferenceEvidenceItem {

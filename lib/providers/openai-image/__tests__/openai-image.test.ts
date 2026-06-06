@@ -105,6 +105,9 @@ describe("openai image provider", () => {
     expect(request?.prompt).not.toContain("signature=secret");
     expect(request?.prompt).not.toContain("source.png");
     expect(result.image.metadata.source_image_ref).toBe("https://example.com");
+    expect(result.image.metadata.edit_degraded_to_generate).toBe(true);
+    expect(result.image.compliance).toBe("needs_review");
+    expect(result.warnings?.some((warning) => warning.code === "live_image_edit_reference_only")).toBe(true);
   });
 
   it("dry-run edit metadata redacts source image references", async () => {
