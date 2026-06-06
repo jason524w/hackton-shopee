@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #111111;
+  --color-ink-soft: #888888;
+  --color-ink-faint: #bbbbbb;
+  --color-ivory: #faf6f0;
+  --color-ivory-deep: #f5f0e8;
+  --color-surface: #ffffff;
+  --color-orange: #ee4d2d;
+  --color-go: #16a34a;
+  --color-watch: #d97706;
+  --color-reject: #dc2626;
+  --color-hairline: #e8e0d5;
+
+  --font-display: var(--font-fraunces);
+  --font-mono: var(--font-plex-mono);
+  --font-sans: var(--font-hanken);
+}
+
+/* Hairline divider used instead of card borders */
+.hairline {
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+html {
+  scroll-behavior: smooth;
+}
