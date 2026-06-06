@@ -21,7 +21,7 @@ margin.calculator → margin.low.net_margin ≈ 0.126   ← 悲观档(高退货 
 risk.checkpoint("margin") → warning「利润对退货/运费敏感,建议封顶 Watch」
 risk 聚合 → risk_level=medium, human_review_required=true(电器 + 夸大吸力)
                               ↓ 写进 contract
-committee(#14) 确定性 gate 读 margin.low + human_review → 封顶 Watch(不给 Go)
+committee(#14, pure-A) 把 margin.low + 合规当证据喂 LLM → 判 Watch(不给 Go)
 ```
 
 - **#10 不做封顶决策**(那是 #14),但**必须产出 gate 要读的两个值**:`margin.low.net_margin` 和 `risk.human_review_required`。

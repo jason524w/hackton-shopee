@@ -980,6 +980,10 @@ Audit requirements:
 
 ## 8.7 Committee Agent
 
+> ⚠️ **实现变更(#14, pure-A):** committee 用 **LLM 直接定 Go/Watch/Reject**;下面的加权/hard-gate 降级为
+> **证据 + LLM 失败兜底**。"high compliance risk cannot Go" 等是 **软约束(skill 指令 + eval),非确定性硬闸**。
+> **#16 别照本节写 hard-gate 断言** —— 验收以 [design/committee.md](design/committee.md) §7 为准。
+
 Department: CEO / Investment Committee
 
 Purpose:

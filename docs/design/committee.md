@@ -10,28 +10,26 @@
 - **verdict 由 LLM 定**(纯 A),不加"钳住成功输出"的护栏。**暂不考虑 live 翻车** —— 真正的 demo 安全网是 `?mock=1`(铁律 #3,未动)。
 - 确定性 `overall` 分 + gate flags **保留**,只当**证据**喂 LLM + 给前端,不再定 verdict。
 - `human_review_required` **不当决策 gate**(流程标志,合规已在 `compliance` 分里);只作证据 + Studio 警告。
-- LLM 失败 → 退回确定性 `baseDecision`,**且把降级输出出来**;支持**断电 pickup**(audit/replay)。
+- LLM 失败 → 退回确定性 `baseDecision`,**且把降级输出出来**。
+- 🚧 **断电 pickup(audit/replay)= 本 PR 不含,已延后**(见 §5)—— 需扩 `AgentContext` 加 `audit`/`runId`(改 seam),与 #15 协调后再做。**当前 `index.ts` 不传 audit/runId,runtime 会新建 run id + InMemoryAuditSink,所以同 run_id replay 不会发生。**
 
 ## 1. 形态:committee 是 LLM agent
 
 ```ts
 import type { Agent } from "../contracts";
-export const committeeAgent: Agent = async (ctx) => {
+// 本 PR 实现(无 pickup):
+export const committeeLiveAgent: Agent = async (ctx) => {
   const opps = ctx.results.opportunities ?? [];
   const evidence = buildEvidence(opps, ctx);            // 确定性:overall + flags + risk warnings
-  const snapshot = await ctx.audit?.getAgentSnapshot(ctx.runId, "committee"); // 断电 pickup
-  const decision = snapshot?.status === "completed"
-    ? replayOutputFromSnapshot(snapshot)                // 复用,不重调 LLM
-    : await runCommitteeLLM(evidence, ctx);             // runAgent(skill, evidence, schema, mode)
-  return decision.ok
-    ? mapToSlice(decision.output, opps)                 // LLM verdict → opportunities + committee
-    : mapToSlice(fallbackDecision(evidence), opps, { degraded: decision.error });
+  const { output, degraded } = await runCommitteeAgent(ctx, { mode: "live" }); // runAgent(skill, evidence, schema)
+  return toCommitteeSlice(output, opps, degraded);      // LLM verdict → slice;失败/不完整 → 确定性兜底 + 降级
 };
+// 🚧 pickup(延后):未来在调 LLM 前 getAgentSnapshot(runId,"committee") 命中即 replay,不重调。
 ```
 
 - 用 runtime 的 `runAgent({ skill, input: evidence, outputSchema, mode, audit, runId, timeoutMs, retryOnce: true })`。
 - `mode`:`fixture`(测试/dry-run,喂确定性 stub)/ `live`(真调 LLM)/ `mock`(走不到这,API 层 ?mock=1 静态透传)。
-- ⚠️ **裸 `committeeAgent` 默认 `fixture`(不调 LLM)。#15 要真跑 LLM 必须显式 `runCommitteeAgent(ctx, { mode: "live" })`**(与 #11 market/sourcing 同约定)。否则 PR 标题的 "LLM 定 verdict" 不会发生。(review finding #5)
+- ⚠️ **裸 `committeeAgent` 默认 `fixture`(不调 LLM)。#15 应把导出的 `committeeLiveAgent`(= `makeCommitteeAgent("live")`)直接接进 `runPipeline`** 才会真跑 LLM —— Agent seam 无 mode 入口,所以提供了绑定 mode 的工厂,避免"换了 import 其实没调 LLM"。(review findings #5 / round2-#3)
 - **完整性校验**:LLM 返回后必须经 `isComplete()` —— `decisions` + `ranked_ids` 恰好覆盖全部 opportunity id;不满足 → 当作失败,退回确定性兜底(不静默保留旧 decision)。这是**结构校验,不是 verdict 护栏**(不覆盖 Go/Watch/Reject)。(review finding #3a)
 - `ctx.audit`/`ctx.runId` 当前不在 `AgentContext` 上 —— 见 §5 范围分工(由 #15 注入或经 providers 传)。
 
@@ -78,12 +76,15 @@ overall>=70?Go:overall>=50?Watch:Reject               // baseDecision
 - `committee.summary` 前缀模板:`(LLM 暂不可用,以下为确定性兜底决策)…`。
 - 受影响 `decision_reason` 用确定性模板(仍引用 gate hits + risk warnings)。
 
-## 5. 断电 pickup(用现有 audit/replay)
+## 5. 断电 pickup(🚧 本 PR **未实现**,设计待办)
 
+> **现状(2026-06):** `index.ts` **没有**传 `audit`/`runId`,也没有 snapshot 检查 —— runtime 会新建 run id + InMemoryAuditSink,**同 run_id replay 不会发生**。本 PR 不交付 pickup,§7 验收里也不作为 #14 的验收项。
+
+设计(将来实现):
 - committee 的 LLM 调用经 `audit` sink 记录(`startAgent`→`recordModelResponse`→`completeAgent`,落 `.runs/<audit_run_id>/`)。
-- 重跑同 `audit_run_id`:`getAgentSnapshot(runId,"committee")` 命中 completed 快照 → `replayOutputFromSnapshot` **复用 verdict,不重调 LLM**(省钱 + 不丢已得结果)。
-- **范围分工**:#14 实现 check-snapshot-before-call + replay;**恢复入口(检测半截 run、重发同 run_id)+ 文件型 AuditSink 持久化属 #15**。#14 只对 `AuditSink` 接口编程,内存/文件由 #15 注入。
-  - 注:`AgentContext` 现无 `audit`/`runId` 字段。MVP 可先经 `providers` 或 #15 包一层把 sink 传进来;若需要扩 `AgentContext` 则走"改 seam = 通知全队"(#23 owner)。
+- 重跑同 `audit_run_id`:`getAgentSnapshot(runId,"committee")` 命中 completed 快照 → `replayOutputFromSnapshot` 复用 verdict,不重调 LLM。
+- **阻塞点**:`AgentContext` 现无 `audit`/`runId` 字段 → 要实现 pickup 必须**扩 seam**(改 `contracts.ts` = 通知全队,#23 owner)+ #15 提供恢复入口 + 文件型 AuditSink。
+- **结论**:作为 **#15 + seam 扩展的 follow-up**,不在 #14。
 
 ## 6. 模块结构 + TDD 顺序
 
@@ -98,13 +99,13 @@ lib/agents/committee/
   __tests__/    ← weights/gates/evidence 纯单测;index 用 mode:"fixture" 测装配 + 失败兜底 + replay 复用
 ```
 
-**TDD 顺序:** `weights` → `gates`(三候选边界)→ `evidence` → `index`(fixture 装配 / 失败降级 / pickup 复用)→ `skill`+`schema` 配 live。
+**TDD 顺序:** `weights` → `gates`(三候选边界)→ `evidence` → `index`(fixture 装配 / 失败降级 / 完整性)→ `skill`+`schema` 配 live。
 
 ## 7. 验收锚点
 
 - **live(fixture 模式代演)**:LLM 输出经 schema 校验,映射出过 `check-contract` 的 RunResult。
-- **fallback**:断网 → 确定性兜底,吸尘器=Watch、dehumidifier=Reject、cable=Go;降级在 warnings/summary/reason 三处可见。
-- **pickup**:同 run_id 二次运行,committee 命中快照 → 不重调 LLM,verdict 一致。
+- **fallback**:断网/输出不完整 → 确定性兜底,吸尘器=Watch、dehumidifier=Reject、cable=Go;降级在 warnings/summary/reason 三处可见。
+- ~~pickup~~ 🚧 **不在 #14 验收**(已延后,见 §5)。
 - `decision_reason` 提利润敏感 + 合规/人工复核;排序 Go>Watch>Reject(cable>vacuum>dehumidifier)。
 - **「高风险/硬违规不能 Go」是软约束(pure-A)**:由 skill 硬指令 + eval 监测保障,**非代码硬闸**(用户决定,见 [[committee-pure-llm-verdict]])。
   代码只做结构兜底:LLM 失败/输出不完整 → 确定性兜底(它复现高风险=Reject)。若 eval 显示模型不够稳,再考虑加最小护栏。

@@ -120,6 +120,21 @@ describe("LLM output completeness (finding #3a)", () => {
   });
 });
 
+describe("committeeLiveAgent / makeCommitteeAgent (finding: live wiring, round 2 #3)", () => {
+  it("committeeLiveAgent actually attempts live (no client → degrades, proving it isn't fixture)", async () => {
+    const { committeeLiveAgent } = await import("../index");
+    const slice = await committeeLiveAgent(ctxWith());
+    const committeeAgentResult = slice.agents!.find((a) => a.key === "committee")!;
+    expect(committeeAgentResult.warnings.length).toBeGreaterThan(0); // degraded marker present
+    // verdict still correct via deterministic fallback
+    expect(slice.opportunities!.find((o) => o.id === "opp_desk_vacuum")!.decision).toBe("Watch");
+  });
+  it("fixture committeeAgent stays clean (no degradation)", async () => {
+    const slice = await committeeAgent(ctxWith());
+    expect(slice.agents!.find((a) => a.key === "committee")!.warnings).toHaveLength(0);
+  });
+});
+
 describe("degraded fallback (live LLM fails)", () => {
   it("falls back to deterministic decision and surfaces the degradation", async () => {
     // force a live call with no client/key so runAgent fails

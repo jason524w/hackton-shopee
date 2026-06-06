@@ -66,10 +66,23 @@ export async function runCommitteeAgent(
   return { output: deterministicOutput(opps, ctx), degraded };
 }
 
-export const committeeAgent: Agent = async (ctx: AgentContext): Promise<Partial<RunResult>> => {
-  const { output, degraded } = await runCommitteeAgent(ctx);
-  return toCommitteeSlice(output, ctx.results.opportunities ?? [], degraded);
-};
+/**
+ * Build a pipeline Agent bound to a run mode. #15 should wire `committeeLiveAgent`
+ * (or `makeCommitteeAgent("live")`) directly into runPipeline so the LLM actually
+ * runs — the Agent seam has no mode param, so the default `committeeAgent` is fixture.
+ */
+export function makeCommitteeAgent(mode: AgentRunMode): Agent {
+  return async (ctx: AgentContext): Promise<Partial<RunResult>> => {
+    const { output, degraded } = await runCommitteeAgent(ctx, { mode });
+    return toCommitteeSlice(output, ctx.results.opportunities ?? [], degraded);
+  };
+}
+
+/** Default = fixture (dry-run / tests). */
+export const committeeAgent: Agent = makeCommitteeAgent("fixture");
+
+/** Live LLM verdict — #15 drops this into runPipeline. */
+export const committeeLiveAgent: Agent = makeCommitteeAgent("live");
 
 export function toCommitteeSlice(
   output: CommitteeOutput,
