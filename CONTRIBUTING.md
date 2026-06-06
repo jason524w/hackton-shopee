@@ -3,7 +3,8 @@
 > 4 人 / 多 agent / 24h。规则只为"多人并行不打架、main 永远能 demo",其余从简。
 
 ## 分支与合并
-- **main 受保护,不能直接 push,一切走 PR。**(含 TASK-01 骨架,只是可不等 review)
+- **一切走 PR,不直接 push main。**(含 TASK-01 骨架,只是可不等 review)
+  > private 免费库服务端无法硬挡 → 这是**团队约定**,PR 上的 CI 红绿是安全网。请自觉遵守。
 - 分支名:`task-<n>-<slug>`,例:`task-2-war-room`。
 - **一个 task/track 一个 PR**,尽量小、尽量快。
 - **不强制 review**(等审会死锁):**PR + CI 绿 → 自己 merge**;鼓励队友顺手扫一眼。
