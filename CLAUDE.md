@@ -40,23 +40,26 @@
 - **Next.js 14 (App Router) + TypeScript + Tailwind**,单仓单应用,Vercel 部署。
 - **OpenAI**:Responses API + **Structured Outputs**(强制 JSON)+ **Function Calling**
   (查种子数据)。模型默认 `gpt-4o`。
-- 6 个 agent = 6 次结构化调用串联,**不上重编排框架**。
-- 状态全在一次 `/api/run` 返回里,前端无需复杂状态管理。
+- **7 个 agent** + ReAct runtime + provider 适配层 + audit(完整后端,见 [IMPLEMENTATION-ROADMAP](docs/IMPLEMENTATION-ROADMAP.md))。
+- 状态全在一次 `/api/run` 返回里(`RunResult`),前端无需复杂状态管理;audit 走 `audit_run_id`。
 
 ## 仓库结构
 
 ```
 contract/            ← 前后端数据契约(已就位,先读 contract/README.md)
-docs/                ← 架构 / 范围 / agent 规格 / 任务板 / PRD
-app/                 ← Next.js(待建)
-  api/run/route.ts   ← POST 接口,返回 RunResult;?mock=1 直回 mock
-  (各页面路由)
+docs/                ← 架构 / ROADMAP / COMMITTEE / 范围 / 任务板 / PRD
+app/
+  api/run/route.ts   ← POST,返回 RunResult;?mock=1 / ?images=0 / live
+  api/runs/[id]/audit/route.ts
+  (brief / war-room / board / studio 页面路由)
 components/          ← UI 组件
 lib/
   openai.ts          ← OpenAI client
-  agents/            ← 6 个 agent(market/sourcing/margin/risk/listing/committee)
-seed/                ← 手抓的真实种子数据 + demo 预生成图
-public/
+  agent-runtime/     ← ReAct loop + tool-runner + audit + replay
+  providers/         ← shopee / sourcing-1688 / shipping / fx / openai-image 适配器
+  agents/            ← 7 个 agent(market/sourcing/margin/risk/listing/packaging/committee),各目录化
+seed/                ← 手抓的真实种子数据(market/sourcing/rules/shipping/fx/images)
+public/generated/    ← live 生成的商品图(不入库)
 ```
 
 ## 怎么跑
