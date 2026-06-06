@@ -119,6 +119,7 @@ export function toCommitteeSlice(
     data_sources: ["committee deterministic + LLM"],
     evidence: output.decisions.map((d) => ({ label: d.id, value: d.verdict })),
     key_judgment: output.summary,
+    audit_summary: "",
     score: top ? computeOverall(top.scores) : 0,
     confidence: degraded ? 0.5 : 0.75,
     warnings: degraded ? [`⚠ LLM 委员会降级:确定性兜底(${degraded.code})`] : [],

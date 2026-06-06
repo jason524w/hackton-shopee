@@ -79,6 +79,7 @@ export const marginAgent: Agent = async (ctx) => {
     key_judgment: sensitive
       ? `base 档利润成立(${pct(marginDetail.base.net_margin)});但悲观档掉到 ${pct(marginDetail.low.net_margin)},低于目标 ${pct(target)},利润对退货与运费敏感。`
       : `各档均达标,利润空间稳健。`,
+    audit_summary: "",
     score: profitScore(marginDetail.base.net_margin, marginDetail.low.net_margin, target),
     confidence: sensitive ? 0.62 : 0.85,
     warnings,

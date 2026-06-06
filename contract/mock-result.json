@@ -30,6 +30,7 @@
         { "label": "热度来源", "value": "desk-cleaning content trending on TikTok SG" }
       ],
       "key_judgment": "需求真实存在,价格带集中、竞争中等;适合轻资产卖家测试,但同质化偏高。",
+      "audit_summary": "Tools: Shopee SG search (seed); Web search. Found: real demand with clustered pricing and medium competition. Action: sized the mini desk vacuum opportunity for Shopee SG. Output: 3 opportunity directions, market score 78/100, differentiation warning.",
       "score": 78,
       "confidence": 0.74,
       "warnings": ["价格竞争激烈,需要差异化包装"]
@@ -48,6 +49,7 @@
         { "label": "包装重量", "value": "180g" }
       ],
       "key_judgment": "货源充足、价差明显;但跨境到货 8–12 天接近平台履约上限。",
+      "audit_summary": "Tools: 1688 quotes (seed). Found: low-cost supplier stock is available, with delivery close to the seller limit. Action: matched the primary direction to a seed-backed supplier. Output: source cost, MOQ, stock, package weight, score 72/100, fulfillment warning.",
       "score": 72,
       "confidence": 0.7,
       "warnings": ["履约时间接近上限,需在 listing 注明发货周期"]
@@ -66,6 +68,7 @@
         { "label": "最低可行售价", "value": "SGD 9.40" }
       ],
       "key_judgment": "base 档利润成立;但 high-return 情形下利润率掉到 ~12%,利润对退货和运费敏感。",
+      "audit_summary": "Tools: deterministic cost model. Found: base margin clears target, but downside margin falls near 12%. Action: computed cost waterfall and viable price. Output: margin detail, minimum viable price, score 66/100, profit sensitivity warning.",
       "score": 66,
       "confidence": 0.62,
       "warnings": ["利润对退货率与国际运费敏感"]
@@ -84,6 +87,7 @@
         { "label": "夸大宣传", "value": "⚠ 竞品常见『超强吸力』属夸大,需规避" }
       ],
       "key_judgment": "无硬性拦截,但属电器类:存在夸大吸力与电器安全描述风险,需人工复核。",
+      "audit_summary": "Tools: Shopee prohibited and listing-violation rules (seed). Found: no hard block, but electrical safety and exaggerated-suction risks require review. Action: checked platform, product, and claim risk. Output: medium risk, score 58/100, two compliance warnings.",
       "score": 58,
       "risk_level": "medium",
       "confidence": 0.8,
@@ -105,6 +109,7 @@
         { "label": "标题风格", "value": "对标 top-3 竞品结构 + HDB/office 场景" }
       ],
       "key_judgment": "字段完整可上架;已按 Risk 约束改写卖点,去掉夸大词。",
+      "audit_summary": "Tools: Shopee category schema (seed); competitor titles (seed). Found: required fields are complete and risky claims were removed. Action: generated Shopee-ready listing fields. Output: ready listing handoff, score 81/100, no warnings.",
       "score": 81,
       "confidence": 0.77,
       "warnings": []
@@ -122,6 +127,7 @@
         { "label": "图片合规", "value": "feature 图需人工确认(不暗示认证)" }
       ],
       "key_judgment": "三张图按真实规格生成、去夸大;feature 图标 needs_review 交人工确认。",
+      "audit_summary": "Tools: competitor style (seed); OpenAI image. Found: localized image concepts can stay within real specs, but feature claims need review. Action: generated hero, lifestyle, and feature image prompts/assets. Output: 3 images, score 76/100, feature review warning.",
       "score": 76,
       "confidence": 0.72,
       "warnings": ["feature 图卖点需与 listing 规格逐项核对"]
@@ -139,6 +145,7 @@
         { "label": "合规", "value": "中风险 (58)" }
       ],
       "key_judgment": "利润在 base 档成立、需求真实,但电器合规为中风险且利润敏感 → 给 Watch,不直接 Go。",
+      "audit_summary": "Tools: committee evidence from upstream agents. Found: demand and base profit are promising, but compliance and downside margin remain sensitive. Action: weighed tradeoffs and ranked opportunities. Output: Watch decision for the desk vacuum, score 69/100, no additional warnings.",
       "score": 69,
       "confidence": 0.71,
       "warnings": []

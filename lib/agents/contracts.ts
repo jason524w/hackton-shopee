@@ -93,13 +93,41 @@ export async function runPipeline(agents: Agent[], ctx: AgentContext): Promise<R
 
   for (const agent of agents) {
     const slice = await agent(pipelineContext);
-    pipelineContext.results = mergeRunResultSlice(pipelineContext.results, slice);
+    pipelineContext.results = mergeRunResultSlice(pipelineContext.results, withAgentAuditSummaries(slice));
   }
 
   return {
     results: pipelineContext.results,
     risk_checkpoints: ctx.risk.getCheckpoints(),
   };
+}
+
+export function withAgentAuditSummaries(slice: Partial<RunResult>): Partial<RunResult> {
+  if (!slice.agents?.length) {
+    return slice;
+  }
+
+  return {
+    ...slice,
+    agents: slice.agents.map((agent) => ({ ...agent, audit_summary: buildAgentAuditSummary(agent) })),
+  };
+}
+
+export function buildAgentAuditSummary(agent: AgentResult): string {
+  const tools = summarizeList(agent.data_sources, "no external tool/source declared");
+  const evidence = summarizeList(
+    agent.evidence.slice(0, 2).map((item) => `${item.label}: ${item.value}`),
+    "no structured evidence declared",
+  );
+  const warnings = summarizeList(agent.warnings, "none");
+  const confidence = Math.round(agent.confidence * 100);
+
+  return [
+    `Tools: ${tools}`,
+    `Found: ${clip(agent.key_judgment)}; evidence: ${evidence}`,
+    `Action: ${agent.name} processed ${clip(agent.inputs_summary)}`,
+    `Output: ${agent.status}, score ${agent.score}/100, confidence ${confidence}%, warnings: ${warnings}`,
+  ].join(". ");
 }
 
 export function mergeRunResultSlice(
@@ -149,6 +177,16 @@ function mergeByKey<Item>(
   }
 
   return Array.from(merged.values());
+}
+
+function summarizeList(values: string[], fallback: string): string {
+  const cleaned = values.map((value) => clip(value)).filter(Boolean);
+  return cleaned.length ? cleaned.slice(0, 3).join("; ") : fallback;
+}
+
+function clip(value: string, maxLength = 160): string {
+  const normalized = value.replace(/\s+/g, " ").trim();
+  return normalized.length > maxLength ? `${normalized.slice(0, maxLength - 1)}...` : normalized;
 }
 
 function createNoopRiskCheckpoint(stage: RiskCheckpointStage): RiskCheckpoint {

@@ -41,6 +41,7 @@ export interface AgentResult {
   data_sources: string[];
   evidence: Evidence[];
   key_judgment: string;
+  audit_summary: string; // brief English audit line: tools/sources, findings, action, output
   score: number; // 0..100
   confidence: number; // 0..1
   warnings: string[];
