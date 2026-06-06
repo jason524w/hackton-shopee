@@ -30,7 +30,9 @@ export const committeeAgent: Agent = async (ctx) => {
 ```
 
 - 用 runtime 的 `runAgent({ skill, input: evidence, outputSchema, mode, audit, runId, timeoutMs, retryOnce: true })`。
-- `mode`:`fixture`(测试,喂 stub 输出)/ `live`(真调 LLM)/ `mock`(走不到这,API 层 ?mock=1 静态透传)。
+- `mode`:`fixture`(测试/dry-run,喂确定性 stub)/ `live`(真调 LLM)/ `mock`(走不到这,API 层 ?mock=1 静态透传)。
+- ⚠️ **裸 `committeeAgent` 默认 `fixture`(不调 LLM)。#15 要真跑 LLM 必须显式 `runCommitteeAgent(ctx, { mode: "live" })`**(与 #11 market/sourcing 同约定)。否则 PR 标题的 "LLM 定 verdict" 不会发生。(review finding #5)
+- **完整性校验**:LLM 返回后必须经 `isComplete()` —— `decisions` + `ranked_ids` 恰好覆盖全部 opportunity id;不满足 → 当作失败,退回确定性兜底(不静默保留旧 decision)。这是**结构校验,不是 verdict 护栏**(不覆盖 Go/Watch/Reject)。(review finding #3a)
 - `ctx.audit`/`ctx.runId` 当前不在 `AgentContext` 上 —— 见 §5 范围分工(由 #15 注入或经 providers 传)。
 
 ## 2. 确定性证据层(保留,只喂 LLM,不定词)
@@ -41,9 +43,13 @@ export const committeeAgent: Agent = async (ctx) => {
 overall          = Σ(scores[k]*weights[k])  四舍五入   // 写回 o.scores.overall
 margin_signal    = primary 才有:low.net_margin vs brief.target_margin
 fulfillment_gap  = o.fulfillment_days − brief.max_fulfillment_days
-risk_signal      = o.risk_level + risk agent warnings(夸大/电器/human_review)
+risk_signal      = o.risk_level + 风险 warnings
 hard_flags       = ctx.risk.getCheckpoints() 的 hard_block / images rejected / stock out
 ```
+
+> ⚠️ **风险 warnings 取源(review finding #2):** committee 在 pipeline 里跑在 **risk 聚合之前**,
+> 所以**不能**读 `ctx.results.agents[risk].warnings`(那时还不存在)。改读
+> `ctx.risk.getCheckpoints().flatMap(c=>c.warnings)` + `selected_listing.compliance.warnings`(均已就绪),去重。
 
 > 权重固定 `{profit:.30, demand:.25, compliance:.20, fulfillment:.15, packaging:.10}`,由 #14 写入 `committee.weights`。
 > `human_review` 进 `risk_signal` 当证据,**不是 gate**。
@@ -99,5 +105,8 @@ lib/agents/committee/
 - **live(fixture 模式代演)**:LLM 输出经 schema 校验,映射出过 `check-contract` 的 RunResult。
 - **fallback**:断网 → 确定性兜底,吸尘器=Watch、dehumidifier=Reject、cable=Go;降级在 warnings/summary/reason 三处可见。
 - **pickup**:同 run_id 二次运行,committee 命中快照 → 不重调 LLM,verdict 一致。
-- `decision_reason` 提利润敏感 + 合规/人工复核;高风险/硬违规不能 Go;排序 Go>Watch>Reject(cable>vacuum>dehumidifier)。
+- `decision_reason` 提利润敏感 + 合规/人工复核;排序 Go>Watch>Reject(cable>vacuum>dehumidifier)。
+- **「高风险/硬违规不能 Go」是软约束(pure-A)**:由 skill 硬指令 + eval 监测保障,**非代码硬闸**(用户决定,见 [[committee-pure-llm-verdict]])。
+  代码只做结构兜底:LLM 失败/输出不完整 → 确定性兜底(它复现高风险=Reject)。若 eval 显示模型不够稳,再考虑加最小护栏。
+- **建议补一个红线 eval 集**(假冒品牌/违禁/high-risk → 断言 Reject 通过率)纳入 #16 QA —— 这是"靠 agent 不靠代码"路线的监测手段。
 - 不改 contract。

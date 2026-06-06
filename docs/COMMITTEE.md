@@ -6,6 +6,11 @@
 > 配套阅读:[AGENTS.md](AGENTS.md)(7 个 agent 总览)、[IMPLEMENTATION-ROADMAP.md](IMPLEMENTATION-ROADMAP.md)
 > (7-agent 后端权威)、[ARCHITECTURE.md](ARCHITECTURE.md)(利润模型 + 权重)、`contract/`(唯一数据对齐目标)。
 
+> ⚠️ **实现方向变更(2026-06,#14):** 本规范 §1「LLM 不碰最终决策 / 确定性 Gate 是硬保障」**已被推翻**。
+> #14 落地为 **pure-A:LLM 直接定 Go/Watch/Reject(产品亮点)**;确定性加权/gate 降级为 **证据 + LLM 失败兜底**。
+> **硬红线(hard_block / risk 高不能 Go)改由 skill 指令 + eval 保障(软约束),不再是代码硬闸**;demo 安全网仍是 `?mock=1`。
+> **以 [docs/design/committee.md](design/committee.md) 为 #14 的实现权威**;本文的加权公式/权重/contract 映射仍有效,gate 部分仅作"兜底逻辑"参考。
+
 ---
 
 ## 0. 一句话
