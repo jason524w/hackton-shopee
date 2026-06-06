@@ -21,6 +21,9 @@ describe("browser retrieval provider", () => {
     expect(shopee.source.raw_snapshot_id).toBeTruthy();
     expect(shopee.source.extracted_text_hash).toMatch(/^[a-f0-9]{64}$/);
     expect(sourcing.offers.length).toBeGreaterThan(0);
+    if ("available" in offer) {
+      throw new Error(`Seed 1688 offer detail should be available: ${offer.reason}`);
+    }
     expect(offer.offer.package_weight_g).toBeGreaterThan(0);
     expect(offer.offer.supplier_stability.stability_score).toBeGreaterThan(0);
     expect(offer.offer.negotiation_notes.length).toBeGreaterThan(0);
@@ -70,6 +73,35 @@ describe("browser retrieval provider", () => {
     expect(result.offers[0]?.title).toMatch(/桌面清洁/);
     expect(result.offers[0]?.source_price_cny).toBe(10.33);
     expect(result.offers[0]?.supplier_name).toBe("锐耀数码专营店");
+  });
+
+  it("returns unavailable metadata for pending Chrome sourcing detail tools", async () => {
+    const controller: BrowserController = {
+      async capture(input) {
+        return {
+          url: input.url,
+          title: "1688 offer",
+          text: "桌面吸尘器 ¥ 12.8 深圳供应商",
+          links: [],
+          captured_at: "2026-06-06T00:00:00.000Z",
+        };
+      },
+    };
+    const provider = createChromeBrowserRetrievalProvider(controller, {
+      allowedDomains: ["1688.com"],
+      maxSteps: 2,
+    });
+
+    const offer = await provider.extract1688Offer({ url: "https://detail.1688.com/offer/example.html" });
+    const stock = await provider.refreshOfferStock({ offerId: "live_1688_example" });
+    const supplier = await provider.extractSupplierSignals({ supplierName: "深圳供应商" });
+
+    expect("available" in offer && offer.available).toBe(false);
+    expect("available" in stock && stock.available).toBe(false);
+    expect("available" in supplier && supplier.available).toBe(false);
+    expect(offer.warnings?.[0]?.code).toBe("CHROME_1688_OFFER_PARSER_PENDING");
+    expect(stock.warnings?.[0]?.code).toBe("CHROME_STOCK_REFRESH_URL_REQUIRED");
+    expect(supplier.warnings?.[0]?.code).toBe("CHROME_SUPPLIER_PROFILE_URL_REQUIRED");
   });
 
   it("keeps Chrome mode constrained by domain allowlist", async () => {

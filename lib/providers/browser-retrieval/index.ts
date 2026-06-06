@@ -27,6 +27,7 @@ import type {
   BrowserSupplierStability,
   BrowserTaobaoSearchInput,
   BrowserTaobaoSearchResult,
+  BrowserUnavailableResult,
   BrowserWebTrendInput,
   BrowserWebTrendResult,
 } from "./types";
@@ -484,23 +485,43 @@ export function createChromeBrowserRetrievalProvider(
       };
     },
 
-    async extract1688Offer(input: Browser1688OfferInput): Promise<Browser1688OfferResult> {
+    async extract1688Offer(input: Browser1688OfferInput): Promise<Browser1688OfferResult | BrowserUnavailableResult> {
       if (!input.url) {
-        throw new Error("Chrome 1688 offer extraction requires a URL.");
+        return unavailableBrowserResult({
+          url: "https://www.1688.com/",
+          code: "CHROME_1688_OFFER_URL_REQUIRED",
+          message: "Chrome 1688 offer extraction requires an offer URL; no browser page was opened.",
+          requiresHumanInput: true,
+        });
       }
       const page = await this.retrievePageSnapshot({ url: input.url, purpose: "sourcing_1688_offer", policy: input.policy });
       assertNoAccessChallenge(page.text_excerpt, page.url);
-      throw new Error(`Chrome offer detail parser is pending for snapshot ${page.snapshot.snapshot_id}.`);
+      return unavailableBrowserResult({
+        page,
+        code: "CHROME_1688_OFFER_PARSER_PENDING",
+        message: `Chrome captured the 1688 offer page, but detailed offer parsing is pending for snapshot ${page.snapshot.snapshot_id}.`,
+        requiresHumanInput: false,
+      });
     },
 
-    async refreshOfferStock(input: BrowserOfferStockInput): Promise<BrowserOfferStockResult> {
-      throw new Error(`Chrome stock refresh requires offer URL mapping for offer ${input.offerId}.`);
+    async refreshOfferStock(input: BrowserOfferStockInput): Promise<BrowserOfferStockResult | BrowserUnavailableResult> {
+      return unavailableBrowserResult({
+        url: "https://www.1688.com/",
+        code: "CHROME_STOCK_REFRESH_URL_REQUIRED",
+        message: `Chrome stock refresh requires an offer URL mapping for offer ${input.offerId}; no browser page was opened.`,
+        requiresHumanInput: true,
+      });
     },
 
-    async extractSupplierSignals(input: BrowserSupplierSignalsInput): Promise<BrowserSupplierSignalsResult> {
-      throw new Error(
-        `Chrome supplier extraction requires supplier page URL mapping for ${input.offerId ?? input.supplierName ?? "unknown supplier"}.`,
-      );
+    async extractSupplierSignals(input: BrowserSupplierSignalsInput): Promise<BrowserSupplierSignalsResult | BrowserUnavailableResult> {
+      return unavailableBrowserResult({
+        url: "https://www.1688.com/",
+        code: "CHROME_SUPPLIER_PROFILE_URL_REQUIRED",
+        message: `Chrome supplier extraction requires supplier page URL mapping for ${
+          input.offerId ?? input.supplierName ?? "unknown supplier"
+        }; no browser page was opened.`,
+        requiresHumanInput: true,
+      });
     },
   };
 }
@@ -531,9 +552,46 @@ function toPageSnapshot(
     source: source("browser-retrieval", "browser", capturedAt, url, snapshot),
     url,
     title: captured.title,
-    text_excerpt: truncate(captured.text, 12_000),
+    text_excerpt: truncate(captured.text, 25_000),
     links: captured.links ?? [],
     snapshot,
+  };
+}
+
+function unavailableBrowserResult(input: {
+  page?: BrowserRetrievePageSnapshotResult;
+  url?: string;
+  code: string;
+  message: string;
+  requiresHumanInput: boolean;
+}): BrowserUnavailableResult {
+  const capturedAt = input.page?.snapshot.captured_at ?? nowIso();
+  const url = input.page?.url ?? input.url ?? "https://www.1688.com/";
+  const snapshot =
+    input.page?.snapshot ??
+    createSnapshot({
+      url,
+      capturedAt,
+      text: input.message,
+      method: "manual_snapshot",
+      confidence: 0,
+      selectorNotes: ["no browser page captured for unavailable browser tool"],
+      warnings: [input.message],
+    });
+
+  return {
+    source: input.page?.source ?? source("browser-retrieval", "snapshot", capturedAt, url, snapshot),
+    available: false,
+    reason: input.message,
+    requires_human_input: input.requiresHumanInput,
+    snapshot,
+    warnings: [
+      {
+        code: input.code,
+        severity: "warning",
+        message: input.message,
+      },
+    ],
   };
 }
 

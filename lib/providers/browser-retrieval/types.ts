@@ -200,6 +200,13 @@ export interface Browser1688OfferResult extends ProviderResultMeta {
   snapshot: BrowserSnapshotEvidence;
 }
 
+export interface BrowserUnavailableResult extends ProviderResultMeta {
+  available: false;
+  reason: string;
+  requires_human_input: boolean;
+  snapshot?: BrowserSnapshotEvidence;
+}
+
 export interface BrowserOfferStockInput {
   offerId: string;
   policy?: Partial<BrowserRetrievalPolicy>;
@@ -248,7 +255,7 @@ export interface BrowserRetrievalProvider {
   extractWebTrend(input: BrowserWebTrendInput): Promise<BrowserWebTrendResult>;
   extract1688Search(input: Browser1688SearchInput): Promise<Browser1688SearchResult>;
   extractTaobaoSearch(input: BrowserTaobaoSearchInput): Promise<BrowserTaobaoSearchResult>;
-  extract1688Offer(input: Browser1688OfferInput): Promise<Browser1688OfferResult>;
-  refreshOfferStock(input: BrowserOfferStockInput): Promise<BrowserOfferStockResult>;
-  extractSupplierSignals(input: BrowserSupplierSignalsInput): Promise<BrowserSupplierSignalsResult>;
+  extract1688Offer(input: Browser1688OfferInput): Promise<Browser1688OfferResult | BrowserUnavailableResult>;
+  refreshOfferStock(input: BrowserOfferStockInput): Promise<BrowserOfferStockResult | BrowserUnavailableResult>;
+  extractSupplierSignals(input: BrowserSupplierSignalsInput): Promise<BrowserSupplierSignalsResult | BrowserUnavailableResult>;
 }
