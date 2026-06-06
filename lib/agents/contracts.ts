@@ -22,6 +22,8 @@ export interface AgentProviders {
   openaiImage: OpenAIImageProvider;
 }
 
+// Risk supervises the downstream business decision checkpoints. Market and
+// sourcing provide evidence, while the risk agent itself aggregates these stages.
 export type RiskCheckpointStage = "margin" | "listing" | "packaging" | "committee";
 
 export interface RiskCheckpoint {
@@ -60,15 +62,17 @@ export function createNoopRisk(): RiskSupervisor {
     async checkpoint(stage: RiskCheckpointStage): Promise<RiskCheckpoint> {
       const checkpoint = createNoopRiskCheckpoint(stage);
       checkpoints.push(checkpoint);
-      return checkpoint;
+      return cloneRiskCheckpoint(checkpoint);
     },
 
     getCheckpoints(): RiskCheckpoint[] {
-      return checkpoints.map((checkpoint) => ({ ...checkpoint }));
+      return checkpoints.map(cloneRiskCheckpoint);
     },
   };
 }
 
+// Stateless singleton for callers that need an inert supervisor and do not care
+// about captured checkpoint history. Harnesses should use createNoopRisk().
 export const noopRisk: RiskSupervisor = {
   async checkpoint(stage: RiskCheckpointStage): Promise<RiskCheckpoint> {
     return createNoopRiskCheckpoint(stage);
@@ -89,8 +93,6 @@ export async function runPipeline(agents: Agent[], ctx: AgentContext): Promise<R
     const slice = await agent(pipelineContext);
     pipelineContext.results = mergeRunResultSlice(pipelineContext.results, slice);
   }
-
-  ctx.results = pipelineContext.results;
 
   return {
     results: pipelineContext.results,
@@ -156,5 +158,14 @@ function createNoopRiskCheckpoint(stage: RiskCheckpointStage): RiskCheckpoint {
     warnings: [],
     evidence: [],
     flags: [],
+  };
+}
+
+function cloneRiskCheckpoint(checkpoint: RiskCheckpoint): RiskCheckpoint {
+  return {
+    ...checkpoint,
+    warnings: [...checkpoint.warnings],
+    evidence: checkpoint.evidence.map((item) => ({ ...item })),
+    flags: [...checkpoint.flags],
   };
 }
