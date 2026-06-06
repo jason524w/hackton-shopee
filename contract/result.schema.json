@@ -3,7 +3,7 @@
   "title": "Sea Launch AI RunResult",
   "description": "Contract returned by POST /api/run. contract/result.ts is the CANONICAL type; this schema is the backend validation target kept in sync with it. Frontend renders against result.ts + mock-result.json. Run scripts/check-contract.mjs to verify mock-result.json conforms.",
   "type": "object",
-  "required": ["run_id", "audit_run_id", "created_at", "currency", "brief", "product_directions", "market_trend_agent_output", "sourcing_agent_output", "agents", "opportunities", "committee", "selected_listing"],
+  "required": ["run_id", "audit_run_id", "created_at", "currency", "brief", "agents", "opportunities", "committee", "selected_listing"],
   "additionalProperties": false,
   "properties": {
     "run_id": { "type": "string" },
@@ -11,9 +11,6 @@
     "created_at": { "type": "string" },
     "currency": { "type": "string" },
     "brief": { "$ref": "#/$defs/brief" },
-    "product_directions": { "type": "array", "items": { "$ref": "#/$defs/productDirection" }, "minItems": 1 },
-    "market_trend_agent_output": { "$ref": "#/$defs/marketTrendAgentOutput" },
-    "sourcing_agent_output": { "$ref": "#/$defs/sourcingAgentOutput" },
     "agents": { "type": "array", "items": { "$ref": "#/$defs/agent" }, "minItems": 1 },
     "opportunities": { "type": "array", "items": { "$ref": "#/$defs/opportunity" }, "minItems": 1 },
     "committee": { "$ref": "#/$defs/committee" },
@@ -41,127 +38,6 @@
       "required": ["label", "value"],
       "properties": { "label": { "type": "string" }, "value": { "type": "string" } }
     },
-    "productDirection": {
-      "type": "object",
-      "required": ["id", "english_name", "chinese_name", "search_keyword"],
-      "properties": {
-        "id": { "type": "string" },
-        "english_name": { "type": "string" },
-        "chinese_name": { "type": "string" },
-        "search_keyword": { "type": "string" }
-      }
-    },
-    "trendSourceLink": {
-      "type": "object",
-      "required": ["label", "url"],
-      "properties": {
-        "label": { "type": "string" },
-        "url": { "type": "string" }
-      }
-    },
-    "priceBand": {
-      "type": "object",
-      "required": ["currency", "min", "max", "label"],
-      "properties": {
-        "currency": { "type": "string" },
-        "min": { "type": "number" },
-        "max": { "type": "number" },
-        "label": { "type": "string" }
-      }
-    },
-    "reviewDensity": {
-      "type": "object",
-      "required": ["median_reviews", "top_listing_reviews", "reviewed_listing_ratio", "label"],
-      "properties": {
-        "median_reviews": { "type": "number" },
-        "top_listing_reviews": { "type": "number" },
-        "reviewed_listing_ratio": { "type": "number" },
-        "label": { "type": "string" }
-      }
-    },
-    "ratingDistribution": {
-      "type": "object",
-      "required": ["average_rating", "five_star_percent", "four_star_percent", "three_star_or_below_percent"],
-      "properties": {
-        "average_rating": { "type": "number" },
-        "five_star_percent": { "type": "number" },
-        "four_star_percent": { "type": "number" },
-        "three_star_or_below_percent": { "type": "number" }
-      }
-    },
-    "marketTrendSignal": {
-      "type": "object",
-      "required": ["product_direction_id", "product_direction", "platform", "demand_signal_score", "competitor_count", "price_band", "review_density", "rating_distribution", "trend_source_links"],
-      "properties": {
-        "product_direction_id": { "type": "string" },
-        "product_direction": { "type": "string" },
-        "platform": { "enum": ["Shopee SG"] },
-        "demand_signal_score": { "type": "number" },
-        "competitor_count": { "type": "number" },
-        "price_band": { "$ref": "#/$defs/priceBand" },
-        "review_density": { "$ref": "#/$defs/reviewDensity" },
-        "rating_distribution": { "$ref": "#/$defs/ratingDistribution" },
-        "trend_source_links": { "type": "array", "items": { "$ref": "#/$defs/trendSourceLink" } }
-      }
-    },
-    "supplierCandidate": {
-      "type": "object",
-      "required": ["supplier_name", "location", "years_active", "price_cny", "minimum_order_quantity", "available_stock", "domestic_shipping_time_days"],
-      "properties": {
-        "supplier_name": { "type": "string" },
-        "location": { "type": "string" },
-        "years_active": { "type": "number" },
-        "price_cny": { "type": "number" },
-        "minimum_order_quantity": { "type": "number" },
-        "available_stock": { "type": "number" },
-        "domestic_shipping_time_days": { "type": "string" }
-      }
-    },
-    "packageDimensions": {
-      "type": "object",
-      "required": ["length_cm", "width_cm", "height_cm", "label"],
-      "properties": {
-        "length_cm": { "type": "number" },
-        "width_cm": { "type": "number" },
-        "height_cm": { "type": "number" },
-        "label": { "type": "string" }
-      }
-    },
-    "sourcingSignal": {
-      "type": "object",
-      "required": ["product_direction_id", "product_direction", "platform", "search_keyword", "source_price", "supplier_candidates", "available_stock", "min_order_quantity", "estimated_domestic_shipping_time", "package_weight", "package_dimensions"],
-      "properties": {
-        "product_direction_id": { "type": "string" },
-        "product_direction": { "type": "string" },
-        "platform": { "enum": ["1688"] },
-        "search_keyword": { "type": "string" },
-        "source_price": { "type": "object" },
-        "supplier_candidates": { "type": "array", "items": { "$ref": "#/$defs/supplierCandidate" } },
-        "available_stock": { "type": "number" },
-        "min_order_quantity": { "type": "number" },
-        "estimated_domestic_shipping_time": { "type": "string" },
-        "package_weight": { "type": "object" },
-        "package_dimensions": { "$ref": "#/$defs/packageDimensions" }
-      }
-    },
-    "marketTrendAgentOutput": {
-      "type": "object",
-      "required": ["platform", "purpose", "signals"],
-      "properties": {
-        "platform": { "enum": ["Shopee SG"] },
-        "purpose": { "type": "string" },
-        "signals": { "type": "array", "items": { "$ref": "#/$defs/marketTrendSignal" } }
-      }
-    },
-    "sourcingAgentOutput": {
-      "type": "object",
-      "required": ["platform", "purpose", "signals"],
-      "properties": {
-        "platform": { "enum": ["1688"] },
-        "purpose": { "type": "string" },
-        "signals": { "type": "array", "items": { "$ref": "#/$defs/sourcingSignal" } }
-      }
-    },
     "agent": {
       "type": "object",
       "required": ["key", "name", "role", "status", "inputs_summary", "data_sources", "evidence", "key_judgment", "score", "confidence", "warnings"],
@@ -177,8 +53,7 @@
         "score": { "type": "number", "minimum": 0, "maximum": 100 },
         "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
         "warnings": { "type": "array", "items": { "type": "string" } },
-        "risk_level": { "enum": ["low", "medium", "high"] },
-        "structured_output": { "type": "object" }
+        "risk_level": { "enum": ["low", "medium", "high"] }
       }
     },
     "costLine": {

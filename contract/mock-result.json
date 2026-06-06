@@ -1,427 +1,110 @@
 {
-  "run_id": "run_mock_shopee_sg_1688_001",
-  "audit_run_id": "audit_run_mock_shopee_sg_1688_001",
-  "created_at": "2026-06-06T12:55:00+08:00",
+  "run_id": "run_demo_001",
+  "audit_run_id": "audit_run_demo_001",
+  "created_at": "2026-06-06T09:30:00+08:00",
   "currency": "SGD",
   "brief": {
     "target_market": "Singapore",
     "target_platform": "Shopee",
     "seller_type": "individual_dropshipper",
-    "product_intent": "Mini desk vacuum / Portable dehumidifier / Cable organizer / Pet grooming tool / Compact garment steamer",
-    "category": "home_lifestyle_small_items",
+    "product_intent": "mini desk vacuum",
+    "category": "home_appliances_small",
     "budget": 500,
     "target_margin": 0.25,
     "max_fulfillment_days": 12,
     "risk_appetite": "balanced",
     "language": "en"
   },
-  "product_directions": [
-    {
-      "id": "mini-desk-vacuum",
-      "english_name": "Mini desk vacuum",
-      "chinese_name": "桌面吸尘器",
-      "search_keyword": "Mini desk vacuum"
-    },
-    {
-      "id": "portable-dehumidifier",
-      "english_name": "Portable dehumidifier",
-      "chinese_name": "小型除湿器",
-      "search_keyword": "Portable dehumidifier"
-    },
-    {
-      "id": "cable-organizer",
-      "english_name": "Cable organizer",
-      "chinese_name": "桌面线缆收纳",
-      "search_keyword": "Cable organizer"
-    },
-    {
-      "id": "pet-grooming-tool",
-      "english_name": "Pet grooming tool",
-      "chinese_name": "宠物清洁小工具",
-      "search_keyword": "Pet grooming tool"
-    },
-    {
-      "id": "compact-garment-steamer",
-      "english_name": "Compact garment steamer",
-      "chinese_name": "手持挂烫机",
-      "search_keyword": "Compact garment steamer"
-    }
-  ],
-  "market_trend_agent_output": {
-    "platform": "Shopee SG",
-    "purpose": "判断这个方向是否有人买、是否有竞争、是否有热度。",
-    "signals": [
-      {
-        "product_direction_id": "mini-desk-vacuum",
-        "product_direction": "Mini desk vacuum / 桌面吸尘器",
-        "platform": "Shopee SG",
-        "demand_signal_score": 78,
-        "competitor_count": 43,
-        "price_band": { "currency": "SGD", "min": 6.9, "max": 18.9, "label": "SGD 6.90-18.90" },
-        "review_density": {
-          "median_reviews": 186,
-          "top_listing_reviews": 1300,
-          "reviewed_listing_ratio": 0.71,
-          "label": "top listings show dense review history"
-        },
-        "rating_distribution": {
-          "average_rating": 4.63,
-          "five_star_percent": 72,
-          "four_star_percent": 19,
-          "three_star_or_below_percent": 9
-        },
-        "trend_source_links": [
-          { "label": "Shopee SG search: mini desk vacuum", "url": "https://shopee.sg/search?keyword=mini%20desk%20vacuum" },
-          { "label": "Shopee Ads product recommendations", "url": "https://ads.shopee.sg/news/853" }
-        ]
-      },
-      {
-        "product_direction_id": "portable-dehumidifier",
-        "product_direction": "Portable dehumidifier / 小型除湿器",
-        "platform": "Shopee SG",
-        "demand_signal_score": 82,
-        "competitor_count": 68,
-        "price_band": { "currency": "SGD", "min": 15.9, "max": 49.9, "label": "SGD 15.90-49.90" },
-        "review_density": {
-          "median_reviews": 242,
-          "top_listing_reviews": 2400,
-          "reviewed_listing_ratio": 0.78,
-          "label": "humid-weather demand is visible but crowded"
-        },
-        "rating_distribution": {
-          "average_rating": 4.42,
-          "five_star_percent": 63,
-          "four_star_percent": 24,
-          "three_star_or_below_percent": 13
-        },
-        "trend_source_links": [
-          { "label": "Shopee SG search: portable dehumidifier", "url": "https://shopee.sg/search?keyword=portable%20dehumidifier" },
-          { "label": "Shopee SG home appliances category", "url": "https://shopee.sg/list/home%20appliances" }
-        ]
-      },
-      {
-        "product_direction_id": "cable-organizer",
-        "product_direction": "Cable organizer / 桌面线缆收纳",
-        "platform": "Shopee SG",
-        "demand_signal_score": 70,
-        "competitor_count": 57,
-        "price_band": { "currency": "SGD", "min": 2.2, "max": 11.9, "label": "SGD 2.20-11.90" },
-        "review_density": {
-          "median_reviews": 118,
-          "top_listing_reviews": 980,
-          "reviewed_listing_ratio": 0.64,
-          "label": "steady desk-setup demand with many low-ticket SKUs"
-        },
-        "rating_distribution": {
-          "average_rating": 4.72,
-          "five_star_percent": 78,
-          "four_star_percent": 17,
-          "three_star_or_below_percent": 5
-        },
-        "trend_source_links": [
-          { "label": "Shopee SG search: cable organizer", "url": "https://shopee.sg/search?keyword=cable%20organizer" },
-          { "label": "Shopee SG office supplies search", "url": "https://shopee.sg/search?keyword=desk%20cable%20management" }
-        ]
-      },
-      {
-        "product_direction_id": "pet-grooming-tool",
-        "product_direction": "Pet grooming tool / 宠物清洁小工具",
-        "platform": "Shopee SG",
-        "demand_signal_score": 74,
-        "competitor_count": 61,
-        "price_band": { "currency": "SGD", "min": 4.8, "max": 24.9, "label": "SGD 4.80-24.90" },
-        "review_density": {
-          "median_reviews": 155,
-          "top_listing_reviews": 1600,
-          "reviewed_listing_ratio": 0.69,
-          "label": "pet owners buy repeatedly, but product claims need care"
-        },
-        "rating_distribution": {
-          "average_rating": 4.56,
-          "five_star_percent": 69,
-          "four_star_percent": 21,
-          "three_star_or_below_percent": 10
-        },
-        "trend_source_links": [
-          { "label": "Shopee SG search: pet grooming tool", "url": "https://shopee.sg/search?keyword=pet%20grooming%20tool" },
-          { "label": "Shopee SG pet supplies search", "url": "https://shopee.sg/search?keyword=pet%20cleaning%20brush" }
-        ]
-      },
-      {
-        "product_direction_id": "compact-garment-steamer",
-        "product_direction": "Compact garment steamer / 手持挂烫机",
-        "platform": "Shopee SG",
-        "demand_signal_score": 76,
-        "competitor_count": 72,
-        "price_band": { "currency": "SGD", "min": 12.9, "max": 39.9, "label": "SGD 12.90-39.90" },
-        "review_density": {
-          "median_reviews": 203,
-          "top_listing_reviews": 2100,
-          "reviewed_listing_ratio": 0.73,
-          "label": "visible demand, high electronics safety and return risk"
-        },
-        "rating_distribution": {
-          "average_rating": 4.31,
-          "five_star_percent": 58,
-          "four_star_percent": 25,
-          "three_star_or_below_percent": 17
-        },
-        "trend_source_links": [
-          { "label": "Shopee SG search: compact garment steamer", "url": "https://shopee.sg/search?keyword=compact%20garment%20steamer" },
-          { "label": "Shopee SG home appliances category", "url": "https://shopee.sg/list/home%20appliances" }
-        ]
-      }
-    ]
-  },
-  "sourcing_agent_output": {
-    "platform": "1688",
-    "purpose": "判断能不能低价买到、库存够不够、履约能不能成立。",
-    "signals": [
-      {
-        "product_direction_id": "mini-desk-vacuum",
-        "product_direction": "Mini desk vacuum / 桌面吸尘器",
-        "platform": "1688",
-        "search_keyword": "Mini desk vacuum",
-        "source_price": { "currency": "CNY", "min": 15.5, "max": 23.8, "label": "CNY 15.50-23.80" },
-        "supplier_candidates": [
-          {
-            "supplier_name": "Shenzhen desktop appliance factory",
-            "location": "Shenzhen, Guangdong",
-            "years_active": 6,
-            "price_cny": 16.8,
-            "minimum_order_quantity": 50,
-            "available_stock": 5200,
-            "domestic_shipping_time_days": "1-2"
-          },
-          {
-            "supplier_name": "Yiwu small electronics wholesaler",
-            "location": "Yiwu, Zhejiang",
-            "years_active": 4,
-            "price_cny": 18.2,
-            "minimum_order_quantity": 30,
-            "available_stock": 3100,
-            "domestic_shipping_time_days": "2-3"
-          }
-        ],
-        "available_stock": 8300,
-        "min_order_quantity": 30,
-        "estimated_domestic_shipping_time": "1-3 days to forwarder warehouse",
-        "package_weight": { "grams": 180, "label": "180g" },
-        "package_dimensions": { "length_cm": 14, "width_cm": 6, "height_cm": 6, "label": "14 x 6 x 6 cm" }
-      },
-      {
-        "product_direction_id": "portable-dehumidifier",
-        "product_direction": "Portable dehumidifier / 小型除湿器",
-        "platform": "1688",
-        "search_keyword": "Portable dehumidifier",
-        "source_price": { "currency": "CNY", "min": 39.5, "max": 72, "label": "CNY 39.50-72.00" },
-        "supplier_candidates": [
-          {
-            "supplier_name": "Ningbo home appliance manufacturer",
-            "location": "Ningbo, Zhejiang",
-            "years_active": 8,
-            "price_cny": 52,
-            "minimum_order_quantity": 100,
-            "available_stock": 2600,
-            "domestic_shipping_time_days": "3-5"
-          },
-          {
-            "supplier_name": "Foshan dehumidifier OEM supplier",
-            "location": "Foshan, Guangdong",
-            "years_active": 5,
-            "price_cny": 47.5,
-            "minimum_order_quantity": 80,
-            "available_stock": 1900,
-            "domestic_shipping_time_days": "3-5"
-          }
-        ],
-        "available_stock": 4500,
-        "min_order_quantity": 80,
-        "estimated_domestic_shipping_time": "3-5 days to forwarder warehouse",
-        "package_weight": { "grams": 780, "label": "780g" },
-        "package_dimensions": { "length_cm": 16, "width_cm": 12, "height_cm": 22, "label": "16 x 12 x 22 cm" }
-      },
-      {
-        "product_direction_id": "cable-organizer",
-        "product_direction": "Cable organizer / 桌面线缆收纳",
-        "platform": "1688",
-        "search_keyword": "Cable organizer",
-        "source_price": { "currency": "CNY", "min": 1.9, "max": 6.8, "label": "CNY 1.90-6.80" },
-        "supplier_candidates": [
-          {
-            "supplier_name": "Dongguan silicone goods factory",
-            "location": "Dongguan, Guangdong",
-            "years_active": 7,
-            "price_cny": 2.8,
-            "minimum_order_quantity": 200,
-            "available_stock": 24000,
-            "domestic_shipping_time_days": "1-2"
-          },
-          {
-            "supplier_name": "Yiwu desk organizer supplier",
-            "location": "Yiwu, Zhejiang",
-            "years_active": 3,
-            "price_cny": 3.2,
-            "minimum_order_quantity": 100,
-            "available_stock": 18000,
-            "domestic_shipping_time_days": "1-3"
-          }
-        ],
-        "available_stock": 42000,
-        "min_order_quantity": 100,
-        "estimated_domestic_shipping_time": "1-3 days to forwarder warehouse",
-        "package_weight": { "grams": 45, "label": "45g" },
-        "package_dimensions": { "length_cm": 10, "width_cm": 8, "height_cm": 2, "label": "10 x 8 x 2 cm" }
-      },
-      {
-        "product_direction_id": "pet-grooming-tool",
-        "product_direction": "Pet grooming tool / 宠物清洁小工具",
-        "platform": "1688",
-        "search_keyword": "Pet grooming tool",
-        "source_price": { "currency": "CNY", "min": 6.5, "max": 18, "label": "CNY 6.50-18.00" },
-        "supplier_candidates": [
-          {
-            "supplier_name": "Suzhou pet product wholesaler",
-            "location": "Suzhou, Jiangsu",
-            "years_active": 5,
-            "price_cny": 8.6,
-            "minimum_order_quantity": 100,
-            "available_stock": 9800,
-            "domestic_shipping_time_days": "2-3"
-          },
-          {
-            "supplier_name": "Guangzhou grooming accessory factory",
-            "location": "Guangzhou, Guangdong",
-            "years_active": 6,
-            "price_cny": 9.9,
-            "minimum_order_quantity": 50,
-            "available_stock": 6400,
-            "domestic_shipping_time_days": "2-4"
-          }
-        ],
-        "available_stock": 16200,
-        "min_order_quantity": 50,
-        "estimated_domestic_shipping_time": "2-4 days to forwarder warehouse",
-        "package_weight": { "grams": 120, "label": "120g" },
-        "package_dimensions": { "length_cm": 18, "width_cm": 10, "height_cm": 4, "label": "18 x 10 x 4 cm" }
-      },
-      {
-        "product_direction_id": "compact-garment-steamer",
-        "product_direction": "Compact garment steamer / 手持挂烫机",
-        "platform": "1688",
-        "search_keyword": "Compact garment steamer",
-        "source_price": { "currency": "CNY", "min": 35, "max": 68, "label": "CNY 35.00-68.00" },
-        "supplier_candidates": [
-          {
-            "supplier_name": "Cixi garment steamer factory",
-            "location": "Cixi, Zhejiang",
-            "years_active": 9,
-            "price_cny": 43,
-            "minimum_order_quantity": 100,
-            "available_stock": 3400,
-            "domestic_shipping_time_days": "3-5"
-          },
-          {
-            "supplier_name": "Foshan portable appliance supplier",
-            "location": "Foshan, Guangdong",
-            "years_active": 6,
-            "price_cny": 39.8,
-            "minimum_order_quantity": 80,
-            "available_stock": 2500,
-            "domestic_shipping_time_days": "3-5"
-          }
-        ],
-        "available_stock": 5900,
-        "min_order_quantity": 80,
-        "estimated_domestic_shipping_time": "3-5 days to forwarder warehouse",
-        "package_weight": { "grams": 650, "label": "650g" },
-        "package_dimensions": { "length_cm": 24, "width_cm": 12, "height_cm": 10, "label": "24 x 12 x 10 cm" }
-      }
-    ]
-  },
   "agents": [
     {
       "key": "market",
       "name": "Market Trend Agent",
-      "role": "读取 Shopee SG mock 市场信号，判断是否有人买、是否有竞争、是否有热度。",
+      "role": "发现目标市场的需求、热度与竞品价格",
       "status": "done",
-      "inputs_summary": "Shopee SG · 5 product directions · English keywords",
-      "data_sources": ["Shopee SG search mock", "Shopee Ads/Seller Centre signal mock", "Shopee category page mock", "Trend source links"],
+      "inputs_summary": "Singapore · Shopee · mini desk vacuum",
+      "data_sources": ["Shopee SG search (seed)", "Web search"],
       "evidence": [
-        { "label": "最高需求分", "value": "Portable dehumidifier 82/100" },
-        { "label": "最低竞争数", "value": "Mini desk vacuum 43 competitors" },
-        { "label": "最低风险市场切口", "value": "Cable organizer has stable demand and low claim risk" }
+        { "label": "竞品数量", "value": "37 listings on Shopee SG" },
+        { "label": "价格带", "value": "SGD 7.90 – 15.90" },
+        { "label": "评论密度", "value": "top listing 1.2k reviews, 4.6★" },
+        { "label": "热度来源", "value": "desk-cleaning content trending on TikTok SG" }
       ],
-      "key_judgment": "5 个方向都有可见购买信号；除湿器和挂烫机热度高但竞争和售后风险更重，线缆收纳是低风险验证方向，桌面吸尘器适合小批量 Watch。",
-      "score": 76,
-      "confidence": 0.78,
-      "warnings": ["Shopee 竞品价格带拥挤，需要用套装、规格或场景差异化"]
+      "key_judgment": "需求真实存在,价格带集中、竞争中等;适合轻资产卖家测试,但同质化偏高。",
+      "score": 78,
+      "confidence": 0.74,
+      "warnings": ["价格竞争激烈,需要差异化包装"]
     },
     {
       "key": "sourcing",
       "name": "Sourcing Agent",
-      "role": "读取 1688 mock 货源信号，判断能否低价买到、库存是否足够、履约能否成立。",
+      "role": "匹配低价货源,判断库存与履约可行性",
       "status": "done",
-      "inputs_summary": "1688 · English search keywords · CN forwarder domestic leg",
-      "data_sources": ["1688 supplier quote mock", "Supplier stock mock", "Package size and weight mock"],
+      "inputs_summary": "mini desk vacuum · ≤12 天履约 · 预算 SGD 500",
+      "data_sources": ["1688 quotes (seed)"],
       "evidence": [
-        { "label": "最低货源价", "value": "Cable organizer CNY 1.90-6.80" },
-        { "label": "库存最足", "value": "Cable organizer 42,000 pcs available" },
-        { "label": "履约压力", "value": "Dehumidifier and garment steamer domestic leg 3-5 days before international shipping" }
+        { "label": "采购价", "value": "¥15.5 (~SGD 2.90) /件" },
+        { "label": "起订量", "value": "MOQ 50" },
+        { "label": "可用库存", "value": ">5000" },
+        { "label": "包装重量", "value": "180g" }
       ],
-      "key_judgment": "线缆收纳和桌面吸尘器货源轻、库存足、国内段履约快；除湿器和挂烫机单价/重量/认证压力偏高，宠物清洁工具可测但需避开医疗或夸大清洁声明。",
-      "score": 74,
-      "confidence": 0.75,
-      "warnings": ["电器类需要人工复核认证、插头/电压描述和退货风险"]
+      "key_judgment": "货源充足、价差明显;但跨境到货 8–12 天接近平台履约上限。",
+      "score": 72,
+      "confidence": 0.7,
+      "warnings": ["履约时间接近上限,需在 listing 注明发货周期"]
     },
     {
       "key": "margin",
       "name": "Margin Agent",
-      "role": "用 mock 采购价、运费、平台费和退货准备金计算净利润空间。",
+      "role": "扣完全部成本后判断真实利润空间",
       "status": "done",
-      "inputs_summary": "selected primary: mini desk vacuum · source SGD 3.15 · sell SGD 11.90",
-      "data_sources": ["Cost model mock", "CN-SG shipping rate mock"],
+      "inputs_summary": "source SGD 2.90 → sell SGD 11.90",
+      "data_sources": ["cost model"],
       "evidence": [
         { "label": "建议售价", "value": "SGD 11.90" },
-        { "label": "base 净利", "value": "SGD 2.95" },
-        { "label": "base 净利率", "value": "25%" }
+        { "label": "净利(base)", "value": "SGD 3.37" },
+        { "label": "净利率(base)", "value": "28%" },
+        { "label": "最低可行售价", "value": "SGD 9.40" }
       ],
-      "key_judgment": "桌面吸尘器 base 档刚好达到目标毛利，但对退货率、国际运费和广告折扣敏感。",
+      "key_judgment": "base 档利润成立;但 high-return 情形下利润率掉到 ~12%,利润对退货和运费敏感。",
       "score": 66,
-      "confidence": 0.68,
-      "warnings": ["建议先小批量测 CAC 和退货率，再放量"]
+      "confidence": 0.62,
+      "warnings": ["利润对退货率与国际运费敏感"]
     },
     {
       "key": "risk",
       "name": "Risk & Compliance Agent",
-      "role": "检查平台、商品、履约、内容和认证风险。",
+      "role": "检查平台、商品、履约与内容风险",
       "status": "done",
-      "inputs_summary": "Shopee SG · home/lifestyle small goods · mixed electronics",
-      "data_sources": ["Shopee policy mock", "Listing claim rules mock"],
+      "inputs_summary": "small electrical appliance · Shopee SG",
+      "data_sources": ["Shopee prohibited & listing-violation rules (seed)"],
       "evidence": [
-        { "label": "低风险方向", "value": "Cable organizer" },
-        { "label": "中风险方向", "value": "Mini desk vacuum, Pet grooming tool" },
-        { "label": "高风险方向", "value": "Portable dehumidifier, Compact garment steamer" }
+        { "label": "禁售/限售", "value": "通过" },
+        { "label": "品牌/IP", "value": "通过(选用无品牌白牌)" },
+        { "label": "电器安全", "value": "⚠ 需标注电压/USB 供电,避免安全认证暗示" },
+        { "label": "夸大宣传", "value": "⚠ 竞品常见『超强吸力』属夸大,需规避" }
       ],
-      "key_judgment": "非电器轻小件更适合首轮测试；电器方向需要人工复核认证、功率、电压、售后和夸大功效描述。",
-      "score": 60,
+      "key_judgment": "无硬性拦截,但属电器类:存在夸大吸力与电器安全描述风险,需人工复核。",
+      "score": 58,
       "risk_level": "medium",
-      "confidence": 0.82,
-      "warnings": ["避免使用 super strong、medical grade、sterilize 等无法证明的强声明"]
+      "confidence": 0.8,
+      "warnings": [
+        "避免『超强吸力 / 工业级』等夸大表述",
+        "需注明 USB 供电与适用场景,不暗示安全认证"
+      ]
     },
     {
       "key": "listing",
       "name": "Listing Agent",
-      "role": "基于选中方向生成 Shopee 可上架字段、标题、卖点和物流规格。",
+      "role": "生成 Shopee 可上架字段(标题/描述/SKU/属性/物流)",
       "status": "done",
-      "inputs_summary": "selected: Mini desk vacuum · Shopee SG · English",
-      "data_sources": ["Shopee category schema mock", "Competitor title pattern mock"],
+      "inputs_summary": "selected: mini desk vacuum · Shopee SG · EN",
+      "data_sources": ["Shopee category schema (seed)", "competitor titles (seed)"],
       "evidence": [
         { "label": "类目", "value": "Home Appliances > Vacuum Cleaners" },
-        { "label": "必填字段", "value": "11/11 completed" },
-        { "label": "关键词", "value": "USB cordless, keyboard cleaner, home office desk" }
+        { "label": "必填字段", "value": "11/11 完整" },
+        { "label": "标题风格", "value": "对标 top-3 竞品结构 + HDB/office 场景" }
       ],
-      "key_judgment": "Listing 字段完整，已避开夸大吸力和认证暗示，可用于 demo 的可编辑 JSON。",
+      "key_judgment": "字段完整可上架;已按 Risk 约束改写卖点,去掉夸大词。",
       "score": 81,
       "confidence": 0.77,
       "warnings": []
@@ -429,190 +112,149 @@
     {
       "key": "packaging",
       "name": "Packaging Agent",
-      "role": "校验商品图、包装重量和尺寸是否支持轻量履约。",
+      "role": "本地化包装 + 商品图(hero/lifestyle/feature)生成与合规检查",
       "status": "done",
-      "inputs_summary": "mini desk vacuum · 180g · 14 x 6 x 6 cm",
-      "data_sources": ["Package spec mock", "Seed product images"],
+      "inputs_summary": "listing output · Shopee SG · EN · HDB/office 场景",
+      "data_sources": ["competitor style (seed)", "OpenAI image"],
       "evidence": [
-        { "label": "重量", "value": "180g" },
-        { "label": "尺寸", "value": "14 x 6 x 6 cm" },
-        { "label": "图片", "value": "hero / lifestyle / feature seed assets" }
+        { "label": "生成图", "value": "hero / lifestyle / feature 各 1 张" },
+        { "label": "本地化", "value": "Singapore HDB / 桌面 / 学生宿舍 场景" },
+        { "label": "图片合规", "value": "feature 图需人工确认(不暗示认证)" }
       ],
-      "key_judgment": "桌面吸尘器体积和重量适合小包履约；feature 图仍需人工确认不要暗示认证或夸大功效。",
+      "key_judgment": "三张图按真实规格生成、去夸大;feature 图标 needs_review 交人工确认。",
       "score": 76,
       "confidence": 0.72,
-      "warnings": ["feature 图卖点需要与 listing 规格逐项核对"]
+      "warnings": ["feature 图卖点需与 listing 规格逐项核对"]
     },
     {
       "key": "committee",
       "name": "Committee Agent",
-      "role": "汇总各 agent，处理需求、货源、利润和风险之间的 tradeoff。",
+      "role": "汇总各 agent,处理 tradeoff,给最终决策",
       "status": "done",
-      "inputs_summary": "market + sourcing + margin + risk + listing + packaging",
-      "data_sources": ["Agent score rollup mock"],
+      "inputs_summary": "market+sourcing+margin+risk+listing",
+      "data_sources": [],
       "evidence": [
-        { "label": "第一名", "value": "Cable organizer · Go" },
-        { "label": "观察项", "value": "Mini desk vacuum · Watch" },
-        { "label": "淘汰项", "value": "Portable dehumidifier, Compact garment steamer" }
+        { "label": "利润", "value": "成立但敏感 (66)" },
+        { "label": "需求", "value": "中高 (78)" },
+        { "label": "合规", "value": "中风险 (58)" }
       ],
-      "key_judgment": "建议用线缆收纳做低风险启动测试，桌面吸尘器作为更有内容卖点的 Watch 项小批量验证；除湿器和挂烫机暂不适合轻资产新手。",
-      "score": 72,
-      "confidence": 0.74,
+      "key_judgment": "利润在 base 档成立、需求真实,但电器合规为中风险且利润敏感 → 给 Watch,不直接 Go。",
+      "score": 69,
+      "confidence": 0.71,
       "warnings": []
     }
   ],
   "opportunities": [
     {
-      "id": "opp_cable_organizer",
-      "is_primary": false,
-      "name": "Cable Organizer Kit",
-      "direction": "桌面线缆收纳",
-      "target_market": "Singapore",
-      "target_platform": "Shopee",
-      "source_price": 0.58,
-      "suggested_price": 5.9,
-      "minimum_viable_price": 4.2,
-      "gross_margin": 0.58,
-      "stock_status": "in_stock",
-      "fulfillment_days": 8,
-      "market_heat": "medium",
-      "risk_level": "low",
-      "decision": "Go",
-      "decision_reason": "货源便宜、库存足、重量轻、合规风险低，适合作为首轮低风险验证。",
-      "scores": { "profit": 70, "demand": 70, "compliance": 90, "fulfillment": 84, "packaging": 86, "overall": 78 },
-      "margin": null,
-      "key_reasons": ["低价轻小件", "库存 42,000 pcs", "非电器合规风险低"]
-    },
-    {
-      "id": "opp_mini_desk_vacuum",
+      "id": "opp_desk_vacuum",
       "is_primary": true,
-      "name": "Mini Desk Vacuum",
-      "direction": "桌面吸尘器",
+      "name": "Mini Desk Vacuum (USB, cordless)",
+      "direction": "桌面/键盘清洁小电",
       "target_market": "Singapore",
       "target_platform": "Shopee",
-      "source_price": 3.15,
+      "source_price": 2.9,
       "suggested_price": 11.9,
-      "minimum_viable_price": 9.7,
-      "gross_margin": 0.47,
+      "minimum_viable_price": 9.4,
+      "gross_margin": 0.46,
       "stock_status": "in_stock",
       "fulfillment_days": 10,
       "market_heat": "high",
       "risk_level": "medium",
       "decision": "Watch",
-      "decision_reason": "需求真实且素材好做，但属于小电器，利润对退货和运费敏感，建议小批量测试。",
-      "scores": { "profit": 66, "demand": 78, "compliance": 62, "fulfillment": 76, "packaging": 78, "overall": 72 },
+      "decision_reason": "需求真实、利润 base 档成立,但属电器类中风险且利润对退货/运费敏感;建议先小批量测试并规避夸大表述。",
+      "scores": { "profit": 66, "demand": 78, "compliance": 58, "fulfillment": 72, "packaging": 81, "overall": 69 },
       "margin": {
-        "base": { "net_profit": 2.95, "net_margin": 0.25 },
-        "low": { "net_profit": 1.35, "net_margin": 0.11 },
-        "high": { "net_profit": 4.15, "net_margin": 0.35 },
+        "base": { "net_profit": 3.37, "net_margin": 0.28 },
+        "low": { "net_profit": 1.45, "net_margin": 0.12 },
+        "high": { "net_profit": 4.52, "net_margin": 0.38 },
         "cost_breakdown": [
           { "label": "Selling price", "amount": 11.9, "type": "revenue" },
-          { "label": "Source price", "amount": -3.15, "type": "cost" },
-          { "label": "Intl shipping", "amount": -1.45, "type": "cost" },
+          { "label": "Source price", "amount": -2.9, "type": "cost" },
+          { "label": "Intl shipping", "amount": -1.5, "type": "cost" },
           { "label": "Local delivery", "amount": -1.2, "type": "cost" },
-          { "label": "Platform fee", "amount": -0.95, "type": "cost" },
-          { "label": "Payment fee", "amount": -0.24, "type": "cost" },
-          { "label": "GST reserve", "amount": -0.4, "type": "cost" },
-          { "label": "Return reserve", "amount": -0.75, "type": "cost" },
+          { "label": "Platform fee (8%)", "amount": -0.95, "type": "cost" },
+          { "label": "Payment fee (2%)", "amount": -0.24, "type": "cost" },
+          { "label": "GST (9%)", "amount": -0.4, "type": "cost" },
+          { "label": "Return reserve (5%)", "amount": -0.6, "type": "cost" },
+          { "label": "Damage reserve (2%)", "amount": -0.24, "type": "cost" },
           { "label": "Packaging", "amount": -0.3, "type": "cost" },
-          { "label": "Net profit", "amount": 2.95, "type": "net" }
+          { "label": "AI ops", "amount": -0.1, "type": "cost" },
+          { "label": "Net profit", "amount": 3.37, "type": "net" }
         ]
       },
-      "key_reasons": ["Shopee SG demand score 78", "1688 MOQ from 30 pcs", "small electronics risk needs review"]
+      "key_reasons": [
+        "Shopee SG 37 个竞品,需求真实",
+        "采购价差大(46% 毛利)",
+        "电器合规中风险 + 利润敏感 → Watch"
+      ]
     },
     {
-      "id": "opp_pet_grooming_tool",
+      "id": "opp_cable_organizer",
       "is_primary": false,
-      "name": "Pet Grooming Tool",
-      "direction": "宠物清洁小工具",
+      "name": "Desk Cable Organizer Kit",
+      "direction": "桌面线缆收纳",
       "target_market": "Singapore",
       "target_platform": "Shopee",
-      "source_price": 1.75,
-      "suggested_price": 9.9,
-      "minimum_viable_price": 7.4,
-      "gross_margin": 0.5,
+      "source_price": 0.85,
+      "suggested_price": 5.9,
+      "minimum_viable_price": 4.2,
+      "gross_margin": 0.55,
       "stock_status": "in_stock",
       "fulfillment_days": 9,
       "market_heat": "medium",
-      "risk_level": "medium",
-      "decision": "Watch",
-      "decision_reason": "宠物清洁需求稳定，货源轻，但标题和图片不能暗示医疗、杀菌或治疗效果。",
-      "scores": { "profit": 68, "demand": 74, "compliance": 68, "fulfillment": 78, "packaging": 72, "overall": 71 },
+      "risk_level": "low",
+      "decision": "Go",
+      "decision_reason": "风险低、轻量运费低、可多 SKU;利润不爆炸但可持续测试。",
+      "scores": { "profit": 61, "demand": 64, "compliance": 88, "fulfillment": 80, "packaging": 70, "overall": 71 },
       "margin": null,
-      "key_reasons": ["库存 16,200 pcs", "重复购买场景好", "声明风险中等"]
+      "key_reasons": ["合规风险低", "运费低、可多 SKU", "利润故事弱于小电"]
     },
     {
-      "id": "opp_portable_dehumidifier",
+      "id": "opp_mini_dehumidifier",
       "is_primary": false,
-      "name": "Portable Dehumidifier",
+      "name": "Portable Mini Dehumidifier",
       "direction": "小型除湿器",
       "target_market": "Singapore",
       "target_platform": "Shopee",
-      "source_price": 9.85,
-      "suggested_price": 25.9,
-      "minimum_viable_price": 22.5,
-      "gross_margin": 0.38,
+      "source_price": 6.5,
+      "suggested_price": 18.9,
+      "minimum_viable_price": 16.0,
+      "gross_margin": 0.41,
       "stock_status": "in_stock",
-      "fulfillment_days": 14,
+      "fulfillment_days": 13,
       "market_heat": "high",
       "risk_level": "high",
       "decision": "Reject",
-      "decision_reason": "热度高但竞争强，且电器认证、漏水投诉和履约时效风险过高。",
-      "scores": { "profit": 58, "demand": 82, "compliance": 38, "fulfillment": 46, "packaging": 52, "overall": 55 },
+      "decision_reason": "电器安全认证要求高、售后/漏液投诉风险大,且履约超出用户 12 天上限 → 不适合轻资产新手测试。",
+      "scores": { "profit": 70, "demand": 75, "compliance": 35, "fulfillment": 48, "packaging": 60, "overall": 52 },
       "margin": null,
-      "key_reasons": ["履约超过 12 天上限", "售后投诉风险高", "电器认证压力高"]
-    },
-    {
-      "id": "opp_compact_garment_steamer",
-      "is_primary": false,
-      "name": "Compact Garment Steamer",
-      "direction": "手持挂烫机",
-      "target_market": "Singapore",
-      "target_platform": "Shopee",
-      "source_price": 8.2,
-      "suggested_price": 22.9,
-      "minimum_viable_price": 20,
-      "gross_margin": 0.39,
-      "stock_status": "in_stock",
-      "fulfillment_days": 14,
-      "market_heat": "high",
-      "risk_level": "high",
-      "decision": "Reject",
-      "decision_reason": "需求可见，但蒸汽电器的安全、退货、重量和售后复杂度不适合首轮 mock demo 的推荐方向。",
-      "scores": { "profit": 57, "demand": 76, "compliance": 34, "fulfillment": 45, "packaging": 50, "overall": 52 },
-      "margin": null,
-      "key_reasons": ["高温蒸汽安全风险", "包装重量 650g", "退货率风险偏高"]
+      "key_reasons": ["电器安全/认证风险高", "履约 13 天超上限", "售后投诉风险大"]
     }
   ],
   "committee": {
-    "ranked_ids": ["opp_cable_organizer", "opp_mini_desk_vacuum", "opp_pet_grooming_tool", "opp_portable_dehumidifier", "opp_compact_garment_steamer"],
+    "ranked_ids": ["opp_cable_organizer", "opp_desk_vacuum", "opp_mini_dehumidifier"],
     "weights": { "profit": 0.3, "demand": 0.25, "compliance": 0.2, "fulfillment": 0.15, "packaging": 0.1 },
     "tradeoffs": [
       {
-        "opportunity_id": "opp_cable_organizer",
-        "conflict": "需求分不是最高，但履约、合规和库存最稳。",
-        "resolution": "Go: 用作首轮低风险验证品，靠套装和颜色组合提高客单价。"
+        "opportunity_id": "opp_desk_vacuum",
+        "conflict": "高需求 + 中合规风险 + 利润敏感",
+        "resolution": "Watch:可测试但需规避夸大表述、注明履约,先小批量"
       },
       {
-        "opportunity_id": "opp_mini_desk_vacuum",
-        "conflict": "需求和内容卖点强，但电器类利润与售后敏感。",
-        "resolution": "Watch: 先小批量测单，标题避免夸大吸力和认证暗示。"
-      },
-      {
-        "opportunity_id": "opp_portable_dehumidifier",
-        "conflict": "新加坡潮湿天气带来高需求，但履约和认证风险高。",
-        "resolution": "Reject: 暂不进入首轮，等有本地库存或认证资料后再评估。"
+        "opportunity_id": "opp_mini_dehumidifier",
+        "conflict": "高利润 + 高合规风险 + 长履约",
+        "resolution": "Reject:认证与售后风险超过利润收益,履约超上限"
       }
     ],
-    "summary": "优先用 Cable organizer 做低风险启动测试；Mini desk vacuum 和 Pet grooming tool 进入观察池；Portable dehumidifier 与 Compact garment steamer 因电器安全、售后和履约风险暂时拒绝。"
+    "summary": "推荐先用 cable organizer 做低风险起步,desk vacuum 作为高潜但需谨慎的 Watch 项小批量测试;dehumidifier 不建议新手碰。"
   },
   "selected_listing": {
-    "opportunity_id": "opp_mini_desk_vacuum",
+    "opportunity_id": "opp_desk_vacuum",
     "platform": "Shopee",
     "market": "Singapore",
     "language": "en",
     "shopee": {
-      "item_name": "Mini Desk Vacuum Cleaner USB Cordless Keyboard Cleaner for Home Office Desk",
+      "item_name": "Mini Desk Vacuum Cleaner USB Cordless Keyboard Cleaner for Home Office HDB",
       "category": "Home Appliances > Vacuum Cleaners",
       "category_id": 100629,
       "brand": "No Brand",
@@ -628,11 +270,11 @@
         "capacity": "Cordless Handheld",
         "warranty": "7-day return"
       },
-      "description": "Compact USB cordless desk vacuum for keyboards, desks and small spaces. Lightweight and easy to use in HDB homes, dorms and offices. Rechargeable battery, no cords. Suitable for crumbs, dust and hair on flat surfaces.\n\nNote: For light desktop cleaning. Ships from overseas, estimated delivery 8-12 days.",
+      "description": "Compact USB cordless desk vacuum for keyboards, desks and small spaces. Lightweight and easy to use in HDB homes, dorms and offices. Rechargeable battery, no cords. Suitable for crumbs, dust and hair on flat surfaces.\n\nNote: For light desktop cleaning. Ships from overseas, est. delivery 8-12 days.",
       "bullet_points": [
-        "USB rechargeable and cordless",
-        "Compact size for HDB desks and dorms",
-        "Cleans keyboards, crumbs and desk dust",
+        "USB rechargeable, fully cordless",
+        "Compact size for HDB desks & dorms",
+        "Cleans keyboards, crumbs & desk dust",
         "Lightweight 180g handheld design"
       ],
       "logistics": { "weight_g": 180, "length_cm": 14, "width_cm": 6, "height_cm": 6 },
@@ -641,31 +283,16 @@
       "missing_fields": []
     },
     "images": [
-      {
-        "type": "hero",
-        "url": "/seed/images/desk-vacuum-hero.svg",
-        "prompt": "white mini handheld USB desk vacuum on a clean office desk, product-centered ecommerce hero shot",
-        "compliance": "ok"
-      },
-      {
-        "type": "lifestyle",
-        "url": "/seed/images/desk-vacuum-lifestyle.svg",
-        "prompt": "person using mini desk vacuum to clean keyboard crumbs on a compact apartment desk",
-        "compliance": "ok"
-      },
-      {
-        "type": "feature",
-        "url": "/seed/images/desk-vacuum-feature.svg",
-        "prompt": "feature callouts: USB rechargeable, cordless, 180g, for desk and keyboard",
-        "compliance": "needs_review"
-      }
+      { "type": "hero", "url": "/seed/images/desk-vacuum-hero.png", "prompt": "white mini handheld USB desk vacuum on a clean wooden office desk, soft natural light, Singapore HDB home office, product-centered, e-commerce hero shot", "compliance": "ok" },
+      { "type": "lifestyle", "url": "/seed/images/desk-vacuum-lifestyle.png", "prompt": "person using mini desk vacuum to clean keyboard crumbs, compact apartment desk, cozy lifestyle, daytime", "compliance": "ok" },
+      { "type": "feature", "url": "/seed/images/desk-vacuum-feature.png", "prompt": "feature callouts: USB rechargeable, cordless, 180g, for desk & keyboard, clean infographic style", "compliance": "needs_review" }
     ],
     "compliance": {
       "human_review_required": true,
       "warnings": [
-        "Avoid exaggerated claims such as super strong suction or industrial grade.",
-        "State USB power and overseas shipping period clearly.",
-        "Feature image needs human review before upload."
+        "避免『超强吸力 / 工业级』等夸大表述",
+        "注明 USB 供电与海外发货周期",
+        "feature 图需人工确认不暗示安全认证"
       ]
     },
     "editable_json_ready": true
