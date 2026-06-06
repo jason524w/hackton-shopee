@@ -2,6 +2,12 @@
 // See docs/design/margin-risk.md §3. Code does all arithmetic; the LLM never
 // invents or alters these numbers. low/base/high vary ONLY the three drivers
 // decided in the design: return rate, international shipping, and FX.
+//
+// Richer source-backed SG/Shopee fee, risk, and operations assumptions live in
+// seed/margin/shopee-sg-2026-06-06.json. That seed is intentionally not stacked
+// wholesale into the demo low scenario: combining every "high" stress input at
+// once would swamp the PRD's load-bearing margin story instead of isolating the
+// high-return/high-shipping sensitivity the demo is meant to show.
 
 export interface MarginAssumptions {
   // FX + sourcing (FX band drives source_price)

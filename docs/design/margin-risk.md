@@ -73,6 +73,11 @@ net_margin = net_profit / selling_price
 | damage_reserve | 2% | 4% | 1% |
 | **固定不动** | local 1.20 · packaging 0.30 · ai_ops 0.10 · platform 8% · payment 2% | | |
 
+更完整的 SG/Shopee fee、risk、operations 配置已存为
+`seed/margin/shopee-sg-2026-06-06.json`,用于后续把费率、退货、包装、资金成本和 live API
+输入来源纳入同一个可审计 seed。当前 demo calculator 仍保留上表的精简三驱动模型,避免把所有
+high stress 假设同时叠加后破坏"base 成立、悲观档约 12% → Watch"的演示高潮。
+
 ### 3.3 反解结果(售价 = 11.90,target_margin = 0.25)
 
 | 档 | net_profit | net_margin | harness 目标 | 说明 |

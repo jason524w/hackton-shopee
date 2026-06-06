@@ -1,0 +1,110 @@
+{
+  "as_of": "2026-06-06",
+  "market": "SG",
+  "platform": "shopee_sg",
+  "currency": "SGD",
+  "fee_config": {
+    "platform_fee_rate": {
+      "base": 0.06,
+      "low": 0.02,
+      "high": 0.11,
+      "source_note": "Shopee SG commission varies by seller tier/category; use 6% as base cold-start estimate."
+    },
+    "payment_fee_rate": {
+      "base": 0.0218,
+      "low": 0.0218,
+      "high": 0.0327,
+      "source_note": "Public Shopee SG fee references show transaction/payment fee around 2.18%-3.27%."
+    },
+    "optional_program_fee_rate": {
+      "base": 0.0,
+      "low": 0.0,
+      "high": 0.1,
+      "source_note": "Coins Cashback / Free Shipping / promo programs are optional; keep base at 0 for cold-start."
+    },
+    "fee_gst_rate": 0.09
+  },
+  "risk_config": {
+    "return_rate": {
+      "base": 0.13,
+      "low": 0.05,
+      "high": 0.25,
+      "category_defaults": {
+        "apparel": 0.25,
+        "electronics": 0.1,
+        "home_goods": 0.12,
+        "beauty_accessories": 0.07,
+        "general_low_value_goods": 0.08
+      }
+    },
+    "return_loss_given_return": {
+      "base": 0.5,
+      "source_note": "Assumes only part of returned value is recoverable after reverse shipping, handling, markdown, or write-off."
+    },
+    "return_loss_reserve_rate": {
+      "base": 0.065,
+      "formula": "return_rate.base * return_loss_given_return.base"
+    },
+    "damage_rate": {
+      "base": 0.03,
+      "low": 0.015,
+      "high": 0.04,
+      "source_note": "Use 3% as base cross-border parcel damage reserve; fragile items should be higher."
+    },
+    "damage_loss_given_damage": {
+      "base": 1.0
+    },
+    "damage_loss_reserve_rate": {
+      "base": 0.03,
+      "formula": "damage_rate.base * damage_loss_given_damage.base"
+    }
+  },
+  "operations_config": {
+    "packaging_cost_sgd": {
+      "base": 0.5,
+      "low": 0.23,
+      "high": 2.1,
+      "benchmarks": {
+        "poly_mailer": 0.23,
+        "bubble_mailer": 0.5,
+        "small_carton_box": 2.1
+      }
+    },
+    "ai_operation_cost_sgd_per_product_evaluation": {
+      "base": 0.03,
+      "low": 0.01,
+      "high": 0.1,
+      "assumption": "Multi-agent product evaluation using low-cost model, roughly 2-4 LLM calls plus parsing/scoring overhead."
+    },
+    "capital_cost_rate_annual": {
+      "base": 0.08,
+      "low": 0.0475,
+      "high": 0.12,
+      "source_note": "Based on Singapore SME/working-capital loan references and prime lending benchmarks."
+    },
+    "expected_cash_cycle_days": {
+      "base": 21,
+      "low": 10,
+      "high": 35,
+      "source_note": "Inventory cash paid before supplier fulfillment; payout depends on delivery, Shopee Guarantee completion, and bank withdrawal timing."
+    },
+    "capital_cost_formula": "source_price_sgd * capital_cost_rate_annual.base * expected_cash_cycle_days.base / 365"
+  },
+  "live_api_inputs": {
+    "fx_rate": "frankfurter",
+    "shipping_rate": "easyship_rates",
+    "hs_code": "easyship_hs_codes",
+    "tax_and_duties": "easyship_tax_and_duties"
+  },
+  "sources": {
+    "shopee_terms": "https://help.shopee.sg/4/article/77148-Shopee-Terms-of-Service",
+    "shopee_fee_reference_onecart": "https://www.getonecart.com/shopee-seller-fees/",
+    "shopee_fee_reference_atsell": "https://atsell.io/calculator",
+    "nrf_returns_report": "https://nrf.com/media-center/press-releases/nrf-and-happy-returns-report-2024-retail-returns-total-890-billion",
+    "dhl_ecommerce_trends_returns": "https://group.dhl.com/content/dam/deutschepostdhl/en/media-center/media-relations/documents/2025/e-commerce-trends-report-2025-business-edition.pdf",
+    "packaging_poly_mailer_price": "https://www.fairprice.com.sg/product/millionparcel-matt-white-polymailer-45-x-55cm-flap-50-pc-90080090",
+    "packaging_carton_box_price": "https://www.nayakfreight.com.sg/product-page/carton-boxes",
+    "openai_pricing": "https://platform.openai.com/docs/pricing",
+    "singapore_prime_lending_rates": "https://www.abs.org.sg/benchmark-rates/prime-lending-rates"
+  }
+}
