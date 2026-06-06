@@ -283,7 +283,9 @@ function mergePrimaryOpportunity(current: Opportunity, output: SourcingOutput): 
   };
 }
 
-function primaryOpportunityToDirection(primary: Opportunity | undefined, ctx: AgentContext): MarketDirection {
+// Exported for the orchestrator (#15) so it can build a mode-aware sourcing
+// wrapper that derives the primary direction from upstream market results.
+export function primaryOpportunityToDirection(primary: Opportunity | undefined, ctx: AgentContext): MarketDirection {
   return {
     id: primary?.id ?? "opp_desk_vacuum",
     is_primary: true,
