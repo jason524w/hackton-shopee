@@ -32,6 +32,96 @@ export interface Evidence {
   value: string;
 }
 
+export interface ProductDirection {
+  id: string;
+  english_name: string;
+  chinese_name: string;
+  search_keyword: string;
+}
+
+export interface TrendSourceLink {
+  label: string;
+  url: string;
+}
+
+export interface PriceBand {
+  currency: string;
+  min: number;
+  max: number;
+  label: string;
+}
+
+export interface ReviewDensity {
+  median_reviews: number;
+  top_listing_reviews: number;
+  reviewed_listing_ratio: number;
+  label: string;
+}
+
+export interface RatingDistribution {
+  average_rating: number;
+  five_star_percent: number;
+  four_star_percent: number;
+  three_star_or_below_percent: number;
+}
+
+export interface MarketTrendSignal {
+  product_direction_id: string;
+  product_direction: string;
+  platform: "Shopee SG";
+  demand_signal_score: number;
+  competitor_count: number;
+  price_band: PriceBand;
+  review_density: ReviewDensity;
+  rating_distribution: RatingDistribution;
+  trend_source_links: TrendSourceLink[];
+}
+
+export interface SupplierCandidate {
+  supplier_name: string;
+  location: string;
+  years_active: number;
+  price_cny: number;
+  minimum_order_quantity: number;
+  available_stock: number;
+  domestic_shipping_time_days: string;
+}
+
+export interface PackageDimensions {
+  length_cm: number;
+  width_cm: number;
+  height_cm: number;
+  label: string;
+}
+
+export interface SourcingSignal {
+  product_direction_id: string;
+  product_direction: string;
+  platform: "1688";
+  search_keyword: string;
+  source_price: { currency: "CNY"; min: number; max: number; label: string };
+  supplier_candidates: SupplierCandidate[];
+  available_stock: number;
+  min_order_quantity: number;
+  estimated_domestic_shipping_time: string;
+  package_weight: { grams: number; label: string };
+  package_dimensions: PackageDimensions;
+}
+
+export interface MarketTrendAgentOutput {
+  platform: "Shopee SG";
+  purpose: string;
+  signals: MarketTrendSignal[];
+}
+
+export interface SourcingAgentOutput {
+  platform: "1688";
+  purpose: string;
+  signals: SourcingSignal[];
+}
+
+export type AgentStructuredOutput = MarketTrendAgentOutput | SourcingAgentOutput | Record<string, unknown>;
+
 export interface AgentResult {
   key: AgentKey;
   name: string;
@@ -45,6 +135,7 @@ export interface AgentResult {
   confidence: number; // 0..1
   warnings: string[];
   risk_level?: RiskLevel; // present on the risk agent
+  structured_output?: AgentStructuredOutput;
 }
 
 export interface CostLine {
@@ -147,6 +238,9 @@ export interface RunResult {
   created_at: string;
   currency: string;
   brief: Brief;
+  product_directions: ProductDirection[];
+  market_trend_agent_output: MarketTrendAgentOutput;
+  sourcing_agent_output: SourcingAgentOutput;
   agents: AgentResult[];
   opportunities: Opportunity[];
   committee: Committee;
