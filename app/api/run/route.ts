@@ -13,8 +13,8 @@ export const runtime = "nodejs";
 // POST /api/run
 //   ?mock=1         → return contract/mock-result.json (铁律 3 安全网,永不可移除)
 //   DEMO_MOCK_ONLY  → force mock regardless of query (demo 兜底)
-//   ?images=0       → text pipeline, packaging skips image generation
-//   ?mode=fixture   → seed-backed pipeline even when OPENAI_API_KEY exists
+//   ?images=0       → text pipeline, Packaging Agent skips live image generation
+//   ?mode=fixture   → fixture text agents even when OPENAI_API_KEY exists
 //   live default    → use live OpenAI text/image agents when OPENAI_API_KEY exists,
 //                     while provider data follows the orchestrator's configured adapters.
 export async function POST(req: NextRequest): Promise<NextResponse> {
@@ -32,8 +32,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const withImages = req.nextUrl.searchParams.get("images") !== "0";
   const forceFixture = req.nextUrl.searchParams.get("mode") === "fixture";
   const hasKey = Boolean(process.env.OPENAI_API_KEY);
+  const liveImagesEnabled = process.env.LIVE_IMAGE_GENERATION !== "false";
   const textMode = forceFixture || !hasKey ? "fixture" : "live";
-  const imageMode = !forceFixture && hasKey && withImages ? "live" : "dry-run";
+  const imageMode = hasKey && withImages && liveImagesEnabled ? "live" : "dry-run";
 
   let brief: Brief;
   try {

@@ -9,6 +9,7 @@ import {
   createSeedShopeeProvider,
   createSeedSourcing1688Provider,
 } from "../providers";
+import { createOpenAIImageProvider } from "../providers/openai-image";
 import { makeCommitteeAgent } from "./committee";
 import { type Agent, type AgentContext, type AgentProviders, runPipeline } from "./contracts";
 import { runListingAgent } from "./listing";
@@ -39,6 +40,13 @@ export function createSeedProviders(): AgentProviders {
     fx: createSeedFxProvider(),
     openaiImage: createSeedOpenAIImageProvider(),
     browser: createSeedBrowserRetrievalProvider(),
+  };
+}
+
+export function createOrchestrationProviders(imageMode: "live" | "dry-run" = "dry-run"): AgentProviders {
+  return {
+    ...createSeedProviders(),
+    openaiImage: createOpenAIImageProvider({ mode: imageMode }),
   };
 }
 
@@ -83,7 +91,7 @@ export async function runOrchestration(brief: Brief, opts: OrchestrationOptions 
   const ctx: AgentContext = {
     brief,
     results: {},
-    providers: opts.providers ?? createSeedProviders(),
+    providers: opts.providers ?? createOrchestrationProviders(imageMode),
     risk: createRiskSupervisor(),
   };
 
