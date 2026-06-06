@@ -1,0 +1,289 @@
+{
+  "visual_strategy": "Create a Shopee Singapore image pack that makes a compact mini desk vacuum look clear, premium, practical, and believable for HDB home-office and study desk cleaning.",
+  "target_platform": "Shopee",
+  "target_market": "Singapore",
+  "product_category": "Small home gadget / desk cleaning",
+  "pack_mode": "balanced",
+  "image_pack_plan": [
+    {
+      "slot": 1,
+      "image_type": "cover_main",
+      "title": "Clean Shopee cover image",
+      "buyer_question_answered": "What exactly am I buying?",
+      "goal": "Show the mini desk vacuum clearly for search and listing thumbnail use.",
+      "layout": "Full product centered on white or very light neutral solid background, realistic soft shadow, no props.",
+      "aspect_ratio": "1:1",
+      "recommended_size": "1024x1024 or higher",
+      "text_overlay": {
+        "enabled": false,
+        "copy": [],
+        "design_layer_note": "No text on cover image."
+      },
+      "model_requirement": {
+        "needed": false,
+        "type": "none",
+        "notes": "No model for cover image."
+      },
+      "product_truth_constraints": [
+        "Preserve compact round white plastic body.",
+        "Do not add brush, pouch, nozzles, logos, certification marks, or suction effects unless confirmed."
+      ],
+      "generation_prompt": "Create a clean Shopee cover image for a compact white mini desk vacuum cleaner. Show the full product clearly, centered on a white or very light neutral solid background. The product should fill roughly 60% or more of the square frame, with realistic color, sharp detail, and soft natural shadow. Preserve the compact round white plastic body and simple handheld shape. Do not add text, logos, watermarks, borders, collage elements, props, models, certification marks, suction effects, or accessories not included in the package.",
+      "negative_prompt": "text, watermark, logo, badge, border, collage, extra accessories, brush, storage pouch, certification mark, exaggerated suction, cropped product, model, hand",
+      "source_assets_needed": ["source product photo"],
+      "compliance_note": "ready: conservative cover image with no text or unsupported items.",
+      "ready_to_generate": true
+    },
+    {
+      "slot": 2,
+      "image_type": "premium_hero",
+      "title": "Premium studio hero",
+      "buyer_question_answered": "Does this feel like a quality product?",
+      "goal": "Increase perceived value while keeping the product realistic.",
+      "layout": "Product centered on refined warm-gray studio surface with soft directional lighting and subtle reflection.",
+      "aspect_ratio": "1:1",
+      "recommended_size": "1024x1024 or higher",
+      "text_overlay": {
+        "enabled": false,
+        "copy": [],
+        "design_layer_note": "Keep image text-free; use title field separately in listing."
+      },
+      "model_requirement": {
+        "needed": false,
+        "type": "none",
+        "notes": ""
+      },
+      "product_truth_constraints": [
+        "Preserve shape, color, material, and visible design.",
+        "Do not make it look like a different premium appliance."
+      ],
+      "generation_prompt": "Transform the provided mini desk vacuum photo into a premium ecommerce hero image. Preserve the product's exact compact round shape, white plastic body, proportions, and visible design. Place it on a refined warm-gray studio surface with soft directional lighting, realistic shadows, subtle reflection, crisp product detail, and clean high-end Shopee-ready commercial photography style. Do not add logos, new buttons, extra accessories, certification marks, text, or exaggerated suction effects.",
+      "negative_prompt": "brand logo, text overlay, certification, extra button, extra nozzle, cable, pouch, fantasy lighting, unrealistic material, exaggerated suction",
+      "source_assets_needed": ["source product photo"],
+      "compliance_note": "ready: visual upgrade stays close to source product.",
+      "ready_to_generate": true
+    },
+    {
+      "slot": 3,
+      "image_type": "localized_lifestyle",
+      "title": "Singapore home-office scene",
+      "buyer_question_answered": "Where would I use this?",
+      "goal": "Show the product in a realistic Singapore compact desk environment.",
+      "layout": "Mini desk vacuum on tidy HDB or condo home-office desk near keyboard and notebooks, product remains focal point.",
+      "aspect_ratio": "1:1",
+      "recommended_size": "1024x1024 or higher",
+      "text_overlay": {
+        "enabled": true,
+        "copy": ["For compact desk mess"],
+        "design_layer_note": "Add this text outside image generation if exact text is required."
+      },
+      "model_requirement": {
+        "needed": false,
+        "type": "none",
+        "notes": "A lifestyle scene is enough; no visible model required."
+      },
+      "product_truth_constraints": [
+        "Use only desk crumbs or dust as light context; avoid dramatic cleaning effects.",
+        "Do not imply industrial suction power."
+      ],
+      "generation_prompt": "Create a premium localized ecommerce lifestyle image for a compact white mini desk vacuum cleaner. Preserve the product's real compact round appearance and white plastic body. Show it on a clean Singapore HDB or condo home-office desk, near a keyboard, notebook, and simple modern desk props, with natural daylight and a space-saving daily-use feel. Keep the product as the clear focus and make the image suitable for a Shopee Singapore listing. Do not add unsupported accessories, brand logos, certification marks, exaggerated suction effects, or messy unrealistic debris. Leave clean space for a short text label if needed.",
+      "negative_prompt": "brand logos, watermarks, heavy mess, dramatic dust cloud, extra accessories, certification, unrealistic scale, cluttered desk",
+      "source_assets_needed": ["source product photo"],
+      "compliance_note": "ready: local scene is realistic and does not add unsupported product facts.",
+      "ready_to_generate": true
+    },
+    {
+      "slot": 4,
+      "image_type": "in_use_model_or_hand",
+      "title": "Hands-in-use scale image",
+      "buyer_question_answered": "How big is it and how do I use it?",
+      "goal": "Show hand scale and simple desk-cleaning action.",
+      "layout": "Hands holding or moving the mini vacuum near keyboard crumbs on a compact desk.",
+      "aspect_ratio": "1:1",
+      "recommended_size": "1024x1024 or higher",
+      "text_overlay": {
+        "enabled": true,
+        "copy": ["Easy handheld cleaning"],
+        "design_layer_note": "Prefer adding text in a design layer."
+      },
+      "model_requirement": {
+        "needed": true,
+        "type": "hands_only",
+        "market_fit": "Singapore home-office buyer",
+        "age_range": "adult",
+        "appearance": "generic adult commercial model; only hands visible",
+        "wardrobe": "plain neutral long-sleeve or casual top if sleeves are visible, no logos",
+        "pose_action": "one hand holding or guiding the mini vacuum beside a keyboard",
+        "framing": "hands and desk context support scale; product remains focal point",
+        "avoid": ["face", "celebrity likeness", "brand logos", "unsafe use", "exaggerated debris"]
+      },
+      "product_truth_constraints": [
+        "Do not show liquid cleanup.",
+        "Do not show strong suction of large objects.",
+        "Keep product scale plausible."
+      ],
+      "generation_prompt": "Create a square Shopee secondary image showing a compact white mini desk vacuum cleaner in realistic use. Use hands-only from a generic adult commercial model, no face visible. One hand is holding or guiding the mini vacuum beside a keyboard on a tidy Singapore home-office desk, with a few small crumbs or dust specks to suggest everyday desk cleaning. Keep the product as the clear focal point and preserve its compact round white plastic appearance. No logos, celebrity likeness, text, watermarks, liquid spills, exaggerated suction effects, large debris, or unsupported accessories.",
+      "negative_prompt": "face, celebrity, logo clothing, liquid spill, large debris, heavy suction, extra accessories, unrealistic scale, watermark",
+      "source_assets_needed": ["source product photo"],
+      "compliance_note": "ready: hands-only image helps scale without making unsupported performance claims.",
+      "ready_to_generate": true
+    },
+    {
+      "slot": 5,
+      "image_type": "feature_infographic",
+      "title": "Key benefit infographic",
+      "buyer_question_answered": "Why is this useful?",
+      "goal": "Explain the top practical benefits with short factual callouts.",
+      "layout": "Product cutout on one side with 3 simple icon callouts and clean orange-accent labels.",
+      "aspect_ratio": "1:1",
+      "recommended_size": "1024x1024 or higher",
+      "text_overlay": {
+        "enabled": true,
+        "copy": ["Keyboard dust", "Desk crumbs", "Compact storage"],
+        "design_layer_note": "Add labels after generation for readable text."
+      },
+      "model_requirement": {
+        "needed": false,
+        "type": "none",
+        "notes": ""
+      },
+      "product_truth_constraints": [
+        "Use only confirmed use cases.",
+        "Do not mention suction power, runtime, waterproofing, or certification."
+      ],
+      "generation_prompt": "Create a square Shopee secondary image for a compact white mini desk vacuum cleaner with a clean ecommerce infographic layout. Show the product clearly and leave space for 3 short factual callouts: Keyboard dust, Desk crumbs, Compact storage. Use simple icon-style visual areas or leader lines, generous spacing, bright clean home-office styling, and mobile-readable composition. Preserve the compact round white product. Do not add unsupported specs, certification marks, brand logos, fake accessories, exaggerated suction effects, or long text.",
+      "negative_prompt": "unsupported suction claim, certification, brand logo, long unreadable text, extra accessories, medical claim, waterproof claim",
+      "source_assets_needed": ["source product photo"],
+      "compliance_note": "needs_seller_confirmation: exact overlay text should be added in design layer for readability.",
+      "ready_to_generate": true
+    },
+    {
+      "slot": 6,
+      "image_type": "specification_size",
+      "title": "Specs and size image",
+      "buyer_question_answered": "What are the size and specs?",
+      "goal": "Reduce uncertainty with dimensions and package facts.",
+      "layout": "Product cutout with measurement lines and a small specs table.",
+      "aspect_ratio": "1:1",
+      "recommended_size": "1024x1024 or higher",
+      "text_overlay": {
+        "enabled": true,
+        "copy": ["Dimensions: confirm before final", "USB rechargeable", "Material: plastic"],
+        "design_layer_note": "Do not finalize exact dimensions until supplier specs are confirmed."
+      },
+      "model_requirement": {
+        "needed": false,
+        "type": "none",
+        "notes": ""
+      },
+      "product_truth_constraints": [
+        "Only include exact dimensions if supplier confirms them.",
+        "Do not invent package weight, battery life, or power rating."
+      ],
+      "generation_prompt": "Create a square Shopee specification image for a compact white mini desk vacuum cleaner. Use a clean product cutout, simple measurement-line placeholders, and a small specs panel. Include only confirmed facts: white plastic-looking body and USB rechargeable if supplied. Leave exact dimensions as editable placeholder space if not confirmed. Keep the layout minimal, mobile-readable, and realistic. Do not invent dimensions, weight, battery life, voltage, suction power, certifications, or package contents.",
+      "negative_prompt": "fake dimensions, fake weight, fake battery life, voltage, certification, waterproof, strong suction claim, extra accessories",
+      "source_assets_needed": ["confirmed dimensions", "source product photo"],
+      "compliance_note": "needs_seller_confirmation: exact dimensions and weight are required before final artwork.",
+      "ready_to_generate": false
+    }
+  ],
+  "product_description_modules": [
+    {
+      "module_type": "opening_benefit",
+      "goal": "Show the main problem and promise.",
+      "headline": "Clean small desk mess in seconds",
+      "body_copy": ["For keyboard dust, snack crumbs, and study desk corners."],
+      "image_direction": "Mini vacuum beside keyboard in a tidy compact desk setup.",
+      "requires_confirmed_specs": [],
+      "compliance_note": "Avoid performance claims like deep suction unless specs prove them."
+    },
+    {
+      "module_type": "usage_scenarios",
+      "goal": "Show realistic use cases.",
+      "headline": "Made for compact workspaces",
+      "body_copy": ["Home office", "Study desk", "Keyboard area"],
+      "image_direction": "Three small scene panels with the same product in each setting.",
+      "requires_confirmed_specs": [],
+      "compliance_note": "Keep scenes realistic and not overly messy."
+    },
+    {
+      "module_type": "specifications",
+      "goal": "Clarify facts before purchase.",
+      "headline": "Product details",
+      "body_copy": ["Dimensions: seller to confirm", "Charging: USB rechargeable if confirmed", "Material: plastic-looking body"],
+      "image_direction": "Specs panel with product cutout.",
+      "requires_confirmed_specs": ["dimensions", "package_weight", "included_items"],
+      "compliance_note": "Do not finalize exact numbers without supplier confirmation."
+    }
+  ],
+  "model_requirements": [
+    {
+      "image_type": "in_use_model_or_hand",
+      "needed": true,
+      "type": "hands_only",
+      "market_fit": "Singapore home-office buyer",
+      "pose_action": "hand using mini vacuum beside keyboard",
+      "avoid": ["visible face", "celebrity likeness", "brand logos", "unsafe or exaggerated usage"]
+    }
+  ],
+  "localized_copy": {
+    "listing_title": "Portable Mini Desk Vacuum Cleaner for Keyboard & Study Desk",
+    "hero_caption": "Compact cleaning for everyday desk mess",
+    "selling_points": [
+      "For keyboard dust and desk crumbs",
+      "Compact size for home office or study desk",
+      "Rechargeable daily cleaning gadget if USB charging is confirmed"
+    ],
+    "image_overlay_copy": [
+      {
+        "image_type": "localized_lifestyle",
+        "copy": "For compact desk mess"
+      },
+      {
+        "image_type": "in_use_model_or_hand",
+        "copy": "Easy handheld cleaning"
+      },
+      {
+        "image_type": "feature_infographic",
+        "copy": ["Keyboard dust", "Desk crumbs", "Compact storage"]
+      }
+    ]
+  },
+  "estimated_generation_plan": {
+    "image_count": 6,
+    "first_render_order": ["cover_main", "premium_hero"],
+    "generation_notes": [
+      "Generate text-free images first where possible.",
+      "Add exact text overlays in a design layer after image generation.",
+      "Do not generate the final specification image until dimensions and package weight are confirmed."
+    ]
+  },
+  "visual_compliance_notes": [
+    {
+      "severity": "medium",
+      "note": "Avoid exaggerated suction claims unless supplier specs prove them."
+    },
+    {
+      "severity": "medium",
+      "note": "Do not show brush, pouch, or replacement nozzle unless included items are confirmed."
+    },
+    {
+      "severity": "low",
+      "note": "Use hands-only model imagery for scale; avoid faces and identifiable logos."
+    }
+  ],
+  "missing_inputs": [
+    "exact product dimensions",
+    "package weight",
+    "confirmed included items",
+    "charging cable inclusion",
+    "source product photo path"
+  ],
+  "editable_json": {
+    "product_name": "Mini desk vacuum",
+    "target_market": "Singapore",
+    "platform": "Shopee",
+    "pack_mode": "balanced",
+    "category_playbook": "small_home_gadget"
+  }
+}
