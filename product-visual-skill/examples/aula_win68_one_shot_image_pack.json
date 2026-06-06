@@ -1,0 +1,468 @@
+{
+  "visual_strategy": "Create a Shopee Malaysia image pack that presents the AULA WIN68 HE keyboard as a compact, high-performance magnetic gaming keyboard with black/red esports styling and localized English + Malay text.",
+  "product_name": "AULA WIN68 HE Max Version Magnetic Gaming Keyboard",
+  "product_category": "Gaming keyboard / magnetic switch keyboard",
+  "target_platform": "Shopee",
+  "target_market": "Malaysia",
+  "pack_mode": "balanced",
+  "one_shot_generation": true,
+  "image_model_capability": "high_text_fidelity",
+  "text_rendering_mode": "hybrid",
+  "source_image": "uploaded AULA WIN68 HE product image",
+  "regional_style": {
+    "target_market": "Malaysia",
+    "scene_direction": "Modern Malaysian apartment or bedroom gaming desk setup",
+    "lighting": "dark desk surface with red RGB glow and warm indoor ambience",
+    "buyer_angle": "performance for compact gaming setups and ranked games",
+    "text_language": "English + Malay",
+    "props": [
+      "gaming monitor without copyrighted UI",
+      "mouse pad",
+      "desk lamp",
+      "compact apartment desk"
+    ],
+    "avoid": [
+      "esports team logos",
+      "copyrighted game screens",
+      "fake local badges",
+      "crowded promo-poster style"
+    ]
+  },
+  "size_plan": {
+    "individual_image_size": "1024x1024",
+    "contact_sheet_grid": "2x3",
+    "contact_sheet_output_size": "1024x1536",
+    "individual_aspect_ratio": "1:1",
+    "contact_sheet_aspect_ratio": "2:3",
+    "text_safe_area": "central 80%; keep text 6% away from edges"
+  },
+  "visible_attributes": {
+    "layout": "60% compact layout",
+    "color": "black and red",
+    "lighting": "red RGB/backlight feel",
+    "keycap_style": "black keycaps with red legends",
+    "case_style": "compact gaming keyboard with left-side WIN68 HE branding area"
+  },
+  "confirmed_selling_points": [
+    "Magnetic Switch",
+    "8000Hz Polling Rate",
+    "Support DKS",
+    "60% Compact Layout",
+    "Custom Web Driver",
+    "Rapid Trigger",
+    "USB-C Wired Connection",
+    "16.8 Million RGB"
+  ],
+  "image_pack_plan": [
+    {
+      "slot": 1,
+      "image_type": "cover_main",
+      "title": "Clean Shopee cover image",
+      "buyer_question_answered": "What exactly am I buying?",
+      "goal": "Show the full keyboard clearly for search thumbnail use.",
+      "layout": "Full keyboard centered on a white or very light neutral background.",
+      "aspect_ratio": "1:1",
+      "recommended_size": "1024x1024",
+      "text_overlay": {
+        "enabled": false,
+        "copy": [],
+        "design_layer_note": "No text on cover image."
+      },
+      "model_requirement": {
+        "needed": false,
+        "type": "none",
+        "notes": ""
+      },
+      "product_truth_constraints": [
+        "Preserve compact 60% black/red layout and WIN68 HE side branding.",
+        "Do not add wireless, Bluetooth, battery, fake accessories, or fake certification claims."
+      ],
+      "generation_prompt": "Create a clean Shopee cover image for the AULA WIN68 HE keyboard, full product visible, white or very light neutral background, no text.",
+      "negative_prompt": "wireless icon, Bluetooth, battery claim, fake accessories, certification badge, copyrighted game UI",
+      "source_assets_needed": ["source product photo"],
+      "compliance_note": "ready: cover is text-free and conservative.",
+      "ready_to_generate": true
+    },
+    {
+      "slot": 2,
+      "image_type": "premium_hero",
+      "title": "Premium RGB hero",
+      "buyer_question_answered": "Does this feel premium and gaming-ready?",
+      "goal": "Increase perceived performance and quality.",
+      "layout": "Keyboard on a dark gaming desk surface with red RGB glow.",
+      "aspect_ratio": "1:1",
+      "recommended_size": "1024x1024",
+      "text_overlay": {
+        "enabled": true,
+        "copy": ["Built for Fast Inputs"],
+        "design_layer_note": "Direct-render short caption with gpt-image-1; review text."
+      },
+      "model_requirement": {
+        "needed": false,
+        "type": "none",
+        "notes": ""
+      },
+      "product_truth_constraints": [
+        "Do not alter key layout or visible colorway."
+      ],
+      "generation_prompt": "Create a premium RGB hero image with exact caption Built for Fast Inputs.",
+      "negative_prompt": "fake layout, wrong colorway, unreadable text, extra accessories",
+      "source_assets_needed": ["source product photo"],
+      "compliance_note": "needs_text_review: direct-rendered caption must be checked.",
+      "ready_to_generate": true
+    },
+    {
+      "slot": 3,
+      "image_type": "localized_lifestyle",
+      "title": "Malaysia gaming desk lifestyle",
+      "buyer_question_answered": "How does it fit my local gaming setup?",
+      "goal": "Show a realistic Malaysian apartment gaming desk.",
+      "layout": "Tidy Malaysian apartment or bedroom gaming desk, no copyrighted game UI.",
+      "aspect_ratio": "1:1",
+      "recommended_size": "1024x1024",
+      "text_overlay": {
+        "enabled": true,
+        "copy": ["Compact Setup for Malaysian Gamers"],
+        "design_layer_note": "Direct-render short caption with gpt-image-1; review text."
+      },
+      "model_requirement": {
+        "needed": false,
+        "type": "none",
+        "notes": ""
+      },
+      "product_truth_constraints": [
+        "Avoid esports team logos and copyrighted game screens."
+      ],
+      "generation_prompt": "Create a Malaysian gaming desk lifestyle image with exact caption Compact Setup for Malaysian Gamers.",
+      "negative_prompt": "copyrighted game UI, esports logos, fake local badges",
+      "source_assets_needed": ["source product photo"],
+      "compliance_note": "needs_text_review: direct-rendered caption must be checked.",
+      "ready_to_generate": true
+    },
+    {
+      "slot": 4,
+      "image_type": "in_use_model_or_hand",
+      "title": "Hands-in-use gaming image",
+      "buyer_question_answered": "How does it feel in use?",
+      "goal": "Show hands-only gaming use and keyboard scale.",
+      "layout": "Hands-only generic adult model typing or gaming on the keyboard.",
+      "aspect_ratio": "1:1",
+      "recommended_size": "1024x1024",
+      "text_overlay": {
+        "enabled": true,
+        "copy": ["Fast Response", "Respon Pantas"],
+        "design_layer_note": "Direct-render two short stacked lines; review text."
+      },
+      "model_requirement": {
+        "needed": true,
+        "type": "hands_only",
+        "notes": "Generic adult hands only, no face, no clothing logos."
+      },
+      "product_truth_constraints": [
+        "Keep scale realistic and preserve keyboard layout."
+      ],
+      "generation_prompt": "Create a hands-only in-use gaming image with stacked caption Fast Response / Respon Pantas.",
+      "negative_prompt": "face, celebrity likeness, clothing logos, wrong keyboard layout",
+      "source_assets_needed": ["source product photo"],
+      "compliance_note": "needs_text_review: direct-rendered bilingual caption must be checked.",
+      "ready_to_generate": true
+    },
+    {
+      "slot": 5,
+      "image_type": "feature_infographic",
+      "title": "Feature infographic",
+      "buyer_question_answered": "What are the main gaming features?",
+      "goal": "Show confirmed feature labels with crisp typography.",
+      "layout": "Keyboard plus five readable callout areas.",
+      "aspect_ratio": "1:1",
+      "recommended_size": "1024x1024",
+      "text_overlay": {
+        "enabled": true,
+        "copy": ["Magnetic Switch", "8000Hz Polling Rate", "Rapid Trigger", "USB-C Wired", "DKS Support"],
+        "design_layer_note": "Direct-render confirmed short labels; review text."
+      },
+      "model_requirement": {
+        "needed": false,
+        "type": "none",
+        "notes": ""
+      },
+      "product_truth_constraints": [
+        "Use only confirmed selling points from the source image."
+      ],
+      "generation_prompt": "Create a feature infographic with exact readable callouts for Magnetic Switch, 8000Hz Polling Rate, Rapid Trigger, USB-C Wired, and DKS Support.",
+      "negative_prompt": "fake wireless claims, fake certification, tiny unreadable text",
+      "source_assets_needed": ["source product photo"],
+      "compliance_note": "needs_text_review: direct-rendered feature labels must be checked.",
+      "ready_to_generate": true
+    },
+    {
+      "slot": 6,
+      "image_type": "specification_size",
+      "title": "Specification image",
+      "buyer_question_answered": "What specs are confirmed?",
+      "goal": "Show confirmed specs while leaving unknown dimensions editable.",
+      "layout": "Keyboard with clean spec panel and measurement placeholders.",
+      "aspect_ratio": "1:1",
+      "recommended_size": "1024x1024",
+      "text_overlay": {
+        "enabled": true,
+        "copy": ["60% Compact Layout", "USB-C Wired Connection", "16.8M RGB"],
+        "design_layer_note": "Render confirmed specs; leave dimensions and weight blank."
+      },
+      "model_requirement": {
+        "needed": false,
+        "type": "none",
+        "notes": ""
+      },
+      "product_truth_constraints": [
+        "Do not invent dimensions, weight, warranty, or package contents."
+      ],
+      "generation_prompt": "Create a specification image with confirmed specs 60% Compact Layout, USB-C Wired Connection, and 16.8M RGB; leave dimensions and weight blank.",
+      "negative_prompt": "fake dimensions, fake weight, fake warranty, fake certification",
+      "source_assets_needed": ["source product photo", "confirmed dimensions if final spec labels are needed"],
+      "compliance_note": "needs_specs_confirmation: dimensions and weight remain missing.",
+      "ready_to_generate": false
+    }
+  ],
+  "localized_text_overlay_plan": {
+    "language_mode": "bilingual",
+    "primary_language": "English",
+    "secondary_language": "Malay",
+    "render_strategy": "hybrid",
+    "text_rendering_mode": "hybrid",
+    "image_model_capability": "high_text_fidelity",
+    "language_reasoning": "Shopee Malaysia gaming/electronics listings usually work well in English, while short Malay labels add local flavor without crowding the image."
+  },
+  "overlay_copy_by_image": [
+    {
+      "slot": 1,
+      "image_type": "cover_main",
+      "language_mode": "none",
+      "render_strategy": "none",
+      "copy": [],
+      "image_prompt_instruction": "Keep cover image text-free."
+    },
+    {
+      "slot": 2,
+      "image_type": "premium_hero",
+      "language_mode": "english",
+      "render_strategy": "direct_image_text",
+      "copy": [
+        {
+          "text": "Built for Fast Inputs",
+          "local_text": "",
+          "placement": "bottom-left small caption",
+          "priority": 1
+        }
+      ],
+      "image_prompt_instruction": "Render the caption directly if using gpt-image-1; keep it crisp and spelled exactly."
+    },
+    {
+      "slot": 3,
+      "image_type": "localized_lifestyle",
+      "language_mode": "english",
+      "render_strategy": "direct_image_text",
+      "copy": [
+        {
+          "text": "Compact Setup for Malaysian Gamers",
+          "local_text": "",
+          "placement": "top-right caption",
+          "priority": 1
+        }
+      ],
+      "image_prompt_instruction": "Render the short caption directly if using gpt-image-1; keep it readable and high contrast."
+    },
+    {
+      "slot": 4,
+      "image_type": "in_use_model_or_hand",
+      "language_mode": "bilingual",
+      "render_strategy": "direct_image_text",
+      "copy": [
+        {
+          "text": "Fast Response",
+          "local_text": "Respon Pantas",
+          "placement": "bottom strip",
+          "priority": 1
+        }
+      ],
+      "image_prompt_instruction": "Render the bilingual caption directly as two short stacked lines if using gpt-image-1."
+    },
+    {
+      "slot": 5,
+      "image_type": "feature_infographic",
+      "language_mode": "bilingual",
+      "render_strategy": "direct_image_text",
+      "copy": [
+        {
+          "text": "Magnetic Switch",
+          "local_text": "Suis Magnetik",
+          "placement": "top-left callout",
+          "priority": 1
+        },
+        {
+          "text": "8000Hz Polling Rate",
+          "local_text": "Kadar Polling 8000Hz",
+          "placement": "top-right callout",
+          "priority": 2
+        },
+        {
+          "text": "Rapid Trigger",
+          "local_text": "Picu Pantas",
+          "placement": "middle-left callout",
+          "priority": 3
+        },
+        {
+          "text": "USB-C Wired",
+          "local_text": "USB-C Berwayar",
+          "placement": "middle-right callout",
+          "priority": 4
+        },
+        {
+          "text": "DKS Support",
+          "local_text": "Sokongan DKS",
+          "placement": "bottom-left callout",
+          "priority": 5
+        }
+      ],
+      "image_prompt_instruction": "Render these short callout labels directly with crisp readable typography if using gpt-image-1."
+    },
+    {
+      "slot": 6,
+      "image_type": "specification_size",
+      "language_mode": "english",
+      "render_strategy": "hybrid",
+      "copy": [
+        {
+          "text": "60% Compact Layout",
+          "local_text": "",
+          "placement": "spec panel row 1",
+          "priority": 1
+        },
+        {
+          "text": "USB-C Wired Connection",
+          "local_text": "",
+          "placement": "spec panel row 2",
+          "priority": 2
+        },
+        {
+          "text": "16.8M RGB",
+          "local_text": "",
+          "placement": "spec panel row 3",
+          "priority": 3
+        }
+      ],
+      "image_prompt_instruction": "Render stable confirmed specs directly, but leave exact dimensions and weight blank/editable until confirmed."
+    }
+  ],
+  "product_description_modules": [],
+  "model_requirements": [
+    {
+      "image_type": "in_use_model_or_hand",
+      "needed": true,
+      "type": "hands_only",
+      "market_fit": "Malaysia gaming/electronics buyer",
+      "pose_action": "hands typing or gaming on the compact keyboard",
+      "avoid": ["visible face", "celebrity likeness", "clothing logos", "wrong keyboard layout"]
+    }
+  ],
+  "localized_copy": {
+    "listing_title": "AULA WIN68 HE Max Magnetic Gaming Keyboard 60% USB-C Wired RGB",
+    "hero_caption": "Built for Fast Inputs",
+    "selling_points": [
+      "Magnetic switch keyboard for fast gaming input",
+      "8000Hz polling rate and rapid trigger",
+      "USB-C wired connection with 16.8M RGB"
+    ],
+    "image_overlay_copy": [
+      {
+        "image_type": "premium_hero",
+        "copy": "Built for Fast Inputs"
+      },
+      {
+        "image_type": "localized_lifestyle",
+        "copy": "Compact Setup for Malaysian Gamers"
+      },
+      {
+        "image_type": "feature_infographic",
+        "copy": ["Magnetic Switch", "8000Hz Polling Rate", "Rapid Trigger", "USB-C Wired", "DKS Support"]
+      }
+    ]
+  },
+  "one_shot_generation_prompt": "Use the attached AULA WIN68 HE Max Version magnetic gaming keyboard product image as the strict product reference. Generate a Shopee Malaysia ecommerce listing image pack as six separate square 1:1 product images in one cohesive 2x3 contact sheet preview, targeting individual 1024x1024 square exports. Preserve the keyboard's visible identity: compact 60% layout, black and red gaming design, red RGB/backlight feel, black keycaps with red legends, left-side WIN68 HE branding area, USB-C wired gaming keyboard look. Do not change the keyboard layout, do not invent wireless/Bluetooth/battery features, do not add copyrighted game UI, esports team logos, fake certifications, fake accessories, or unrelated props. Create these six final-looking listing assets: 1. Clean cover main image on white or very light neutral background, full keyboard visible, no text. 2. Premium RGB hero on a dark gaming desk surface with cinematic red glow and exact readable caption: Built for Fast Inputs. 3. Malaysia gaming desk lifestyle in a tidy modern apartment or bedroom setup, no copyrighted game content, with exact readable caption: Compact Setup for Malaysian Gamers. 4. Hands-only in-use image with a generic adult model typing/gaming, no face and no clothing logos, with stacked bilingual caption: Fast Response / Respon Pantas. 5. Feature infographic with exact readable callouts: Magnetic Switch / Suis Magnetik, 8000Hz Polling Rate / Kadar Polling 8000Hz, Rapid Trigger / Picu Pantas, USB-C Wired / USB-C Berwayar, DKS Support / Sokongan DKS. 6. Specification image with confirmed specs 60% Compact Layout, USB-C Wired Connection, and 16.8M RGB; leave exact dimensions and weight blank/editable. Style: premium ecommerce, sharp product detail, Shopee-ready, realistic commercial product photography, consistent black/red cyber esports visual language.",
+  "generated_or_planned_images": [],
+  "asset_manifest": [
+    {
+      "slot": 1,
+      "image_type": "cover_main",
+      "status": "needs_individual_export",
+      "next_step": "Regenerate or crop as a standalone square upload image."
+    },
+    {
+      "slot": 2,
+      "image_type": "premium_hero",
+      "status": "needs_individual_export",
+      "next_step": "Use as standalone hero image after export."
+    },
+    {
+      "slot": 3,
+      "image_type": "localized_lifestyle",
+      "status": "needs_individual_export",
+      "next_step": "Use as lifestyle gallery image after export."
+    },
+    {
+      "slot": 4,
+      "image_type": "in_use_model_or_hand",
+      "status": "needs_individual_export",
+      "next_step": "Check hand realism and keyboard layout before upload."
+    },
+    {
+      "slot": 5,
+      "image_type": "feature_infographic",
+      "status": "needs_text_review",
+      "next_step": "Review direct-rendered feature labels for spelling and legibility before export."
+    },
+    {
+      "slot": 6,
+      "image_type": "specification_size",
+      "status": "needs_specs_confirmation",
+      "next_step": "Add confirmed dimensions, weight, package contents, and exact model fields."
+    }
+  ],
+  "estimated_generation_plan": {
+    "image_count": 6,
+    "first_render_order": ["cover_main", "premium_hero"],
+    "generation_notes": [
+      "Generate a 2x3 contact sheet as a review preview.",
+      "Regenerate each approved panel as an individual 1024x1024 upload image.",
+      "Review all direct-rendered text before marking images upload-ready."
+    ]
+  },
+  "visual_compliance_notes": [
+    {
+      "severity": "high",
+      "note": "Do not claim wireless, Bluetooth, or battery functions."
+    },
+    {
+      "severity": "medium",
+      "note": "Avoid copyrighted game screens and esports team logos."
+    },
+    {
+      "severity": "medium",
+      "note": "If the seller is not authorized to use AULA branding, avoid reproducing brand logos beyond the supplied product image."
+    }
+  ]
+  ,
+  "missing_inputs": [
+    "exact product dimensions",
+    "package weight",
+    "confirmed package contents",
+    "seller authorization for AULA branding if brand use is restricted"
+  ],
+  "editable_json": {
+    "product_name": "AULA WIN68 HE Max Version Magnetic Gaming Keyboard",
+    "target_market": "Malaysia",
+    "platform": "Shopee",
+    "pack_mode": "balanced",
+    "category_playbook": "electronics"
+  }
+}

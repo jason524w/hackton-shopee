@@ -1,0 +1,8 @@
+interface:
+  display_name: "Product Listing Image Pack"
+  short_description: "Generate Shopee-ready listing image packs"
+  brand_color: "#EE4D2D"
+  default_prompt: "Use $product-visual-skill to turn this product into a Shopee-ready listing image pack."
+
+policy:
+  allow_implicit_invocation: true
