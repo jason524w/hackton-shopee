@@ -1,7 +1,11 @@
-# Agent 规格 — 6 个 agent
+# Agent 规格 — 7 个 agent
+
+> **后端权威以 [IMPLEMENTATION-ROADMAP.md](IMPLEMENTATION-ROADMAP.md) 为准**(7-agent + runtime/
+> providers/audit/harness 的完整实施规范、目录结构、checkpoint)。本文件是职责简表。
+> 顺序:`market → sourcing → margin → risk → listing → packaging → committee`。
 
 每个 agent = 一次 OpenAI Responses API 调用,`response_format` 用 strict json_schema。
-实现放 `lib/agents/<key>.ts`。
+实现放 `lib/agents/<key>/`(目录化,见 ROADMAP §3/§4)。
 
 > **契约边界(重要):** contract 只定义**最终汇总的 `RunResult`**。下面每个 agent 的
 > "输出"是**内部中间产物**(directions[]、supplier、flags、ranked… ),**其 schema 由 P1
@@ -47,15 +51,23 @@
 - **判断**:高风险→只能 human review;中风险→可生成但带 warning;低风险→可 Go。
 - **Demo 关键**:对吸尘器必须输出「⚠ 夸大吸力 / 电器安全需人工复核」。
 
-## 5. `listing` — Listing & Packaging Agent
-- **职责**:把 primary 候选转成 Shopee 可上架字段 + 本地化标题/卖点/描述 + 图 prompt。
+## 5. `listing` — Listing Agent
+- **职责**:把 primary 候选转成 Shopee 可上架字段(标题/描述/SKU/属性/物流)。
 - **输入**:selected product、市场、类目、recommended_price、stock、规格、`risk` 的约束。
-- **输出**:`selected_listing.shopee`(完整字段)+ bullet_points + images(prompt + 预生成 url)
-  + missing_fields。
+- **输出**:`selected_listing.shopee`(完整字段)+ bullet_points + missing_fields。
 - **判断**:必填字段缺 → 不能标 ready;Risk 有 warning → 必须写进 listing compliance。
-- **约束**:按 Risk 改写卖点,去掉夸大词;本地化加 HDB/office/dorm 场景。
+- **约束**:按 Risk 改写卖点,去掉夸大词(super suction / industrial / certified 等)。
 
-## 6. `committee` — Committee Agent
+## 6. `packaging` — Packaging Agent
+- **职责**:本地化包装 + 商品图(hero/lifestyle/feature)prompt 生成、live 生成与图片合规。
+- **输入**:listing output、市场、竞品风格、产品规格、`risk` 约束、可选 source 图。
+- **工具**:`openaiImage.generate/edit/checkCompliance`、`risk.checkpoint("packaging")`。
+- **输出**:`selected_listing.images[]`(hero/lifestyle/feature + prompt + compliance)+ 本地化卖点/风格说明。
+- **判断**:prompt 只用真实规格、不暗示不存在的功能/认证;feature 图与 listing 规格逐项对齐;可标 `needs_review`。
+- **模式**:dry-run 只产 prompt 不调图 API;live 生成存 `public/generated/<run_id>/`。
+- **Demo 关键**:图必须由真实规格驱动,不是漂亮但不可信的广告图。
+
+## 7. `committee` — Committee Agent
 > **实现规范见 [COMMITTEE.md](COMMITTEE.md)**:确定性合并 + Commerce Gates 封顶,
 > LLM 只做 Devil's Advocate 与 summary;零 contract 改动。
 - **职责**:汇总全部 agent,处理 tradeoff,给最终 Go/Watch/Reject + 排序 + 解释。

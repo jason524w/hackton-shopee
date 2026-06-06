@@ -5,25 +5,27 @@
 ## 独占路径
 `seed/**`
 
-## Subagent / 子任务
+## Subagent / 子任务(seed 布局见 [ROADMAP §3](../IMPLEMENTATION-ROADMAP.md))
 
-### □ `seed/desk-vacuum.json` — 真实市场 + 货源
-- 打开 Shopee SG 搜 "mini desk vacuum",**手抄 8–10 条真实 listing**:
-  标题、价格(SGD)、评论数、评分、是否有销量标签。
-- 1688 搜对应商品,**抄 3–4 个真实报价**:价格(RMB)、MOQ、发货地、规格、包装重量。
-- 结构参考 `contract/mock-result.json` 里 market/sourcing 的 evidence 字段。
+### □ market 信号
+- `seed/market/mini-desk-vacuum-shopee-search.json` — Shopee SG 搜 "mini desk vacuum",**抄 8–10 条真实 listing**(标题/价格 SGD/评论数/评分/销量标签)。
+- `seed/market/mini-desk-vacuum-competitor-details.json` — top 3 竞品详情(主图风格、卖点结构、属性)。
 
-### □ `seed/shopee-rules.json` — 合规规则摘要
-- 从 Shopee 禁售/限售 + listing violation 指南里抄关键规则(电器、夸大宣传、keyword spam、
-  品牌/IP、图文不符)。给 Risk agent 当判断依据。
-- 参考链接见 `docs/PRD.md` 第 7.4 / 第 4 层。
+### □ sourcing 报价
+- `seed/sourcing/mini-desk-vacuum-1688-offers.json` — 1688 **抄 3–4 个真实报价**(price RMB/MOQ/发货地/规格/包装重量+尺寸/offer id)。
 
-### □ `seed/images/` — demo 预生成图(3 张)
-- 用 OpenAI 图像生成,提前做好:`desk-vacuum-hero.png` `-lifestyle.png` `-feature.png`。
-- prompt 参考 `mock-result.json` 的 `selected_listing.images[].prompt`。
-- **demo 不 live 生成图,用这三张静态图。**
+### □ rules 合规
+- `seed/rules/shopee-sg-policy-rules.json` — Shopee SG 禁售/限售规则(给 Risk,每条带 rule id)。
+- `seed/rules/shopee-sg-listing-violations.json` — listing 违规规则(电器/夸大/keyword spam/图文不符)。
+
+### □ shipping / fx
+- `seed/shipping/cn-to-sg-small-parcel.json` — CN→SG 小包运费(low/base/high + 天数 + 假设)。
+- `seed/fx/cny-sgd.json` — CNY→SGD 汇率(rate + captured_at + source)。
+
+### □ images 源图
+- `seed/images/source-product/mini-desk-vacuum-source.png` — 一张真实/参考源图,供 Packaging 的 image edit 用。
+- 注:最终 hero/lifestyle/feature 由 Packaging **live 生成**写到 `public/generated/<run_id>/`,不放 seed。
 
 ## 验收
-- 三个产物就位;`seed/desk-vacuum.json` 和 `seed/shopee-rules.json` 是合法 JSON。
-- 后端 Function(search_shopee / get_1688_quotes)能直接读 `desk-vacuum.json`。
-- Listing Studio 的 `images[].url` 能指到 `seed/images/` 里真实存在的图。
+- 上述 JSON 均合法且字段齐(带 source / captured_at / id 元数据,见 [ROADMAP §6](../IMPLEMENTATION-ROADMAP.md))。
+- provider 适配器(`lib/providers/*`)能直接读对应 seed 文件做 fixture 回放。

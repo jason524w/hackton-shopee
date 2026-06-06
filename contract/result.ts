@@ -11,6 +11,7 @@ export type AgentKey =
   | "margin"
   | "risk"
   | "listing"
+  | "packaging"
   | "committee";
 
 export interface Brief {
@@ -142,6 +143,7 @@ export interface SelectedListing {
 
 export interface RunResult {
   run_id: string;
+  audit_run_id: string; // points to GET /api/runs/:id/audit; full logs NOT inlined here
   created_at: string;
   currency: string;
   brief: Brief;

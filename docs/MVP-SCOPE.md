@@ -10,9 +10,13 @@
 | Agent War Room | 渲染 6 个 agent,status 渐进点亮 + evidence + score |
 | Opportunity Board | 3 张候选卡 + 主卡利润瀑布 + Committee 排序/tradeoff |
 | Listing Studio | Shopee 一份 listing + 预生成图 + compliance 警告 |
-| `/api/run?mock=1` + 缓存 | **P0 必达**:demo 主路径,零延迟零失败 |
-| `/api/run` 真实管道 | **P1 加分**:输出符合 `contract/result.schema.json`,当展示/备份 |
+| `/api/run` 真实 7-agent 管道 + live 图 | **主 demo 路径**,输出符合 schema,详见 [IMPLEMENTATION-ROADMAP](IMPLEMENTATION-ROADMAP.md) |
+| `/api/run?mock=1` + 缓存 | **必达安全网**:零延迟零失败,live 失败一键切回;**永不移除** |
+| `/api/run?images=0` | 纯文本快速彩排 |
 | seed 真实数据 | 吸尘器的 Shopee + 1688 种子数据 |
+| 后端 7-agent + runtime/audit/providers | 按 [IMPLEMENTATION-ROADMAP](IMPLEMENTATION-ROADMAP.md) 完整建(团队已选完整路线) |
+
+> 后端范围以 **IMPLEMENTATION-ROADMAP.md 为权威**;下面的 ❌ 主要是**前端 / 演示层**的取舍。
 
 ## ❌ 不做(进 roadmap slide,嘴上讲)
 
@@ -24,7 +28,6 @@
 > 不实现 Lazada 渲染/转译。Lazada 只在 pitch 的 roadmap 里讲。
 | 多地区 SG/MY/PH 本地化变体 | 一个市场足够讲清本地化逻辑 |
 | ROI Dashboard 写代码 | 改成 1 张静态 slide |
-| 实时图像生成 | demo 前预生成 2–3 张存 `seed/images/` |
 | 监控闭环 / 订阅付费系统 | 纯 pitch 内容 |
 | 用户登录 / 多用户 / 持久化 | demo 不需要 |
 | 3–5 候选全部走深管道 | 只有 primary 候选走完整,其余轻量 |

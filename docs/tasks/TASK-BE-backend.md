@@ -1,34 +1,26 @@
-# TASK-BE · 后端 agent 管道 + /api/run(独立轨,P1 拥有)
+# 后端总轨 — 已拆成 9 个并行 PR
 
-> `lib/agents/*` 是纯 TS 模块,**可立刻对着 contract 开写,不等骨架**;
-> 只有 `app/api/run` 接线需要 TASK-01 落地。内部用 **6 路 subagent 扇出**(一 agent 一文件)。
+> ⚠️ 旧的"单个后端 epic"已**作废**。团队选了**完整 ROADMAP**,后端按
+> [IMPLEMENTATION-ROADMAP.md](../IMPLEMENTATION-ROADMAP.md) §13 拆成 9 个独立 PR,
+> 每个 PR 独占自己的目录,可多 agent 并行。**实现细节、目录规范、harness、audit 要求全部以 ROADMAP 为权威。**
 
-## 独占路径
-`lib/agents/**` `app/api/run/**` `lib/cost-model.ts`
+## 9 个后端 PR(独占路径 → 不冲突)
 
-## 公共约定
-- 每个 agent = 一次 Responses API 调用,`response_format` 用 strict `json_schema`,
-  输出直接是 `contract/result.ts` 对应结构。
-- prompt 强约束:**只基于传入数据/工具结果判断,不凭记忆编造**。
-- Market/Sourcing 用 Function Calling 读 `seed/`(依赖 TASK-DATA,没数据时先用 mock 兜)。
-- **任何时候 `/api/run` 整体输出必须通过 `contract/result.schema.json`。**
+| Issue | 独占路径 | 依赖 |
+|---|---|---|
+| TASK-RUNTIME-AUDIT | `lib/agent-runtime/**` | 骨架 |
+| TASK-PROVIDERS | `lib/providers/{shopee,sourcing-1688,shipping,fx}/**` | 骨架 + seed 数据 |
+| TASK-MARGIN-RISK | `lib/agents/margin/**` `lib/agents/risk/**` | runtime + providers + contract |
+| TASK-MARKET-SOURCING | `lib/agents/market/**` `lib/agents/sourcing/**` | runtime + providers + contract |
+| TASK-LISTING | `lib/agents/listing/**` | runtime + providers + risk checkpoint |
+| TASK-PACKAGING-IMAGE | `lib/agents/packaging/**` `lib/providers/openai-image/**` | runtime + risk checkpoint |
+| TASK-COMMITTEE | `lib/agents/committee/**` | margin/risk/listing 产物 + [COMMITTEE.md](../COMMITTEE.md) |
+| TASK-API-INTEGRATION | `app/api/run/**` `app/api/runs/[id]/audit/**` | 上述全部 |
+| TASK-HARNESS-QA | `tests/**` + smoke checklist | 各 agent harness |
 
-## Subagent 扇出(各写各文件,详规见 docs/AGENTS.md)
-
-- □ `lib/agents/market.ts` — 产 3 候选 + demand 信号(Function: search_shopee)
-- □ `lib/agents/sourcing.ts` — primary 候选货源(Function: get_1688_quotes)
-- □ `lib/agents/margin.ts` — **护城河**:利润公式 low/base/high + cost 瀑布(用 `lib/cost-model.ts`)
-- □ `lib/agents/risk.ts` — **护城河**:对照 Shopee 规则打分;**吸尘器必须出「夸大吸力/电器安全」warning**
-- □ `lib/agents/listing.ts` — Shopee 字段 + 本地化标题/卖点/图 prompt
-- □ `lib/agents/committee.ts` — 汇总 + tradeoff + Go/Watch/Reject 排序(权重 30/25/20/15/10)
-- □ `app/api/run/route.ts` — 串联管道;`?mock=1` 直回 mock;真实模式跑全链
-
-## 实现顺序
-1. 先用 mock 片段把整条管道**接线跑通**(每个 agent 先返回 mock 子结构)。
-2. 逐个 agent 换成真实 OpenAI 调用,先做 margin / risk(护城河)。
-3. 跑通后把一次真实输出**存成缓存 JSON**,demo 走缓存。
-
-## 验收
-- `/api/run`(非 mock)真实跑出结果,**通过 `result.schema.json` 校验**。
-- 吸尘器 primary:决策 = **Watch**,Risk 含电器/夸大 warning,利润卡 base≈28%、high-return 档≈12%。
-- 前端把 mock import 换成 `fetch('/api/run')` 后,**零改动**正常渲染。
+## 公共铁律
+- 每个 agent 目录遵循同一模板:`skill / schema / tools / harness / index`(见 ROADMAP §4)。
+- agent 只导入 provider 适配器,**不直接碰 SDK / HTTP**。
+- Risk 是跨切 checkpoint supervisor(ROADMAP §7),其 API 改动需 margin/listing/packaging/committee owner 知会。
+- **任何时候 `/api/run` 最终 `RunResult` 必须通过 `scripts/check-contract.mjs`**(7 agent + audit_run_id)。
+- 不移除 `/api/run?mock=1`;Committee 不得静默翻 Risk 硬 gate。

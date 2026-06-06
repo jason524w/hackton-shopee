@@ -23,10 +23,10 @@
    (`mock-result.json` + `result.ts` + `result.schema.json`)。
 2. **MVP 范围内才动手。** 只做 [docs/MVP-SCOPE.md](docs/MVP-SCOPE.md) 里"✅ 做"的部分。
    想加功能 → 先问"它服务 demo 高潮吗?"(见下)。不服务就不做。
-3. **分两层交付,demo 不 live 调模型。**
-   - **P0(必达):** `/api/run?mock=1` + 缓存,让整条 demo 主线端到端跑通、零延迟、零失败。
-   - **P1(加分):** 真实 agent pipeline(`lib/agents/*`)。它**是 MVP 的一部分要做**,
-     但**不是 demo 的主路径**——demo 默认走缓存,真实链路当展示/备份。
+3. **Live 是主 demo 路径,mock 是永不可移除的安全网。**
+   - **主路径:** `/api/run` 真实 7-agent pipeline(含 live 图像生成),见 [IMPLEMENTATION-ROADMAP](docs/IMPLEMENTATION-ROADMAP.md)。
+   - **安全网(必达、一键可切):** `/api/run?mock=1` + 缓存,零延迟零失败,live 卡顿/失败随时切回。
+   - **`/api/run?images=0`** 跑纯文本快速彩排。**永远不要移除 `?mock=1`**;demo 当天先验安全网再跑 live。
 
 ## Demo 高潮(所有取舍的判断标准)
 

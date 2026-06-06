@@ -43,6 +43,13 @@ function check(node, sch, path) {
 
 check(data, schema, "$");
 
+// ROADMAP §11: agents[] must be exactly these seven, in this order.
+const EXPECTED_AGENTS = ["market", "sourcing", "margin", "risk", "listing", "packaging", "committee"];
+const got = (data.agents || []).map((a) => a.key);
+if (got.length !== EXPECTED_AGENTS.length || EXPECTED_AGENTS.some((k, i) => got[i] !== k)) {
+  errors.push(`agents[]: expected exactly [${EXPECTED_AGENTS.join(", ")}], got [${got.join(", ")}]`);
+}
+
 if (errors.length) {
   console.error(`✗ contract check FAILED (${errors.length}):`);
   for (const e of errors) console.error("  - " + e);

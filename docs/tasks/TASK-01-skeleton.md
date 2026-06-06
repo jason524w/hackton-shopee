@@ -15,6 +15,12 @@
 - 4 个空路由占位:`app/brief` `app/war-room` `app/board` `app/studio`(各一个 `page.tsx` 写个标题即可)。
 - `lib/openai.ts`:导出配置好的 OpenAI client(读 `OPENAI_API_KEY`)。
 - `app/api/run/route.ts`:`POST` 先实现 `?mock=1` → 返回 `contract/mock-result.json`。
+- `app/api/runs/[id]/audit/route.ts`:stub,先返回 `{ status: "not_implemented" }`(占位,见 ROADMAP §9)。
+- **scaffold 后端目录骨架**(按 [ROADMAP §3](../IMPLEMENTATION-ROADMAP.md)),空目录放 `.gitkeep`:
+  `lib/agent-runtime/` `lib/providers/{shopee,sourcing-1688,shipping,fx,openai-image}/`
+  `lib/agents/{market,sourcing,margin,risk,listing,packaging,committee}/`。
+  → 让 10 个后端 PR 各占自己目录、互不冲突。
+- `.gitignore` 追加 `.runs/` 和 `public/generated/`(audit 与生成图,不入库)。
 - 根 `app/page.tsx`:跳到 `/brief`。
 
 ## 验收

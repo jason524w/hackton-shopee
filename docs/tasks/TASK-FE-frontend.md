@@ -21,7 +21,8 @@
 - 验收:1–2 分钟能填完;输入结构化,不是开放式 prompt。
 
 ### □ 页面 2 · Agent War Room (`app/war-room`)
-- 渲染 `agents[]`:6 张 agent 卡片,**status 渐进点亮**(waiting→running→done)。
+- 渲染 `agents[]`:7 张 agent 卡片(market→sourcing→margin→risk→listing→packaging→committee),**status 渐进点亮**(waiting→running→done)。
+- 可加一个 audit 链接占位(`audit_run_id` → 未来 `/api/runs/:id/audit`),MVP 可不实现详情页。
 - 每卡展示:role、data_sources、evidence[]、key_judgment、score、confidence、warnings。
 - 允许展示冲突(利润高/风险高),Committee 卡做最终汇总。
 - 验收:看得到"逐个 agent 完成"的过程 + 证据 + 分数,不是只显示 thinking。

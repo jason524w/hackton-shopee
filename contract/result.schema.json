@@ -3,10 +3,11 @@
   "title": "Sea Launch AI RunResult",
   "description": "Contract returned by POST /api/run. contract/result.ts is the CANONICAL type; this schema is the backend validation target kept in sync with it. Frontend renders against result.ts + mock-result.json. Run scripts/check-contract.mjs to verify mock-result.json conforms.",
   "type": "object",
-  "required": ["run_id", "created_at", "currency", "brief", "agents", "opportunities", "committee", "selected_listing"],
+  "required": ["run_id", "audit_run_id", "created_at", "currency", "brief", "agents", "opportunities", "committee", "selected_listing"],
   "additionalProperties": false,
   "properties": {
     "run_id": { "type": "string" },
+    "audit_run_id": { "type": "string" },
     "created_at": { "type": "string" },
     "currency": { "type": "string" },
     "brief": { "$ref": "#/$defs/brief" },
@@ -41,7 +42,7 @@
       "type": "object",
       "required": ["key", "name", "role", "status", "inputs_summary", "data_sources", "evidence", "key_judgment", "score", "confidence", "warnings"],
       "properties": {
-        "key": { "enum": ["market", "sourcing", "margin", "risk", "listing", "committee"] },
+        "key": { "enum": ["market", "sourcing", "margin", "risk", "listing", "packaging", "committee"] },
         "name": { "type": "string" },
         "role": { "type": "string" },
         "status": { "enum": ["waiting", "running", "done", "blocked"] },

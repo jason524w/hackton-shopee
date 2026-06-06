@@ -3,14 +3,14 @@
 > 电商版"投委会"的实现规范。改编自一份金融多智能体投委会架构,核心思想保留、
 > 业务规则换成电商。**任何实现 `lib/agents/committee.ts` 的 agent / 队员,先读这里。**
 >
-> 配套阅读:[AGENTS.md](AGENTS.md)(6 个 agent 总览)、[ARCHITECTURE.md](ARCHITECTURE.md)
-> (利润模型 + 权重)、`contract/`(唯一数据对齐目标)。
+> 配套阅读:[AGENTS.md](AGENTS.md)(7 个 agent 总览)、[IMPLEMENTATION-ROADMAP.md](IMPLEMENTATION-ROADMAP.md)
+> (7-agent 后端权威)、[ARCHITECTURE.md](ARCHITECTURE.md)(利润模型 + 权重)、`contract/`(唯一数据对齐目标)。
 
 ---
 
 ## 0. 一句话
 
-> Market / Sourcing / Margin / Risk / Listing 五个 agent 产出 **evidence + score + 判断**;
+> Market / Sourcing / Margin / Risk / Listing / Packaging 六个 feeder agent 产出 **evidence + score + 判断**;
 > Committee **不靠 LLM 拍板**——它用**确定性规则合并打分 + 封顶决策**,LLM 只负责
 > **质疑(Devil's Advocate)和措辞(summary)**。
 

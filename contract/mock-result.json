@@ -1,5 +1,6 @@
 {
   "run_id": "run_demo_001",
+  "audit_run_id": "audit_run_demo_001",
   "created_at": "2026-06-06T09:30:00+08:00",
   "currency": "SGD",
   "brief": {
@@ -93,8 +94,8 @@
     },
     {
       "key": "listing",
-      "name": "Listing & Packaging Agent",
-      "role": "生成 Shopee 可上架字段 + 本地化标题/卖点/图",
+      "name": "Listing Agent",
+      "role": "生成 Shopee 可上架字段(标题/描述/SKU/属性/物流)",
       "status": "done",
       "inputs_summary": "selected: mini desk vacuum · Shopee SG · EN",
       "data_sources": ["Shopee category schema (seed)", "competitor titles (seed)"],
@@ -107,6 +108,23 @@
       "score": 81,
       "confidence": 0.77,
       "warnings": []
+    },
+    {
+      "key": "packaging",
+      "name": "Packaging Agent",
+      "role": "本地化包装 + 商品图(hero/lifestyle/feature)生成与合规检查",
+      "status": "done",
+      "inputs_summary": "listing output · Shopee SG · EN · HDB/office 场景",
+      "data_sources": ["competitor style (seed)", "OpenAI image"],
+      "evidence": [
+        { "label": "生成图", "value": "hero / lifestyle / feature 各 1 张" },
+        { "label": "本地化", "value": "Singapore HDB / 桌面 / 学生宿舍 场景" },
+        { "label": "图片合规", "value": "feature 图需人工确认(不暗示认证)" }
+      ],
+      "key_judgment": "三张图按真实规格生成、去夸大;feature 图标 needs_review 交人工确认。",
+      "score": 76,
+      "confidence": 0.72,
+      "warnings": ["feature 图卖点需与 listing 规格逐项核对"]
     },
     {
       "key": "committee",
