@@ -23,13 +23,17 @@ Brief
  → Sourcing    只对 primary 候选,读 1688 种子报价           supplier/price/stock
  → Margin      套利润公式,出 low/base/high + cost 瀑布      margin detail
  → Risk        对照 Shopee 禁售/违规规则打分                 flags / risk_level
- → Listing     工具驱动粗排/精排 + 筛选 + Packaging handoff
+ → Listing     消费 canonical score + 工具筛选 + Packaging handoff
  → Packaging   生成 Shopee-ready 文案/字段 + 本地化图片       selected_listing
  → Committee   汇总 + tradeoff + Go/Watch/Reject 排序        committee + decisions
 ```
 
-**性能取舍:** Market 产 3 候选;Listing Ranker 用工具证据做粗排/精排,但**只有 handoff
-候选进入 Packaging 深管道**;另外候选保留轻量分数与筛选理由。控制延迟与 token。
+**性能取舍:** Market 产 3 候选;Listing Ranker 不覆盖 Market 的 `is_primary`,也不替代
+Committee 的最终排序。它消费上游 canonical scores,用工具证据做筛选/解释,但**只有
+handoff 候选进入 Packaging 深管道**;另外候选保留轻量分数与筛选理由。控制延迟与 token。
+
+**接线约束:** Listing handoff 不是 Listing Studio 最终交付物。`/api/run` 接 live pipeline
+时必须 Listing → Packaging 成对接线,由 Packaging 写最终 copy/images/ready 状态后再返回给前端。
 
 **每个 agent = 一次 Responses API 调用**,`response_format: json_schema (strict)`。
 单个 agent 可有内部 schema(例如 Listing Ranker 的 `ranked_ids` / factor scores / filters);

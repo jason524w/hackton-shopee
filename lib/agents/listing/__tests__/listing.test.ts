@@ -33,7 +33,7 @@ describe("listing ranker agent", () => {
     expect(output.agent.key_judgment).toContain("upstream primary");
   });
 
-  it("does not generate Packaging-owned images or final launch claims", async () => {
+  it("does not generate Packaging-owned images or final-ready launch claims", async () => {
     const output = await replayFixture();
     const text = [
       output.selected_listing.shopee.item_name,
@@ -49,6 +49,7 @@ describe("listing ranker agent", () => {
     expect(text).not.toContain("certified safety");
     expect(text).not.toContain("guaranteed deep cleaning");
     expect(output.selected_listing.compliance.warnings.join(" ")).toContain("Packaging Agent");
+    expect(output.selected_listing.editable_json_ready).toBe(false);
   });
 
   it("uses provider evidence and calls listing risk checkpoint", async () => {
@@ -68,8 +69,23 @@ describe("listing ranker agent", () => {
     expect(result.selected_listing?.shopee.required_fields_filled).toBe(
       result.selected_listing?.shopee.required_fields_total,
     );
-    expect(result.selected_listing?.editable_json_ready).toBe(true);
-    expect(result.opportunities?.find((opportunity) => opportunity.id === "opp_desk_vacuum")?.is_primary).toBe(true);
+    expect(result.selected_listing?.editable_json_ready).toBe(false);
+    expect(result.opportunities).toBeUndefined();
+  });
+
+  it("keeps Market-owned primary flags out of the Listing slice", async () => {
+    const risk = createSpyRisk();
+    const result = cloneRunResult(mockResult as RunResult);
+    result.opportunities = result.opportunities.map((opportunity) => ({
+      ...opportunity,
+      is_primary: opportunity.id === "opp_desk_vacuum",
+    }));
+    const ctx = createFixtureContext(risk, result);
+    const slice = await runListingAgent(ctx, { mode: "fixture", runId: "run_listing_primary_boundary" });
+
+    expect(slice.selected_listing?.opportunity_id).toBe("opp_desk_vacuum");
+    expect(slice.opportunities).toBeUndefined();
+    expect(result.opportunities.find((opportunity) => opportunity.id === "opp_desk_vacuum")?.margin).not.toBeNull();
   });
 
   it("does not produce a ready handoff when every candidate is hard-filtered", async () => {

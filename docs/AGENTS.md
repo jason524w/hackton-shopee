@@ -52,12 +52,12 @@
 - **Demo 关键**:对吸尘器必须输出「⚠ 夸大吸力 / 电器安全需人工复核」。
 
 ## 5. `listing` — Listing Ranker Agent
-- **职责**:用工具证据对候选商品做粗排/精排和筛选,决定哪个商品进入 Packaging handoff;不负责最终上架。
+- **职责**:消费上游 canonical opportunity scores,用工具证据做筛选/解释,决定哪个商品进入 Packaging handoff;不负责最终上架。
 - **输入**:opportunities、市场/类目、margin、货源/物流/FX、Shopee SG 规则、近期/本地 market context、`risk` 约束。
 - **工具**:`shopee.searchProducts`、`sourcing1688.searchOffers/getOfferDetail`、`shipping.estimateCrossBorder`、`fx.convert`、`shopee.getPolicyRules`、Singapore market context。
-- **输出**:内部 `ranked_ids`、factor scores、filters、tradeoffs + 给 Packaging 的 `selected_listing` handoff 外壳。
-- **判断**:LLM 不是数据源,只能基于工具结果做 tradeoff;硬拦截先过滤;上游 primary/用户选择若未硬拦截,可保留进入 Packaging 并带 warning。
-- **约束**:不生成最终上架、不生成图片;禁止把模型训练偏好当成新加坡近期趋势证据。
+- **输出**:内部 `ranked_ids`、factor diagnostics、filters、tradeoffs + 给 Packaging 的 `selected_listing` handoff 外壳。
+- **判断**:LLM 不是数据源,只能基于工具结果做 tradeoff;硬拦截先过滤;上游 primary/用户选择若未硬拦截,可保留进入 Packaging 并带 warning;不覆盖 Market 的 `is_primary`。
+- **约束**:不生成最终上架、不生成图片;handoff 的 `editable_json_ready=false`;禁止把模型训练偏好当成新加坡近期趋势证据。
 
 ## 6. `packaging` — Packaging Agent
 - **职责**:接收 Listing Ranker 的 handoff,完成 Shopee-ready 上架包文案、本地化包装 + 商品图(hero/lifestyle/feature)prompt 生成、live 生成与图片合规。
@@ -66,6 +66,7 @@
 - **输出**:`selected_listing.images[]`(hero/lifestyle/feature + prompt + compliance)+ 本地化卖点/风格说明。
 - **判断**:prompt 只用真实规格、不暗示不存在的功能/认证;feature 图与 listing 规格逐项对齐;可标 `needs_review`。
 - **模式**:dry-run 只产 prompt 不调图 API;live 生成存 `public/generated/<run_id>/`。
+- **接线约束**:`/api/run` 不能只接 Listing 就把 handoff 展示为最终 Listing Studio;Packaging 必须成对接线并决定最终 ready 状态。
 - **Demo 关键**:图必须由真实规格驱动,不是漂亮但不可信的广告图。
 
 ## 7. `committee` — Committee Agent

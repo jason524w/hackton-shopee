@@ -63,7 +63,6 @@ export async function runListingAgent(
 
   return {
     agents: [output.agent],
-    opportunities: markSelectedOpportunity(input.opportunities, output.selection.selected_opportunity_id),
     selected_listing: output.selected_listing,
   };
 }
@@ -219,15 +218,10 @@ function buildFeatureVectors(input: ListingInput): OpportunityFeatureVector[] {
     const marketTiming = clamp(scoreMarketTiming(opportunity, input.evidence.market_context));
     const volatilityRisk = priceVolatilityRisk(opportunity, input);
     const priceStability = clamp(volatilityRisk === "high" ? 42 : volatilityRisk === "medium" ? 65 : 82);
-    const overall = clamp(
-      profit * 0.22 +
-        demand * 0.16 +
-        sourcing * 0.14 +
-        compliance * 0.26 +
-        fulfillment * 0.11 +
-        marketTiming * 0.09 +
-        priceStability * 0.05,
-    );
+    // Listing consumes the upstream canonical opportunity score; tool-derived
+    // factors below explain handoff readiness instead of creating a second
+    // competing ranker with different weights from Committee.
+    const overall = clamp(opportunity.scores.overall);
     const status = initialStatus(opportunity, input.brief.max_fulfillment_days);
     const reasons = buildVectorReasons(opportunity, volatilityRisk, status, input);
 
@@ -250,7 +244,12 @@ function buildFeatureVectors(input: ListingInput): OpportunityFeatureVector[] {
 }
 
 function buildHeuristicSelection(input: ListingInput, vectors: OpportunityFeatureVector[]): ListingSelection {
-  const rankedVectors = [...vectors].sort((left, right) => right.overall - left.overall);
+  const rankedVectors = [...vectors].sort((left, right) => {
+    if (left.status !== right.status) {
+      return left.status === "filtered" ? 1 : -1;
+    }
+    return right.overall - left.overall;
+  });
   const preferred = input.preferred_opportunity_id
     ? vectors.find((vector) => vector.opportunity_id === input.preferred_opportunity_id)
     : undefined;
@@ -329,6 +328,7 @@ function buildPackagingHandoff(
       .map((rule) => rule.guidance),
     ...selection.handoff_notes,
     ...checkpoint.warnings,
+    "Listing Ranker handoff is not final listing copy; Packaging must finalize copy, attributes, images, and readiness.",
     ...(filteredHandoff ? ["All opportunities were hard-filtered; Packaging handoff is blocked until inputs change."] : []),
     ...(selectedVector?.price_volatility_risk === "high" ? ["Price volatility is high; Packaging should avoid aggressive price claims."] : []),
     ...(offer?.supplier_risk_notes ?? []),
@@ -348,8 +348,7 @@ function buildPackagingHandoff(
         complianceWarnings.some((warning) => includesNormalized(warning, "review")),
       warnings: complianceWarnings,
     },
-    editable_json_ready:
-      !filteredHandoff && missingFields.length === 0 && !checkpoint.hard_block && opportunity.decision !== "Reject",
+    editable_json_ready: false,
   };
 }
 
@@ -484,16 +483,13 @@ function buildAgentResult(
         label: "Packaging handoff",
         value: `${selection.selected_opportunity_id} (${selectedVector?.overall ?? "n/a"})`,
       },
-      {
-        label: "Top ranked",
-        value: topRanked,
-      },
+      { label: "Top canonical candidate", value: topRanked },
       ...buildContextEvidence(input.evidence.market_context),
     ],
     key_judgment:
       topRanked === selection.selected_opportunity_id
-        ? "Tool-grounded ranking selected the top viable opportunity for Packaging handoff."
-        : "Tool-grounded ranking found a safer top candidate, but kept the viable upstream primary for Packaging handoff with warnings.",
+        ? "Tool-grounded screening accepted the top canonical opportunity for Packaging handoff."
+        : "Tool-grounded screening found a different top candidate, but kept the viable upstream primary for Packaging handoff with warnings.",
     score: Math.round(selectedVector?.overall ?? 50),
     confidence: input.evidence.market_context.freshness === "live" ? 0.82 : 0.68,
     warnings,
@@ -659,6 +655,7 @@ function buildHandoffNotes(input: ListingInput, selectedId: string, vectors: Opp
   const vector = vectors.find((candidate) => candidate.opportunity_id === selectedId);
   return uniqueList([
     `Packaging Agent receives ${selected.name}; Listing Ranker does not publish or finalize the listing.`,
+    "Packaging must finalize copy, attributes, images, and editable_json_ready before Listing Studio shows launch-ready output.",
     `Use suggested price SGD ${selected.suggested_price}; do not undercut minimum viable price SGD ${selected.minimum_viable_price}.`,
     ...(vector?.price_volatility_risk !== "low" ? [`Price volatility risk is ${vector?.price_volatility_risk}; keep claims and discounts conservative.`] : []),
     ...(selected.risk_level !== "low" ? ["Human review warning must remain visible in Packaging output."] : []),
@@ -673,13 +670,6 @@ function buildHandoffBulletPoints(input: ListingInput, opportunity: Opportunity)
     localUseCases ? `Local use cases: ${localUseCases}` : "Local use cases require Packaging Agent localization",
     opportunity.risk_level === "low" ? "Low compliance risk from current evidence" : "Compliance warning must be reviewed before launch",
   ].map(sanitizeText);
-}
-
-function markSelectedOpportunity(opportunities: Opportunity[], selectedId: string): Opportunity[] {
-  return opportunities.map((opportunity) => ({
-    ...opportunity,
-    is_primary: opportunity.id === selectedId,
-  }));
 }
 
 function toFactorScores(vector: OpportunityFeatureVector): OpportunityFactorScores {
