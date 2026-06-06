@@ -1,0 +1,44 @@
+{
+  "fixture_id": "shopee-sg-mini-desk-vacuum-details-2026-06-06",
+  "captured_at": "2026-06-06T00:00:00+08:00",
+  "products": [
+    {
+      "item_id": "sg-desk-vac-001",
+      "title": "Mini Desk Vacuum Cleaner USB Cordless Keyboard Cleaner",
+      "price_sgd": 12.9,
+      "rating": 4.7,
+      "review_count": 186,
+      "sold_label": "seed: visible sales label",
+      "shop_type": "preferred",
+      "image_url": "/seed/images/desk-vacuum-hero.svg",
+      "product_url": "seed://shopee/mini-desk-vacuum-001",
+      "category_id": 100636,
+      "evidence_label": "Detailed competitor seed for Mini Desk Vacuum",
+      "description": "Compact mini desk vacuum for dry crumbs, keyboard dust and desktop cleaning. USB rechargeable. Not for wet mess or heavy debris.",
+      "bullet_points": [
+        "Compact size for desk, keyboard and study table",
+        "USB rechargeable cordless use",
+        "Dry crumbs and light dust only",
+        "Removable bottom dust container"
+      ],
+      "attributes": {
+        "Power Source": "USB rechargeable",
+        "Use Case": "Desk and keyboard cleaning",
+        "Material": "ABS plastic",
+        "Color": "White"
+      },
+      "logistics": {
+        "weight_g": 180,
+        "length_cm": 9,
+        "width_cm": 9,
+        "height_cm": 7
+      },
+      "seller_location": "Singapore",
+      "style_notes": [
+        "Clean white-background hero image",
+        "Keyboard crumb lifestyle scene",
+        "Simple feature callouts, avoid exaggerated suction claims"
+      ]
+    }
+  ]
+}

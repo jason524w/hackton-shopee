@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-label="Seed hero image for mini desk vacuum">
+  <rect width="1024" height="1024" fill="#f7f7f4"/>
+  <rect x="120" y="700" width="784" height="64" rx="8" fill="#d8c9b6"/>
+  <ellipse cx="512" cy="512" rx="230" ry="185" fill="#ffffff" stroke="#2f3a44" stroke-width="18"/>
+  <circle cx="440" cy="500" r="48" fill="#e9eef3" stroke="#2f3a44" stroke-width="12"/>
+  <rect x="545" y="430" width="130" height="70" rx="20" fill="#dfe7ed" stroke="#2f3a44" stroke-width="12"/>
+  <rect x="332" y="610" width="360" height="34" rx="17" fill="#9fb4c6"/>
+  <circle cx="632" cy="390" r="18" fill="#56a66f"/>
+  <text x="512" y="850" text-anchor="middle" font-family="Arial, sans-serif" font-size="44" fill="#2f3a44">Mini Desk Vacuum</text>
+</svg>

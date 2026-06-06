@@ -257,7 +257,7 @@ async function runLiveAttempt<Input, Output>(
   attempt: number,
   signal: AbortSignal,
 ): Promise<Output> {
-  const model = options.model ?? readEnv("OPENAI_MODEL") ?? "gpt-4o";
+  const model = options.model ?? readEnv("OPENAI_TEXT_MODEL") ?? readEnv("OPENAI_MODEL") ?? "gpt-5.5";
   const client = options.client ?? new FetchOpenAIResponsesClient(options.apiKey ?? readRequiredOpenAIKey());
   const tools = options.tools ?? [];
   const maxToolCalls = options.maxToolCalls ?? 8;

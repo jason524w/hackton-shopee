@@ -1,0 +1,53 @@
+{
+  "fixture_id": "openai-image-mini-desk-vacuum-fallback-2026-06-06",
+  "captured_at": "2026-06-06T00:00:00+08:00",
+  "model": "gpt-image-2",
+  "assets": [
+    {
+      "image_id": "seed-desk-vacuum-hero",
+      "type": "hero",
+      "url": "/seed/images/desk-vacuum-hero.svg",
+      "prompt": "White mini desk vacuum centered on a clean desk, Shopee-style e-commerce hero image, compact product, no exaggerated text claims.",
+      "revised_prompt": "A compact white mini desk vacuum on a clean desk with simple e-commerce composition.",
+      "model": "gpt-image-2",
+      "size": "1024x1024",
+      "quality": "low",
+      "compliance": "ok",
+      "metadata": {
+        "provider_mode": "seed",
+        "contains_text": false
+      }
+    },
+    {
+      "image_id": "seed-desk-vacuum-lifestyle",
+      "type": "lifestyle",
+      "url": "/seed/images/desk-vacuum-lifestyle.svg",
+      "prompt": "Person using a compact mini desk vacuum to clean dry crumbs near a keyboard in a Singapore HDB home office.",
+      "revised_prompt": "A compact apartment home office lifestyle scene showing a mini desk vacuum near a keyboard.",
+      "model": "gpt-image-2",
+      "size": "1536x1024",
+      "quality": "low",
+      "compliance": "ok",
+      "metadata": {
+        "provider_mode": "seed",
+        "contains_text": false
+      }
+    },
+    {
+      "image_id": "seed-desk-vacuum-feature",
+      "type": "feature",
+      "url": "/seed/images/desk-vacuum-feature.svg",
+      "prompt": "Feature image with safe callouts: USB rechargeable, compact size, for dry crumbs and keyboard dust, removable dust container.",
+      "revised_prompt": "A simple product feature layout with factual callouts only.",
+      "model": "gpt-image-2",
+      "size": "1024x1024",
+      "quality": "low",
+      "compliance": "needs_review",
+      "metadata": {
+        "provider_mode": "seed",
+        "contains_text": true,
+        "review_reason": "Feature callout text should be checked against supplier specs."
+      }
+    }
+  ]
+}

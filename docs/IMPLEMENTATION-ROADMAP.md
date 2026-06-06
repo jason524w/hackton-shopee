@@ -1460,8 +1460,8 @@ Demo / frontend is MVP-ready when:
 
 ```txt
 OPENAI_API_KEY=
-OPENAI_TEXT_MODEL=gpt-4o
-OPENAI_IMAGE_MODEL=gpt-image-1
+OPENAI_TEXT_MODEL=gpt-5.5
+OPENAI_IMAGE_MODEL=gpt-image-2
 DEMO_MOCK_ONLY=false
 LIVE_IMAGE_GENERATION=true
 PROVIDER_MODE=fixture
@@ -1549,4 +1549,3 @@ listing prepared the shelf,
 packaging made Shopee-ready visuals,
 committee made the business decision.
 ```
-

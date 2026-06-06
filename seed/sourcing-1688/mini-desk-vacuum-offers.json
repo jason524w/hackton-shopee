@@ -1,0 +1,64 @@
+{
+  "fixture_id": "sourcing-1688-mini-desk-vacuum-offers-2026-06-06",
+  "captured_at": "2026-06-06T00:00:00+08:00",
+  "offers": [
+    {
+      "offer_id": "1688-desk-vac-001",
+      "title": "Mini desktop vacuum cleaner USB rechargeable keyboard dust cleaner",
+      "source_price_cny": 18.8,
+      "currency": "CNY",
+      "moq": 2,
+      "available_stock": 3200,
+      "supplier_name": "Shenzhen CleanHome Small Appliances",
+      "supplier_location": "Shenzhen, Guangdong",
+      "domestic_dispatch_days": 2,
+      "source_url": "https://detail.1688.com/seed/mini-desk-vacuum-001.html",
+      "evidence_label": "1688 seed offer: low MOQ mini desk vacuum",
+      "sku_options": [
+        {
+          "name": "Color",
+          "options": ["White", "Pink", "Green"]
+        }
+      ],
+      "package_weight_g": 220,
+      "package_dimensions_cm": {
+        "length": 10,
+        "width": 10,
+        "height": 8
+      },
+      "supplier_risk_notes": [
+        "Supplier specs need confirmation before claiming battery life.",
+        "USB charging safety details require manual review."
+      ]
+    },
+    {
+      "offer_id": "1688-desk-vac-002",
+      "title": "Portable table vacuum cleaner for office and student desk",
+      "source_price_cny": 22.5,
+      "currency": "CNY",
+      "moq": 5,
+      "available_stock": 1800,
+      "supplier_name": "Yiwu Office Gadget Factory",
+      "supplier_location": "Yiwu, Zhejiang",
+      "domestic_dispatch_days": 3,
+      "source_url": "https://detail.1688.com/seed/mini-desk-vacuum-002.html",
+      "evidence_label": "1688 seed offer: slightly higher price with color variants",
+      "sku_options": [
+        {
+          "name": "Color",
+          "options": ["White", "Blue"]
+        }
+      ],
+      "package_weight_g": 240,
+      "package_dimensions_cm": {
+        "length": 11,
+        "width": 10,
+        "height": 8
+      },
+      "supplier_risk_notes": [
+        "MOQ higher than ideal for first test.",
+        "Confirm replacement policy before buying."
+      ]
+    }
+  ]
+}
