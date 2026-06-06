@@ -423,6 +423,7 @@ function buildAgentResult(
       reviewCount > 0
         ? `Localized copy and prompts are grounded in ${profile.market}/${profile.platform} evidence; review flagged images before launch.`
         : `Localized copy and images are grounded in ${profile.market}/${profile.platform} evidence and passed prompt compliance checks.`,
+    audit_summary: "",
     score,
     confidence: profile.confidence,
     warnings: uniqueList([

@@ -490,6 +490,7 @@ function buildAgentResult(
       topRanked === selection.selected_opportunity_id
         ? "Tool-grounded screening accepted the top canonical opportunity for Packaging handoff."
         : "Tool-grounded screening found a different top candidate, but kept the viable upstream primary for Packaging handoff with warnings.",
+    audit_summary: "",
     score: Math.round(selectedVector?.overall ?? 50),
     confidence: input.evidence.market_context.freshness === "live" ? 0.82 : 0.68,
     warnings,

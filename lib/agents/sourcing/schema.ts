@@ -120,6 +120,7 @@ const agentResultSchema = makeObjectSchema({
   data_sources: { type: "array", items: { type: "string" } },
   evidence: { type: "array", items: evidenceSchema },
   key_judgment: { type: "string" },
+  audit_summary: { type: "string" },
   score: { type: "number", minimum: 0, maximum: 100 },
   confidence: { type: "number", minimum: 0, maximum: 1 },
   warnings: { type: "array", items: { type: "string" } },

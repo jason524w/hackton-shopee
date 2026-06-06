@@ -44,6 +44,7 @@ export function aggregateRisk(checkpoints: RiskCheckpoint[]): AgentResult {
     data_sources: ["Shopee prohibited & listing-violation rules (seed)"],
     evidence: evidence.length ? evidence : [{ label: "风险扫描", value: "通过" }],
     key_judgment: keyJudgment,
+    audit_summary: "",
     score: riskScore(riskLevel, humanReview, hardBlock),
     confidence: 0.8,
     warnings,

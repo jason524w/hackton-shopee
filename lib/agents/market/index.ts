@@ -93,6 +93,7 @@ async function buildFixtureOutput(input: MarketAgentInput, ctx: AgentContext): P
     evidence,
     key_judgment:
       "Shopee SG seed data shows real proxy demand for compact USB desk vacuums through reviewed listings, coherent pricing, and strong ratings; treat this as a testable Watch/Go candidate pending sourcing and risk review.",
+    audit_summary: "",
     score: stats.demand_score,
     confidence: 0.74,
     warnings,
@@ -299,4 +300,3 @@ function round(value: number, decimals = 2): number {
   const factor = 10 ** decimals;
   return Math.round(value * factor) / factor;
 }
-

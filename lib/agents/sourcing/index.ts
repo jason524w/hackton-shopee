@@ -122,6 +122,7 @@ async function buildFixtureOutput(input: SourcingAgentInput, ctx: AgentContext):
       warnings.length > 0
         ? "A low-MOQ supplier is available with complete package specs, but fulfillment reaches the seller limit in the base case and should be treated carefully."
         : "A low-MOQ supplier is available with complete package specs and fulfillment inside the seller limit.",
+    audit_summary: "",
     score,
     confidence: warnings.length > 0 ? 0.68 : 0.76,
     warnings,
@@ -328,4 +329,3 @@ function round(value: number, decimals = 2): number {
   const factor = 10 ** decimals;
   return Math.round(value * factor) / factor;
 }
-

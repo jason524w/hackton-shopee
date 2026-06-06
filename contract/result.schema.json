@@ -40,7 +40,7 @@
     },
     "agent": {
       "type": "object",
-      "required": ["key", "name", "role", "status", "inputs_summary", "data_sources", "evidence", "key_judgment", "score", "confidence", "warnings"],
+      "required": ["key", "name", "role", "status", "inputs_summary", "data_sources", "evidence", "key_judgment", "audit_summary", "score", "confidence", "warnings"],
       "properties": {
         "key": { "enum": ["market", "sourcing", "margin", "risk", "listing", "packaging", "committee"] },
         "name": { "type": "string" },
@@ -50,6 +50,7 @@
         "data_sources": { "type": "array", "items": { "type": "string" } },
         "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } },
         "key_judgment": { "type": "string" },
+        "audit_summary": { "type": "string" },
         "score": { "type": "number", "minimum": 0, "maximum": 100 },
         "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
         "warnings": { "type": "array", "items": { "type": "string" } },
