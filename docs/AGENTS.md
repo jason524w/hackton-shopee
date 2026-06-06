@@ -56,6 +56,8 @@
 - **约束**:按 Risk 改写卖点,去掉夸大词;本地化加 HDB/office/dorm 场景。
 
 ## 6. `committee` — Committee Agent
+> **实现规范见 [COMMITTEE.md](COMMITTEE.md)**:确定性合并 + Commerce Gates 封顶,
+> LLM 只做 Devil's Advocate 与 summary;零 contract 改动。
 - **职责**:汇总全部 agent,处理 tradeoff,给最终 Go/Watch/Reject + 排序 + 解释。
 - **输入**:上面 5 个 agent 的输出 + `brief`。
 - **输出**:`committee`(ranked_ids、weights、tradeoffs、summary)+ 写回每个 opportunity 的 decision。
