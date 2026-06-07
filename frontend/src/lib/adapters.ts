@@ -211,6 +211,37 @@ export function toListing(run: RunResult): ShopeeListing {
   };
 }
 
+// ---------- progressive status from audit polling ----------
+
+const AUDIT_STATUS_MAP: Record<string, DeptStatus> = {
+  running: "running",
+  completed: "complete",
+  failed: "blocked",
+};
+
+// Applies audit snapshots onto the department list while a run is in flight:
+// agents with a snapshot get its status; the first agent without one is "running"
+// (pipeline is sequential), the rest stay "waiting".
+export function applyAuditStatuses(
+  departments: DepartmentResult[],
+  snapshots: Array<{ agent_key: string; status: string }>,
+): DepartmentResult[] {
+  const byKey = new Map(snapshots.map((snap) => [snap.agent_key, snap.status]));
+  let nextIsRunning = true;
+  return departments.map((dept) => {
+    const auditStatus = byKey.get(dept.id);
+    if (auditStatus) {
+      if (auditStatus !== "completed") nextIsRunning = false;
+      return { ...dept, status: AUDIT_STATUS_MAP[auditStatus] ?? dept.status };
+    }
+    if (nextIsRunning) {
+      nextIsRunning = false;
+      return { ...dept, status: "running" };
+    }
+    return { ...dept, status: "waiting" };
+  });
+}
+
 // ---------- board summary ----------
 
 export interface BoardSummary {

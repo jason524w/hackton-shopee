@@ -51,6 +51,27 @@ describe("adapters", () => {
     expect(listing.preview.title).toBe(run.selected_listing.shopee.item_name);
   });
 
+  it("applyAuditStatuses lights departments up progressively", async () => {
+    const { applyAuditStatuses, toDepartments } = await import("./adapters");
+    const base = toDepartments(run).map((d) => ({ ...d, status: "waiting" as const }));
+
+    const none = applyAuditStatuses(base, []);
+    expect(none[0].status).toBe("running"); // market starts first
+    expect(none[1].status).toBe("waiting");
+
+    const mid = applyAuditStatuses(base, [
+      { agent_key: "market", status: "completed" },
+      { agent_key: "sourcing", status: "completed" },
+    ]);
+    expect(mid[0].status).toBe("complete");
+    expect(mid[1].status).toBe("complete");
+    expect(mid[2].status).toBe("running"); // margin is next
+    expect(mid[3].status).toBe("waiting");
+
+    const failed = applyAuditStatuses(base, [{ agent_key: "market", status: "failed" }]);
+    expect(failed[0].status).toBe("blocked");
+  });
+
   it("toBoardSummary counts decisions from the run", () => {
     const summary = toBoardSummary(run);
     expect(summary.found).toBe(run.opportunities.length);

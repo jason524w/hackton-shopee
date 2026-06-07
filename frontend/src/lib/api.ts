@@ -16,12 +16,15 @@ export class PipelineError extends Error {
   }
 }
 
-export async function runPipeline(brief: Brief, opts?: { images?: boolean }): Promise<RunResult> {
+export async function runPipeline(
+  brief: Brief,
+  opts?: { images?: boolean; runId?: string },
+): Promise<RunResult> {
   const params = opts?.images === false ? "?images=0" : "";
   const response = await fetch(`${BASE_URL}/api/run${params}`, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ brief }),
+    body: JSON.stringify({ brief, ...(opts?.runId ? { run_id: opts.runId } : {}) }),
   });
 
   let payload: unknown;
@@ -40,4 +43,30 @@ export async function runPipeline(brief: Brief, opts?: { images?: boolean }): Pr
   }
 
   return payload as RunResult;
+}
+
+export function newRunId(): string {
+  const uuid =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
+  return `run_${uuid}`;
+}
+
+export interface AgentAuditSnapshot {
+  agent_key: string;
+  status: "running" | "completed" | "failed";
+}
+
+// Polled during a run to light departments up progressively (War Room 渐进点亮).
+// Returns [] until the first agent snapshot lands (404 from the audit endpoint).
+export async function fetchAuditSnapshots(runId: string): Promise<AgentAuditSnapshot[]> {
+  try {
+    const response = await fetch(`${BASE_URL}/api/runs/${encodeURIComponent(runId)}/audit`);
+    if (!response.ok) return [];
+    const payload = (await response.json()) as { agents?: AgentAuditSnapshot[] };
+    return payload.agents ?? [];
+  } catch {
+    return []; // polling is best-effort; the POST result is the source of truth
+  }
 }
