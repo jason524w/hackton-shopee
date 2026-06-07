@@ -1,6 +1,8 @@
 # 下一步实施方案 — 对齐文档目标态
 
 > 基于 main@3df8074 通读全部 docs 后的差距分析与可执行计划(2026-06-07)。
+> **执行进度:GAP-1 ✅(#53) · GAP-4/5/6 ✅(#54) · GAP-8 ✅(#55) · GAP-2 ✅ · GAP-3 ✅(见 DEMO-READINESS.md)
+> · GAP-7 代码侧 ✅(maxDuration),部署本体待 Vercel Pro 决策。**
 > 配套阅读:IMPLEMENTATION-ROADMAP(后端权威)、design/committee.md(#14 权威)、REFACTOR.md(已执行)。
 
 ## 0. 现状基线(先纠正一个普遍误解)
