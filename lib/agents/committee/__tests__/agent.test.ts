@@ -142,4 +142,42 @@ describe("degraded fallback (live LLM fails)", () => {
     expect(degraded).not.toBeNull();
     expect(output.decisions.find((d) => d.id === "opp_desk_vacuum")!.verdict).toBe("Watch");
   });
+
+  it("TIMEOUT: hanging LLM client → deterministic fallback, vacuum stays Watch (GAP-4)", async () => {
+    // Client that never resolves until runAgent's timeout aborts it.
+    const hangingClient = {
+      create: (_req: Record<string, unknown>, init?: { signal?: AbortSignal }) =>
+        new Promise<never>((_, reject) => {
+          init?.signal?.addEventListener("abort", () => reject(new Error("aborted")));
+        }),
+    };
+    const ctx = ctxWith();
+    const { output, degraded } = await runCommitteeAgent(ctx, {
+      mode: "live",
+      client: hangingClient,
+      timeoutMs: 60,
+    });
+    expect(degraded).not.toBeNull();
+    expect(degraded!.code).toMatch(/TIMEOUT|RETRY_EXHAUSTED/);
+    expect(output.decisions.find((d) => d.id === "opp_desk_vacuum")!.verdict).toBe("Watch");
+  }, 15_000);
+
+  it("degradation is visible in ALL THREE places (warnings/summary/decision_reason)", async () => {
+    const { toCommitteeSlice } = await import("../index");
+    const ctx = ctxWith();
+    const opps = ctx.results.opportunities!;
+    const { output, degraded } = await runCommitteeAgent(ctx, { mode: "live" }); // no key/client → fails
+    expect(degraded).not.toBeNull();
+
+    const slice = toCommitteeSlice(output, opps, degraded);
+    const agent = slice.agents!.find((a) => a.key === "committee")!;
+    // ① warnings carry the ⚠ degradation marker
+    expect(agent.warnings.join(" ")).toMatch(/⚠.*降级/);
+    // ② summary is prefixed with the deterministic-fallback notice
+    expect(slice.committee!.summary).toMatch(/LLM 暂不可用/);
+    // ③ decision_reason uses the deterministic template (non-empty, mentions gate/score basis)
+    const primary = slice.opportunities!.find((o) => o.id === "opp_desk_vacuum")!;
+    expect(primary.decision).toBe("Watch");
+    expect(primary.decision_reason.length).toBeGreaterThan(0);
+  });
 });

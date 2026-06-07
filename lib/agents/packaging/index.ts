@@ -51,7 +51,9 @@ export async function runPackaging(input: PackagingInput, ctx: Pick<AgentContext
       : await buildLiveImages(input, prompts, ctx);
   const checkpoint = await ctx.risk.checkpoint("packaging", {
     preference_profile: preferenceProfile,
+    category: input.brief.category, // documented payload field (design/margin-risk.md §5.5)
     prompts,
+    selling_copy: sellingCopy,
     images,
     product_specs: input.product_specs,
     policy_rules: input.policy_rules,

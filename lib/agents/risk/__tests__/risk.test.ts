@@ -85,4 +85,33 @@ describe("Mini Desk Vacuum — full risk outcome via supervisor + aggregate", ()
     expect(agent.warnings.length).toBeGreaterThanOrEqual(2);
     expect(agent.warnings.join(" ")).toMatch(/吸力|夸大|super suction/i);
   });
+
+  it("REAL pipeline payload shapes still trigger both red lines (GAP-5 regression)", async () => {
+    // The live listing/packaging agents do NOT send {title, description...} —
+    // they send selection/prompts/selling_copy shapes. The deterministic layer
+    // must still produce 电器安全 + 夸大 guidance for the vacuum demo.
+    const sup = createRiskSupervisor();
+    await sup.checkpoint("listing", {
+      purpose: "rank_filter_before_packaging_handoff",
+      category: "home_appliances_small",
+      selection: { ranked_ids: ["dir_1"] },
+    });
+    await sup.checkpoint("packaging", {
+      category: "home_appliances_small",
+      prompts: [{ type: "hero", prompt: "Desk vacuum with super suction on a clean desk" }],
+      selling_copy: { item_name: "Mini Desk Vacuum", bullet_points: ["industrial-grade power"] },
+    });
+
+    const agent = aggregateRisk(sup.getCheckpoints());
+    expect(agent.risk_level).toBe("medium");
+    const joined = agent.warnings.join(" ");
+    expect(joined).toMatch(/电器|USB/);
+    expect(joined).toMatch(/夸大/);
+    expect(sup.getCheckpoints().some((c) => c.human_review_required)).toBe(true);
+    // claims scan saw nested prompt + selling copy text
+    expect(sup.getCheckpoints().flatMap((c) => c.flags)).toEqual(
+      expect.arrayContaining(["electrical_safety_review", "exaggeration_guidance"]),
+    );
+    expect(joined).toMatch(/super suction|industrial/i);
+  });
 });
