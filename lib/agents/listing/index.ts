@@ -81,6 +81,7 @@ export async function runListing(
   const selectedOpportunity = findSelectedOpportunity(input, normalizedSelection.selected_opportunity_id);
   const checkpoint = await ctx.risk.checkpoint("listing", {
     purpose: "rank_filter_before_packaging_handoff",
+    category: input.brief.category, // documented payload field (design/margin-risk.md §5.5)
     selection: normalizedSelection,
     feature_vectors: featureVectors,
     market_context: input.evidence.market_context,

@@ -16,6 +16,8 @@ export { buildEvidence, deterministicOutput } from "./evidence";
 export interface RunCommitteeOptions {
   mode?: AgentRunMode;
   fixture?: CommitteeOutput; // override the fixture output (testing / #15 injection)
+  client?: Parameters<typeof runAgent>[0]["client"]; // fake-client injection for failure-path tests
+  timeoutMs?: number;
 }
 
 /**
@@ -49,6 +51,8 @@ export async function runCommitteeAgent(
     mode,
     fixture: options.fixture ?? (() => deterministicOutput(opps, ctx)),
     retryOnce: true,
+    ...(options.client ? { client: options.client } : {}),
+    ...(options.timeoutMs ? { timeoutMs: options.timeoutMs } : {}),
   });
 
   if (result.ok && isComplete(result.output, opps)) {

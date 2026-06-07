@@ -75,10 +75,9 @@ export function createSeedShopeeProvider(): ShopeeProvider {
 
     async getProductDetail(input: ShopeeProductDetailInput): Promise<ShopeeProductDetailResult> {
       const seed = await readSeedJson<ShopeeDetailsSeed>("seed/shopee/mini-desk-vacuum-details.json");
-      const product = seed.products.find((candidate) => candidate.item_id === input.itemId);
-      if (!product) {
-        throw new Error(`Shopee product detail not found for itemId=${input.itemId}`);
-      }
+      const product =
+        seed.products.find((candidate) => candidate.item_id === input.itemId) ??
+        (await buildSummaryBackedDetail(input.itemId));
 
       return {
         source: {
@@ -124,6 +123,32 @@ export function createSeedShopeeProvider(): ShopeeProvider {
         rules: seed.rules,
       };
     },
+  };
+}
+
+// Detail seed coverage is partial (captured for the hero item only). For other
+// itemIds returned by search, synthesize a degraded-but-structured detail from
+// the REAL captured search row instead of failing the tool call (GAP-6). The
+// synthetic fields are clearly labeled so agents don't over-trust them.
+async function buildSummaryBackedDetail(itemId: string): Promise<ShopeeProductDetail> {
+  const searchSeed = await readSeedJson<ShopeeSearchSeed>("seed/shopee/mini-desk-vacuum-search.json");
+  const summary = searchSeed.products.find((candidate) => candidate.item_id === itemId);
+  if (!summary) {
+    throw new Error(`Shopee product detail not found for itemId=${itemId}`);
+  }
+
+  return {
+    ...summary,
+    description:
+      "(detail not captured — derived from search listing) " +
+      `${summary.title}. Rated ${summary.rating}★ across ${summary.review_count} reviews` +
+      (summary.sold_label ? `, ${summary.sold_label}.` : "."),
+    bullet_points: [],
+    attributes: {},
+    logistics: { weight_g: 0, length_cm: 0, width_cm: 0, height_cm: 0 },
+    seller_location: "",
+    style_notes: ["search-derived detail; logistics/attributes unavailable"],
+    evidence_label: `${summary.evidence_label} (search-derived detail)`,
   };
 }
 

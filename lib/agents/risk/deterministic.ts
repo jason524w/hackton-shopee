@@ -75,14 +75,38 @@ export function runDeterministic(stage: RiskCheckpointStage, payload: unknown): 
     if (typeof p.description === "string") texts.push(p.description);
     if (Array.isArray(p.bullet_points)) texts.push(...(p.bullet_points as string[]));
     if (typeof p.prompt === "string") texts.push(p.prompt);
+    // Real payloads (listing/packaging agents) carry copy in nested shapes —
+    // extract them too so the claims scan actually sees the text (GAP-5).
+    if (Array.isArray(p.prompts)) {
+      for (const item of p.prompts as Array<unknown>) {
+        if (typeof item === "string") texts.push(item);
+        else if (item && typeof (item as { prompt?: unknown }).prompt === "string") {
+          texts.push((item as { prompt: string }).prompt);
+        }
+      }
+    }
+    if (p.selling_copy && typeof p.selling_copy === "object") {
+      for (const value of Object.values(p.selling_copy as Record<string, unknown>)) {
+        if (typeof value === "string") texts.push(value);
+        if (Array.isArray(value)) texts.push(...value.filter((v): v is string => typeof v === "string"));
+      }
+    }
     scanClaims(result, texts.join("\n"), stage === "packaging" ? "image prompt" : "listing");
 
-    const category = (p.category as string) ?? (p.brief as { category?: string })?.category;
+    const category =
+      (p.category as string) ??
+      (p.brief as { category?: string })?.category ??
+      (p.product_specs as { category?: string })?.category ??
+      (p.market_context as { category?: string })?.category;
     if (isElectrical(category)) {
       result.human_review_required = true;
       result.warnings.push("USB/电器类:需核对供电与安全信息,不暗示安全认证,launch 前人工复核");
       result.flags.push("electrical_safety_review");
       result.evidence.push({ label: "电器安全", value: "⚠ USB 供电电器,需人工复核(rule: sg-electrical-safety-review)" });
+      // Preventive red line (docs/design/margin-risk.md §4.3): the vacuum demo must
+      // always surface the exaggeration guidance, even when the current copy is clean.
+      result.warnings.push("营销文案避免夸大吸力/清洁力等性能承诺,不得暗示未验证的安全认证(rule: sg-listing-exaggeration)");
+      result.flags.push("exaggeration_guidance");
       result.risk_level = maxLevel(result.risk_level, "medium");
     }
 
