@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { RunResult } from "../../../contract/result";
 import {
+  applyAuditStatuses,
   toBoardSummary,
   toBrief,
   toDepartments,
@@ -9,7 +10,7 @@ import {
   toPackaging,
   type BoardSummary,
 } from "./adapters";
-import { PipelineError, runPipeline } from "./api";
+import { fetchAuditSnapshots, newRunId, PipelineError, runPipeline } from "./api";
 import type { FlowKey } from "./flow";
 import { DEMO_BRIEF, DEPARTMENT_META } from "./static-content";
 import type {
@@ -75,11 +76,13 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   startRun: async () => {
     const brief = get().brief ?? DEMO_BRIEF;
+    const runId = newRunId();
     set({
       runStatus: "running",
       runError: null,
       runResult: null,
-      departments: EMPTY_DEPARTMENTS.map((d) => ({ ...d, status: "running" })),
+      // Sequential pipeline: market starts first, the rest wait (War Room 渐进点亮).
+      departments: applyAuditStatuses(EMPTY_DEPARTMENTS, []),
       opportunities: [],
       boardSummary: null,
       packaging: null,
@@ -87,8 +90,18 @@ export const useAppStore = create<AppState>((set, get) => ({
       currentStep: "company",
     });
 
+    // Poll the audit endpoint while the run is in flight to light departments up
+    // one by one. Best-effort: the POST result below remains the source of truth.
+    const poller = setInterval(async () => {
+      const snapshots = await fetchAuditSnapshots(runId);
+      if (get().runStatus !== "running") return;
+      if (snapshots.length) {
+        set({ departments: applyAuditStatuses(EMPTY_DEPARTMENTS, snapshots) });
+      }
+    }, 3000);
+
     try {
-      const result = await runPipeline(toBrief(brief));
+      const result = await runPipeline(toBrief(brief), { runId });
       set({
         runStatus: "done",
         runResult: result,
@@ -108,6 +121,8 @@ export const useAppStore = create<AppState>((set, get) => ({
             : "Pipeline request failed. Check that the backend is running and OPENAI_API_KEY is configured.",
         departments: EMPTY_DEPARTMENTS,
       });
+    } finally {
+      clearInterval(poller);
     }
   },
 
