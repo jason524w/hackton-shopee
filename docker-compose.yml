@@ -1,0 +1,42 @@
+# Sea Launch AI — cloud-server deployment (API + frontend).
+#   cp .env.example .env.local   # fill OPENAI_API_KEY etc.
+#   docker compose up -d --build
+# API on :3000, frontend on :3001. Put nginx/caddy in front for TLS.
+
+services:
+  api:
+    build: .
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.local
+    volumes:
+      # Audit snapshots — keeps GET /api/runs/:id/audit (渐进点亮) across restarts.
+      - runs-data:/app/.runs
+      # Live-generated product images served from /generated/*.
+      - generated-images:/app/public/generated
+    restart: unless-stopped
+    healthcheck:
+      # /api/run without a key returns 503 by design; any HTTP response means the server is up.
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        # Browser-side base URL of the API app. Same host: keep the public origin,
+        # e.g. https://demo.example.com if nginx proxies /api/* to the api service.
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:3000}
+    ports:
+      - "3001:3001"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  runs-data:
+  generated-images:

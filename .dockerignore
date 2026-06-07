@@ -1,0 +1,14 @@
+node_modules
+frontend/node_modules
+.next
+frontend/.next
+.git
+.runs
+public/generated
+docs
+mock
+*.log
+.env
+.env.local
+.env*.local
+.DS_Store
