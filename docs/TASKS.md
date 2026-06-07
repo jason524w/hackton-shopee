@@ -4,9 +4,14 @@
 > 认领用 GitHub Issues。每个任务**独占一组路径**,多机/多 agent 并行不冲突。
 > 后端细节权威:[IMPLEMENTATION-ROADMAP.md](IMPLEMENTATION-ROADMAP.md);Committee:[COMMITTEE.md](COMMITTEE.md)。
 
-## ✅ 已完成(bootstrap)
+## ✅ 已完成(bootstrap + 主线)
 - **契约 Phase 0**:contract 升到 **7-agent**(+ packaging)+ `audit_run_id`,`check-contract` 通过。
 - 文档冲突已消解:demo 路径(live 唯一路径,无 mock,见 REFACTOR.md)、COMMITTEE/AGENTS 对齐 7-agent。
+- **TASK-01 / RUNTIME-AUDIT / PROVIDERS / MARGIN-RISK / MARKET-SOURCING / LISTING /
+  PACKAGING / COMMITTEE / API-INTEGRATION / FE 全部完成**(PR #51-#54):
+  `/api/run` 单一 live 路径已端到端验证(HTTP 200,7 agent,吸尘器=Watch);
+  前端真实接入 + War Room 渐进点亮(audit 轮询)。
+- **当前待办以 [NEXT-STEPS.md](NEXT-STEPS.md) 为准**(GAP-2 全量图像验证、GAP-3 彩排、GAP-7 部署)。
 
 ## 依赖与并行
 

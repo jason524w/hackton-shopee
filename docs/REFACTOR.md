@@ -1,9 +1,8 @@
 # 去 Mock 重构方案 v2 — 基于 origin/main 真实代码
 
-> 状态:**方案待审**。v1 基于"仓库无代码"的错误前提,已作废。
-> 本版基于 origin/main(领先本地 79 commits,238 个文件)+ 5 个未合并分支的实际代码。
-> ⚠️ 你本地 main 落后 79 个 commit,动手前先 `git pull`(本次 fetch 用了 `--filter=blob:none`,
-> checkout 时会按需补下大文件,首次会慢)。
+> 状态:**✅ 已执行完毕**(PR #51 重构 + PR #52 live bug 修复,2026-06-07 合入 main)。
+> 本文保留作架构决策记录;当前待办见 [NEXT-STEPS.md](NEXT-STEPS.md)。
+> 执行结果:live 管道端到端 HTTP 200,7 agent 全过,demo 高潮(吸尘器=Watch)真实复现。
 
 ## 0. 仓库真实现状
 
