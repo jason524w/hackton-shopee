@@ -75,6 +75,85 @@ describe("browser retrieval provider", () => {
     expect(result.offers[0]?.supplier_name).toBe("锐耀数码专营店");
   });
 
+  it("merges multi-page 1688 search rows, dedupes repeats, and stops when a page adds nothing new", async () => {
+    const controller: BrowserController = {
+      async capture(input) {
+        const page2 = input.url.includes("beginPage=2");
+        return {
+          url: input.url,
+          title: "1688搜索",
+          text: page2
+            ? ["桌面吸尘器B款迷你键盘清洁器学生用", "¥15.50", "桌面吸尘器A款手持清洁器USB充电", "¥12.80"].join("\n")
+            : ["桌面吸尘器A款手持清洁器USB充电", "¥12.80"].join("\n"),
+          links: [],
+          captured_at: "2026-06-06T00:00:00.000Z",
+        };
+      },
+    };
+    const provider = createChromeBrowserRetrievalProvider(controller, {
+      allowedDomains: ["1688.com"],
+      maxSteps: 2,
+    });
+
+    const result = await provider.extract1688Search({ query: "桌面吸尘器", limit: 10, pages: 3 });
+
+    // Page 1: offer A. Page 2: offer B (+ duplicate A removed). Page 3: same as page 1 → nothing new → early stop.
+    expect(result.offers).toHaveLength(2);
+    expect(result.offers.map((offer) => offer.source_price_cny).sort()).toEqual([12.8, 15.5]);
+    expect(result.pages_scanned).toBe(3);
+    expect(result.page_snapshots).toHaveLength(3);
+    expect(result.warnings?.some((warning) => warning.code === "CHROME_PAGINATION_NO_NEW_ROWS")).toBe(true);
+  });
+
+  it("keeps earlier page rows when a later page hits an access verification wall", async () => {
+    const controller: BrowserController = {
+      async capture(input) {
+        const page2 = input.url.includes("beginPage=2");
+        return {
+          url: input.url,
+          title: page2 ? "安全验证" : "1688搜索",
+          text: page2
+            ? "安全验证 请拖动滑块完成验证"
+            : ["桌面吸尘器A款手持清洁器USB充电", "¥12.80"].join("\n"),
+          links: [],
+          captured_at: "2026-06-06T00:00:00.000Z",
+        };
+      },
+    };
+    const provider = createChromeBrowserRetrievalProvider(controller, {
+      allowedDomains: ["1688.com"],
+      maxSteps: 2,
+    });
+
+    const result = await provider.extract1688Search({ query: "桌面吸尘器", limit: 10, pages: 3 });
+
+    expect(result.offers).toHaveLength(1);
+    expect(result.pages_scanned).toBe(2);
+    expect(result.warnings?.[0]?.code).toBe("CHROME_PAGINATION_ACCESS_CHALLENGE");
+  });
+
+  it("does not mistake long marketplace pages mentioning robots or 已验证 for challenge walls", async () => {
+    const filler = "桌面吸尘器迷你键盘清洁器 robot vacuum 已验证供应商 ".repeat(80);
+    const controller: BrowserController = {
+      async capture(input) {
+        return {
+          url: input.url,
+          title: "1688搜索",
+          text: [filler, "桌面吸尘器A款手持清洁器USB充电", "¥12.80"].join("\n"),
+          links: [],
+          captured_at: "2026-06-06T00:00:00.000Z",
+        };
+      },
+    };
+    const provider = createChromeBrowserRetrievalProvider(controller, {
+      allowedDomains: ["1688.com"],
+      maxSteps: 2,
+    });
+
+    const result = await provider.extract1688Search({ query: "桌面吸尘器", limit: 5 });
+    expect(result.offers.length).toBeGreaterThan(0);
+  });
+
   it("parses comparable specs from 1688 and Taobao detail snapshots", async () => {
     const controller: BrowserController = {
       async capture(input) {

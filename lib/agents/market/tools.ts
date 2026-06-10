@@ -61,12 +61,18 @@ export function createMarketTools(providers: AgentProviders): AgentTool[] {
     {
       name: "browser_extract_shopee_search",
       description:
-        "Use the controlled browser retrieval provider to extract Shopee search page signals when direct API access is unavailable.",
+        "Use the controlled browser retrieval provider to extract Shopee search page signals when direct API access is unavailable. " +
+        "Each page is scanned incrementally while scrolling so lazy-loaded rows are not missed. " +
+        "Set pages (1-5, nullable, default 1) to scan and merge multiple result pages; rows are deduped across pages and " +
+        "page_snapshots carries one audit snapshot per page.",
+      // strict function schemas require every key in `required`; optionality is
+      // expressed via nullable types instead.
       parameters: makeObjectSchema({
         query: { type: "string" },
         market: { type: "string" },
         category: { type: "string" },
         limit: { type: "number", minimum: 1, maximum: 20 },
+        pages: { type: ["number", "null"], minimum: 1, maximum: 5 },
       }),
       execute(input: unknown) {
         return providers.browser.extractShopeeSearch(input as BrowserShopeeSearchInput);

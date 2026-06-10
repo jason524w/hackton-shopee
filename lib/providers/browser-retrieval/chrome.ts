@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type {
@@ -57,20 +58,20 @@ export function createCdpChromeBrowserController(
         await client.send("Runtime.enable");
         await navigate(client, input.url, navigationTimeoutMs);
         await sleep(settleMs);
-        await scrollPage(client, input.policy.max_steps, settleMs);
 
-        const extracted = await evaluatePage(client);
+        const scanned = await scanPage(client, input.policy.max_steps, settleMs);
         const screenshotPath = input.policy.capture_screenshot
           ? await captureScreenshot(client, screenshotDir, input.purpose, target.id)
           : undefined;
 
         return {
-          url: extracted.url || input.url,
-          title: extracted.title,
-          text: input.policy.redact_sensitive ? redactText(extracted.text) : extracted.text,
-          links: sanitizeLinks(extracted.links),
+          url: scanned.url || input.url,
+          title: scanned.title,
+          text: input.policy.redact_sensitive ? redactText(scanned.text) : scanned.text,
+          links: sanitizeLinks(scanned.links),
           screenshot_path: screenshotPath,
           captured_at: startedAt,
+          scan: { steps: scanned.steps, reached_end: scanned.reachedEnd },
         };
       } finally {
         client.close();
@@ -147,20 +148,121 @@ async function evaluatePage(client: CdpClient): Promise<ChromeEvaluateValue> {
   };
 }
 
-async function scrollPage(client: CdpClient, maxSteps: number, settleMs: number): Promise<void> {
-  const steps = Math.max(0, Math.min(maxSteps, 12));
+interface PageScanResult {
+  url: string;
+  title: string;
+  text: string;
+  links: Array<{ label: string; url: string }>;
+  steps: number;
+  reachedEnd: boolean;
+}
+
+const MAX_SCAN_TEXT_LENGTH = 150_000;
+
+/**
+ * Incremental scan: capture visible text after EVERY scroll step instead of once at the end.
+ * Marketplace search pages (Shopee/Taobao/1688) virtualize their lists — rows scrolled past are
+ * removed from the DOM, so a single end-state innerText capture silently drops earlier rows.
+ * Each step's capture is accumulated (identical captures deduped by hash) and lazy loading is
+ * awaited adaptively (poll for scrollHeight growth) rather than with a blind fixed sleep.
+ */
+async function scanPage(client: CdpClient, maxSteps: number, settleMs: number): Promise<PageScanResult> {
+  const steps = Math.max(1, Math.min(maxSteps, 16));
+  const stepTexts: string[] = [];
+  const stepHashes = new Set<string>();
+  const links = new Map<string, { label: string; url: string }>();
+  let url = "";
+  let title = "";
+  let reachedEnd = false;
+  let performedSteps = 0;
+
+  const accumulate = (extracted: ChromeEvaluateValue): void => {
+    url = extracted.url || url;
+    title = extracted.title || title;
+    const hash = createHash("sha256").update(extracted.text).digest("hex");
+    if (extracted.text && !stepHashes.has(hash)) {
+      stepHashes.add(hash);
+      stepTexts.push(extracted.text);
+    }
+    for (const link of extracted.links) {
+      if (link.url && !links.has(link.url)) {
+        links.set(link.url, link);
+      }
+    }
+  };
+
   for (let step = 0; step < steps; step += 1) {
-    await client.send("Runtime.evaluate", {
-      expression: `(() => {
-        const before = window.scrollY;
-        window.scrollBy(0, Math.max(window.innerHeight * 0.85, 600));
-        return { before, after: window.scrollY, height: document.documentElement.scrollHeight };
-      })()`,
-      returnByValue: true,
-      awaitPromise: true,
-    });
-    await sleep(Math.max(500, Math.min(settleMs, 3_000)));
+    performedSteps = step + 1;
+    accumulate(await evaluatePage(client));
+
+    if (totalLength(stepTexts) >= MAX_SCAN_TEXT_LENGTH) {
+      break;
+    }
+
+    const position = await scrollOnce(client);
+    if (position.atBottom) {
+      // Bottom of the current page height — wait to see whether lazy loading extends it.
+      const grew = await waitForHeightGrowth(client, position.height, Math.max(settleMs, 1_200));
+      if (!grew) {
+        accumulate(await evaluatePage(client));
+        reachedEnd = true;
+        break;
+      }
+    } else {
+      await waitForHeightGrowth(client, position.height, Math.max(500, Math.min(settleMs, 3_000)));
+    }
   }
+
+  return {
+    url,
+    title,
+    text: stepTexts.join("\n").slice(0, MAX_SCAN_TEXT_LENGTH),
+    links: Array.from(links.values()),
+    steps: performedSteps,
+    reachedEnd,
+  };
+}
+
+async function scrollOnce(client: CdpClient): Promise<{ atBottom: boolean; height: number }> {
+  const result = await client.send("Runtime.evaluate", {
+    expression: `(() => {
+      window.scrollBy(0, Math.max(window.innerHeight * 0.8, 600));
+      const doc = document.documentElement;
+      return {
+        scrollY: window.scrollY,
+        viewport: window.innerHeight,
+        height: Math.max(doc.scrollHeight, document.body ? document.body.scrollHeight : 0)
+      };
+    })()`,
+    returnByValue: true,
+    awaitPromise: true,
+  });
+  const value = asRecord(asRecord(asRecord(result).result).value);
+  const scrollY = Number(value.scrollY ?? 0);
+  const viewport = Number(value.viewport ?? 0);
+  const height = Number(value.height ?? 0);
+  return { atBottom: height > 0 && scrollY + viewport >= height - 4, height };
+}
+
+/** Poll until the document grows past `baseline` (lazy-loaded content arrived) or the timeout passes. */
+async function waitForHeightGrowth(client: CdpClient, baseline: number, timeoutMs: number): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    await sleep(250);
+    const result = await client.send("Runtime.evaluate", {
+      expression: `Math.max(document.documentElement.scrollHeight, document.body ? document.body.scrollHeight : 0)`,
+      returnByValue: true,
+    });
+    const height = Number(asRecord(asRecord(result).result).value ?? 0);
+    if (height > baseline + 4) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function totalLength(parts: string[]): number {
+  return parts.reduce((sum, part) => sum + part.length, 0);
 }
 
 async function captureScreenshot(

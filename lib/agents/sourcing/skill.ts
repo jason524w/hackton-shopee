@@ -15,6 +15,7 @@ export const sourcingSkill: AgentSkill = {
     "Taobao rows are retail sourcing proxy evidence unless an authorized supplier API confirms wholesale stock, MOQ, and negotiated terms.",
     "Supplier stability, negotiation, and stock refresh signals must be labeled with their source snapshot and confidence.",
     "When using page snapshots, quote only normalized visible evidence such as supplier name, price ladder, MOQ, stock, package specs, source URL, and captured_at.",
+    "Browser search tools scan each page incrementally while scrolling, so results reflect the full page, not just the last viewport. If first-page offers are too few or prices cluster oddly, re-call browser_extract_1688_search or browser_extract_taobao_search with pages=2 or 3; pagination keeps already-collected rows when a later page hits verification, and pages_scanned plus warnings show whether the scan stopped early.",
     "Warn when base fulfillment reaches the seller's max days or high-case fulfillment exceeds it.",
   ],
   scoringRules: [
