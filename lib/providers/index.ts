@@ -12,7 +12,8 @@ export {
 } from "./shipping/index";
 export type * from "./shipping/types";
 
-export { fxProvider, createSeedFxProvider } from "./fx/index";
+export { fxProvider, createSeedFxProvider, createLiveFxProvider, createFxProviderFromEnv } from "./fx/index";
+export type { FxFetcher, LiveFxProviderOptions } from "./fx/index";
 export type * from "./fx/types";
 
 export { openaiImageProvider, createSeedOpenAIImageProvider } from "./openai-image/index";

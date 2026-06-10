@@ -119,6 +119,43 @@ describe("Easyship shipping provider", () => {
     expect(requests[1]).toContain("/2024-09/rates");
     expect(result.assumptions.join(" ")).toContain("HS code 85081100");
   });
+
+  it("accepts free-text origin/destination place names (region-aliased, no throw)", async () => {
+    const provider = createEasyshipShippingProvider({
+      apiKey: "test-token",
+      quoteMode: "freight_only",
+      taxDutyProvider: "easyship",
+      hsCodeProvider: "static",
+      fetchImpl: async () =>
+        jsonResponse({
+          rates: [easyshipRate({ total_charge: 6.0, shipment_charge_total: 5.0, value_for_money_rank: 1 })],
+          meta: { request_id: "req_easyship_region" },
+        }),
+    });
+
+    // Agents pass real place names, not ISO codes — these must resolve to CN->SG.
+    const result = await provider.estimateCrossBorder({
+      weight_g: 150,
+      dimensions_cm: { length: 8, width: 8, height: 6 },
+      from: "Guangzhou, Guangdong, China",
+      to: "Singapore",
+    });
+
+    expect(result.source.mode).toBe("live");
+    expect(result.scenarios.base.cost_sgd).toBe(5.0);
+  });
+
+  it("still rejects an unsupported lane", async () => {
+    const provider = createEasyshipShippingProvider({ apiKey: "test-token", fetchImpl: async () => jsonResponse({}) });
+    await expect(
+      provider.estimateCrossBorder({
+        weight_g: 100,
+        dimensions_cm: { length: 5, width: 5, height: 5 },
+        from: "Vietnam",
+        to: "Singapore",
+      }),
+    ).rejects.toThrow(/CN->SG only/);
+  });
 });
 
 function easyshipRate(input: {
