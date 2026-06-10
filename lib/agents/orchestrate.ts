@@ -3,6 +3,7 @@ import { createAuditRunId, type AuditSink } from "../agent-runtime/audit";
 import type { AgentRunMode } from "../agent-runtime/run-agent";
 import {
   createChromeBrowserRetrievalProvider,
+  createFxProviderFromEnv,
   createSeedBrowserRetrievalProvider,
   createSeedFxProvider,
   createSeedOpenAIImageProvider,
@@ -64,6 +65,7 @@ function createBrowserProviderFromEnv() {
 export function createOrchestrationProviders(imageMode: "live" | "dry-run" = "dry-run"): AgentProviders {
   return {
     ...createSeedProviders(),
+    fx: createFxProviderFromEnv(),
     shipping: createShippingProviderFromEnv(),
     browser: createBrowserProviderFromEnv(),
     openaiImage: createOpenAIImageProvider({ mode: imageMode }),
@@ -109,10 +111,15 @@ export async function runOrchestration(brief: Brief, opts: OrchestrationOptions 
   const imageMode = opts.imageMode ?? "dry-run";
   const listingMode = textMode === "live" ? "live" : "fixture";
 
+  // Fixture mode is for deterministic, offline testing — it must NEVER touch live
+  // providers (FX/shipping/scrape network calls). Live mode uses the env-routed
+  // (default-live) providers.
+  const defaultProviders =
+    textMode === "fixture" ? createSeedProviders() : createOrchestrationProviders(imageMode);
   const ctx: AgentContext = {
     brief,
     results: {},
-    providers: opts.providers ?? createOrchestrationProviders(imageMode),
+    providers: opts.providers ?? defaultProviders,
     risk: createRiskSupervisor(),
   };
 

@@ -25,7 +25,7 @@ const REGION_ALIASES: Record<string, string[]> = {
   sg: ["sg", "singapore", "新加坡"],
 };
 
-function matchesRegion(routeCode: string, input: string): boolean {
+export function matchesRegion(routeCode: string, input: string): boolean {
   const code = routeCode.trim().toLowerCase();
   const text = input.trim().toLowerCase();
   if (code === text) return true;

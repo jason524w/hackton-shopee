@@ -1,4 +1,5 @@
 import { nowIso, roundMoney } from "../shared";
+import { matchesRegion } from "./index";
 import type { ShippingEstimateInput, ShippingEstimateResult, ShippingProvider, ShippingScenario } from "./types";
 
 type EasyshipQuoteMode = "freight_only" | "freight_and_duties";
@@ -115,7 +116,10 @@ export function createEasyshipShippingProvider(options: EasyshipShippingProvider
       if (!apiKey) {
         throw new Error("EASYSHIP_API_KEY is missing.");
       }
-      if (input.from.toUpperCase() !== "CN" || input.to.toUpperCase() !== "SG") {
+      // Agents pass free-text place names ("Guangzhou, Guangdong, China"), not ISO codes —
+      // match leniently on the same region aliases the seed provider uses so live wiring
+      // doesn't throw on real upstream values.
+      if (!matchesRegion("cn", input.from) || !matchesRegion("sg", input.to)) {
         throw new Error(`Easyship live provider is configured for CN->SG only, got ${input.from}->${input.to}.`);
       }
 

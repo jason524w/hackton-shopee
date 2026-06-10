@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import iconv from "iconv-lite";
 import { includesQuery, nowIso, readSeedJson, roundMoney } from "../shared";
 import type { ProviderWarning } from "../shared";
 import type {
@@ -1195,14 +1196,33 @@ function parse1688Offers(
 }
 
 function encode1688Keyword(query: string): string {
+  // The legacy s.1688.com/selloffer/offer_search.htm route expects GBK-encoded
+  // (percent-escaped) Chinese keywords, not UTF-8. Encode the whole query to GBK
+  // and percent-escape each byte so ANY Chinese term works, not a hardcoded few.
+  // ASCII bytes are passed through unescaped where URL-safe.
   const trimmed = query.trim();
-  // 1688 search still expects legacy GBK-encoded Chinese keywords in this route.
-  // Keep this MVP mapping narrow; replace it with official API or a full encoder in the real adapter.
-  const knownGbkQueries: Record<string, string> = {
-    "桌面吸尘器": "%D7%C0%C3%E6%CE%FC%B3%BE%C6%F7",
-    "迷你桌面吸尘器": "%C3%D4%C4%E3%D7%C0%C3%E6%CE%FC%B3%BE%C6%F7",
-  };
-  return knownGbkQueries[trimmed] ?? encodeURIComponent(trimmed);
+  if (!trimmed) {
+    return "";
+  }
+  const gbkBytes = iconv.encode(trimmed, "gbk");
+  let out = "";
+  for (const byte of gbkBytes) {
+    // RFC3986 unreserved set — safe to leave as-is; everything else percent-escaped.
+    if (
+      (byte >= 0x30 && byte <= 0x39) || // 0-9
+      (byte >= 0x41 && byte <= 0x5a) || // A-Z
+      (byte >= 0x61 && byte <= 0x7a) || // a-z
+      byte === 0x2d || // -
+      byte === 0x2e || // .
+      byte === 0x5f || // _
+      byte === 0x7e // ~
+    ) {
+      out += String.fromCharCode(byte);
+    } else {
+      out += `%${byte.toString(16).toUpperCase().padStart(2, "0")}`;
+    }
+  }
+  return out;
 }
 
 function parseTaobaoOffers(
