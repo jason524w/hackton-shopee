@@ -41,6 +41,8 @@ export interface BrowserRetrievePageSnapshotResult extends ProviderResultMeta {
   url: string;
   title: string;
   text_excerpt: string;
+  /** Full accumulated scan text (incremental scroll captures). Parsers should prefer this over text_excerpt. */
+  text_full?: string;
   links: Array<{ label: string; url: string }>;
   snapshot: BrowserSnapshotEvidence;
 }
@@ -50,6 +52,8 @@ export interface BrowserShopeeSearchInput {
   market: string;
   category?: string;
   limit?: number;
+  /** Number of search result pages to scan and merge (default 1, max 5). */
+  pages?: number;
   policy?: Partial<BrowserRetrievalPolicy>;
 }
 
@@ -75,6 +79,10 @@ export interface BrowserShopeeSearchResult extends ProviderResultMeta {
   competitor_count: number;
   price_band: { low: number; high: number; median: number };
   snapshot: BrowserSnapshotEvidence;
+  /** How many result pages were actually captured when pagination was requested. */
+  pages_scanned?: number;
+  /** Audit snapshot per captured page, in page order. */
+  page_snapshots?: BrowserSnapshotEvidence[];
 }
 
 export interface BrowserShopeeAdsSignalsInput {
@@ -126,6 +134,8 @@ export interface BrowserWebTrendResult extends ProviderResultMeta {
 export interface Browser1688SearchInput {
   query: string;
   limit?: number;
+  /** Number of search result pages to scan and merge (default 1, max 5). */
+  pages?: number;
   policy?: Partial<BrowserRetrievalPolicy>;
 }
 
@@ -147,11 +157,15 @@ export interface Browser1688SearchResult extends ProviderResultMeta {
   query: string;
   offers: Browser1688OfferSignal[];
   snapshot: BrowserSnapshotEvidence;
+  pages_scanned?: number;
+  page_snapshots?: BrowserSnapshotEvidence[];
 }
 
 export interface BrowserTaobaoSearchInput {
   query: string;
   limit?: number;
+  /** Number of search result pages to scan and merge (default 1, max 5). */
+  pages?: number;
   policy?: Partial<BrowserRetrievalPolicy>;
 }
 
@@ -159,6 +173,8 @@ export interface BrowserTaobaoSearchResult extends ProviderResultMeta {
   query: string;
   offers: Browser1688OfferSignal[];
   snapshot: BrowserSnapshotEvidence;
+  pages_scanned?: number;
+  page_snapshots?: BrowserSnapshotEvidence[];
 }
 
 export interface Browser1688OfferInput {
@@ -238,6 +254,8 @@ export interface BrowserControllerSnapshot {
   links?: Array<{ label: string; url: string }>;
   screenshot_path?: string;
   captured_at?: string;
+  /** Incremental scan stats: how many scroll-capture steps ran and whether the page bottom was reached. */
+  scan?: { steps: number; reached_end: boolean };
 }
 
 export interface BrowserController {

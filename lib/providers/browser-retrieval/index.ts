@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { includesQuery, nowIso, readSeedJson, roundMoney } from "../shared";
+import type { ProviderWarning } from "../shared";
 import type {
   Browser1688OfferDetail,
   Browser1688OfferInput,
@@ -406,12 +407,42 @@ export function createChromeBrowserRetrievalProvider(
     },
 
     async extractShopeeSearch(input: BrowserShopeeSearchInput): Promise<BrowserShopeeSearchResult> {
-      const url = `https://shopee.sg/search?keyword=${encodeURIComponent(input.query)}`;
-      const page = await this.retrievePageSnapshot({ url, purpose: "market_shopee_search", policy: input.policy });
-      const products = parseShopeeProducts(page.text_excerpt, input.limit ?? 20);
+      const limit = input.limit ?? 20;
+      const baseUrl = `https://shopee.sg/search?keyword=${encodeURIComponent(input.query)}`;
+      const scan = await scanSearchPages<BrowserShopeeProductSignal>({
+        retrieve: (url) =>
+          this.retrievePageSnapshot({
+            url,
+            purpose: "market_shopee_search",
+            policy: { max_steps: 8, ...input.policy },
+          }),
+        // Shopee search pagination is 0-based via the `page` query param.
+        pageUrl: (pageIndex) => (pageIndex === 0 ? baseUrl : `${baseUrl}&page=${pageIndex}`),
+        pages: input.pages,
+        limit,
+        throwOnFirstPageChallenge: false,
+        parsePage: (page, remaining) =>
+          parseShopeeProducts(pageText(page), remaining).map((product) => ({
+            key: `${normalizeLoose(product.title)}|${product.price_sgd}`,
+            value: product,
+          })),
+      });
+      const products = scan.items;
       const prices = products.map((product) => product.price_sgd).sort((a, b) => a - b);
+      const warnings: ProviderWarning[] = [
+        ...scan.warnings,
+        ...(products.length === 0
+          ? [
+              {
+                code: "CHROME_SHOPEE_PRODUCTS_NOT_FOUND",
+                severity: "warning" as const,
+                message: "Chrome captured a Shopee page, but no visible product rows were parsed.",
+              },
+            ]
+          : []),
+      ];
       return {
-        source: page.source,
+        source: scan.firstPage.source,
         query: input.query,
         market: input.market,
         category: input.category,
@@ -422,17 +453,10 @@ export function createChromeBrowserRetrievalProvider(
           high: prices[prices.length - 1] ?? 0,
           median: roundMoney(prices.length ? prices[Math.floor(prices.length / 2)] : 0),
         },
-        snapshot: page.snapshot,
-        warnings:
-          products.length === 0
-            ? [
-                {
-                  code: "CHROME_SHOPEE_PRODUCTS_NOT_FOUND",
-                  severity: "warning",
-                  message: "Chrome captured a Shopee page, but no visible product rows were parsed.",
-                },
-              ]
-            : undefined,
+        snapshot: scan.firstPage.snapshot,
+        pages_scanned: scan.pagesScanned,
+        page_snapshots: scan.snapshots,
+        warnings: warnings.length ? warnings : undefined,
       };
     },
 
@@ -479,38 +503,77 @@ export function createChromeBrowserRetrievalProvider(
     },
 
     async extract1688Search(input: Browser1688SearchInput): Promise<Browser1688SearchResult> {
-      const url = `https://s.1688.com/selloffer/offer_search.htm?keywords=${encode1688Keyword(input.query)}`;
-      const page = await this.retrievePageSnapshot({ url, purpose: "sourcing_1688_search", policy: input.policy });
-      assertNoAccessChallenge(page.text_excerpt, page.url);
-      const offers = parse1688Offers(page.text_excerpt, input.limit ?? 20, page.links);
-      if (offers.length === 0) {
+      const limit = input.limit ?? 20;
+      const baseUrl = `https://s.1688.com/selloffer/offer_search.htm?keywords=${encode1688Keyword(input.query)}`;
+      const scan = await scanSearchPages<Browser1688OfferSignal>({
+        retrieve: (url) =>
+          this.retrievePageSnapshot({
+            url,
+            purpose: "sourcing_1688_search",
+            policy: { max_steps: 8, ...input.policy },
+          }),
+        // 1688 search pagination is 1-based via the `beginPage` query param.
+        pageUrl: (pageIndex) => (pageIndex === 0 ? baseUrl : `${baseUrl}&beginPage=${pageIndex + 1}`),
+        pages: input.pages,
+        limit,
+        throwOnFirstPageChallenge: true,
+        parsePage: (page, remaining) =>
+          parse1688Offers(pageText(page), remaining, page.links).map((offer) => ({
+            key: `${normalizeLoose(offer.title)}|${offer.source_price_cny}`,
+            value: offer,
+          })),
+      });
+      if (scan.items.length === 0) {
         throw new Error(
-          `No visible 1688 offer rows were parsed for ${page.url}. Human login/refresh or parser update is required; seed/mock data was not used.`,
+          `No visible 1688 offer rows were parsed for ${scan.firstPage.url}. Human login/refresh or parser update is required; seed/mock data was not used.`,
         );
       }
       return {
-        source: page.source,
+        source: scan.firstPage.source,
         query: input.query,
-        offers,
-        snapshot: page.snapshot,
+        offers: scan.items,
+        snapshot: scan.firstPage.snapshot,
+        pages_scanned: scan.pagesScanned,
+        page_snapshots: scan.snapshots,
+        warnings: scan.warnings.length ? scan.warnings : undefined,
       };
     },
 
     async extractTaobaoSearch(input: BrowserTaobaoSearchInput): Promise<BrowserTaobaoSearchResult> {
-      const url = `https://s.taobao.com/search?q=${encodeURIComponent(input.query)}`;
-      const page = await this.retrievePageSnapshot({ url, purpose: "sourcing_taobao_search", policy: input.policy });
-      assertNoAccessChallenge(page.text_excerpt, page.url);
-      const offers = parseTaobaoOffers(page.text_excerpt, input.limit ?? 20, page.links);
-      if (offers.length === 0) {
+      const limit = input.limit ?? 20;
+      const baseUrl = `https://s.taobao.com/search?q=${encodeURIComponent(input.query)}`;
+      const scan = await scanSearchPages<Browser1688OfferSignal>({
+        retrieve: (url) =>
+          this.retrievePageSnapshot({
+            url,
+            purpose: "sourcing_taobao_search",
+            policy: { max_steps: 8, ...input.policy },
+          }),
+        // Taobao accepts both the modern `page` param and the legacy `s` row offset; send both.
+        pageUrl: (pageIndex) =>
+          pageIndex === 0 ? baseUrl : `${baseUrl}&page=${pageIndex + 1}&s=${44 * pageIndex}`,
+        pages: input.pages,
+        limit,
+        throwOnFirstPageChallenge: true,
+        parsePage: (page, remaining) =>
+          parseTaobaoOffers(pageText(page), remaining, page.links).map((offer) => ({
+            key: `${normalizeLoose(offer.title)}|${offer.source_price_cny}`,
+            value: offer,
+          })),
+      });
+      if (scan.items.length === 0) {
         throw new Error(
-          `No visible Taobao product rows were parsed for ${page.url}. Human login/refresh or parser update is required; seed/mock data was not used.`,
+          `No visible Taobao product rows were parsed for ${scan.firstPage.url}. Human login/refresh or parser update is required; seed/mock data was not used.`,
         );
       }
       return {
-        source: page.source,
+        source: scan.firstPage.source,
         query: input.query,
-        offers,
-        snapshot: page.snapshot,
+        offers: scan.items,
+        snapshot: scan.firstPage.snapshot,
+        pages_scanned: scan.pagesScanned,
+        page_snapshots: scan.snapshots,
+        warnings: scan.warnings.length ? scan.warnings : undefined,
       };
     },
 
@@ -528,7 +591,7 @@ export function createChromeBrowserRetrievalProvider(
         purpose: "sourcing_1688_offer",
         policy: { max_steps: 12, ...input.policy },
       });
-      assertNoAccessChallenge(page.text_excerpt, page.url);
+      assertNoAccessChallenge(pageText(page), page.url);
       const detail = parseSourcingOfferDetailPage(page, input, "1688");
       if (!detail.available) {
         return unavailableBrowserResult({
@@ -559,7 +622,7 @@ export function createChromeBrowserRetrievalProvider(
         purpose: "sourcing_taobao_offer",
         policy: { max_steps: 12, ...input.policy },
       });
-      assertNoAccessChallenge(page.text_excerpt, page.url);
+      assertNoAccessChallenge(pageText(page), page.url);
       const detail = parseSourcingOfferDetailPage(page, input, "taobao");
       if (!detail.available) {
         return unavailableBrowserResult({
@@ -609,15 +672,21 @@ function toPageSnapshot(
 ): BrowserRetrievePageSnapshotResult {
   const capturedAt = captured.captured_at ?? nowIso();
   const url = captured.url || fallbackUrl;
+  const scanNotes = captured.scan
+    ? [`incremental scan: ${captured.scan.steps} step(s), reached_end=${captured.scan.reached_end}`]
+    : [];
   const snapshot = createSnapshot({
     url,
     capturedAt,
     text: captured.text,
     method: "chrome",
     screenshotPath: captured.screenshot_path,
-    confidence: 0.7,
-    selectorNotes: [`chrome controller snapshot for ${purpose}`],
-    warnings: [],
+    confidence: captured.scan?.reached_end ? 0.78 : 0.7,
+    selectorNotes: [`chrome controller snapshot for ${purpose}`, ...scanNotes],
+    warnings:
+      captured.scan && !captured.scan.reached_end
+        ? ["Scan stopped before the page bottom (max_steps or text budget); rows further down may be missing."]
+        : [],
   });
 
   return {
@@ -625,9 +694,116 @@ function toPageSnapshot(
     url,
     title: captured.title,
     text_excerpt: truncate(captured.text, 25_000),
+    text_full: truncate(captured.text, 150_000),
     links: captured.links ?? [],
     snapshot,
   };
+}
+
+/** Parsers should see the full accumulated scan text, not the 25k agent-facing excerpt. */
+function pageText(page: BrowserRetrievePageSnapshotResult): string {
+  return page.text_full ?? page.text_excerpt;
+}
+
+interface PagedScanOptions<T> {
+  retrieve: (url: string) => Promise<BrowserRetrievePageSnapshotResult>;
+  pageUrl: (pageIndex: number) => string;
+  pages?: number;
+  limit: number;
+  /** Sourcing platforms hard-fail on a first-page challenge; Shopee degrades to a warning. */
+  throwOnFirstPageChallenge: boolean;
+  parsePage: (page: BrowserRetrievePageSnapshotResult, remaining: number) => Array<{ key: string; value: T }>;
+}
+
+interface PagedScanResult<T> {
+  items: T[];
+  firstPage: BrowserRetrievePageSnapshotResult;
+  pagesScanned: number;
+  snapshots: BrowserSnapshotEvidence[];
+  warnings: ProviderWarning[];
+}
+
+/**
+ * Multi-page search scan with cross-page dedupe. Key behaviors:
+ * - Rows already collected are NEVER discarded when a later page fails or hits a verification
+ *   wall; the failure becomes a warning so the agent can decide with partial evidence.
+ * - Items are deduped across pages (and across overlapping scroll captures within one page)
+ *   by a caller-provided key, so repeated rows do not crowd out the limit.
+ * - Stops early when a page contributes nothing new (end of real results).
+ */
+async function scanSearchPages<T>(options: PagedScanOptions<T>): Promise<PagedScanResult<T>> {
+  const maxPages = clamp(Math.floor(options.pages ?? 1), 1, 5);
+  const items: T[] = [];
+  const seen = new Set<string>();
+  const snapshots: BrowserSnapshotEvidence[] = [];
+  const warnings: ProviderWarning[] = [];
+  let firstPage: BrowserRetrievePageSnapshotResult | undefined;
+  let pagesScanned = 0;
+
+  for (let pageIndex = 0; pageIndex < maxPages && items.length < options.limit; pageIndex += 1) {
+    let page: BrowserRetrievePageSnapshotResult;
+    try {
+      page = await options.retrieve(options.pageUrl(pageIndex));
+    } catch (error) {
+      if (pageIndex === 0) {
+        throw error;
+      }
+      warnings.push({
+        code: "CHROME_PAGINATION_PAGE_FAILED",
+        severity: "warning",
+        message: `Capture of search page ${pageIndex + 1} failed (${
+          error instanceof Error ? error.message : String(error)
+        }); ${items.length} row(s) from earlier pages were kept.`,
+      });
+      break;
+    }
+
+    firstPage ??= page;
+    pagesScanned += 1;
+    snapshots.push(page.snapshot);
+
+    if (isAccessChallenge(pageText(page))) {
+      if (pageIndex === 0 && options.throwOnFirstPageChallenge) {
+        throw new Error(
+          `Browser retrieval hit an access verification page for ${page.url}. Human login/verification or an authorized API is required; seed/mock data was not used.`,
+        );
+      }
+      warnings.push({
+        code: "CHROME_PAGINATION_ACCESS_CHALLENGE",
+        severity: "warning",
+        message: `Access verification appeared on search page ${pageIndex + 1} (${page.url}); scan stopped and ${items.length} row(s) already collected were kept.`,
+      });
+      break;
+    }
+
+    let added = 0;
+    for (const entry of options.parsePage(page, options.limit - items.length)) {
+      if (seen.has(entry.key)) {
+        continue;
+      }
+      seen.add(entry.key);
+      items.push(entry.value);
+      added += 1;
+      if (items.length >= options.limit) {
+        break;
+      }
+    }
+
+    if (added === 0 && pageIndex > 0) {
+      warnings.push({
+        code: "CHROME_PAGINATION_NO_NEW_ROWS",
+        severity: "info",
+        message: `Search page ${pageIndex + 1} added no new rows; pagination stopped early.`,
+      });
+      break;
+    }
+  }
+
+  if (!firstPage) {
+    throw new Error("Browser pagination captured no search page.");
+  }
+
+  return { items, firstPage, pagesScanned, snapshots, warnings };
 }
 
 function unavailableBrowserResult(input: {
@@ -788,6 +964,7 @@ function parseShopeeProducts(text: string, limit: number): BrowserShopeeProductS
     lines.findIndex((line) => /search result/i.test(line)),
   );
   const products: BrowserShopeeProductSignal[] = [];
+  const seen = new Set<string>();
 
   for (let index = start; index < lines.length && products.length < limit; index += 1) {
     const title = lines[index];
@@ -804,6 +981,13 @@ function parseShopeeProducts(text: string, limit: number): BrowserShopeeProductS
     if (price <= 0) {
       continue;
     }
+
+    const dedupeKey = `${normalizeLoose(title)}|${price}`;
+    if (seen.has(dedupeKey)) {
+      index = priceIndex;
+      continue;
+    }
+    seen.add(dedupeKey);
 
     const rating = findNextRating(lines, priceIndex + 1, 8);
     const shopType = /mall/i.test(lines.slice(Math.max(0, index - 3), index + 8).join(" "))
@@ -836,6 +1020,7 @@ function parse1688Offers(
   const lines = visibleLines(text);
   const offers: Browser1688OfferSignal[] = [];
   const usedUrls = new Set<string>();
+  const seen = new Set<string>();
 
   for (let index = 0; index < lines.length && offers.length < limit; index += 1) {
     const title = lines[index];
@@ -852,6 +1037,13 @@ function parse1688Offers(
     if (price <= 0) {
       continue;
     }
+
+    const dedupeKey = `${normalizeLoose(title)}|${price}`;
+    if (seen.has(dedupeKey)) {
+      index = priceIndex;
+      continue;
+    }
+    seen.add(dedupeKey);
 
     offers.push({
       offer_id: `live_1688_${hashText(`${title}:${price}`).slice(0, 12)}`,
@@ -947,12 +1139,13 @@ function parseSourcingOfferDetailPage(
   input: Browser1688OfferInput,
   platform: SourcingDetailPlatform,
 ): SourcingDetailParseResult {
-  const lines = visibleLines(page.text_excerpt);
+  const text = pageText(page);
+  const lines = visibleLines(text);
   const title = inferDetailTitle(lines, page.title, platform);
   const price = inferDetailPrice(lines, title);
-  const weight = parsePackageWeight(page.text_excerpt);
-  const dimensions = parsePackageDimensions(page.text_excerpt);
-  const stock = parseStockSignal(page.text_excerpt);
+  const weight = parsePackageWeight(text);
+  const dimensions = parsePackageDimensions(text);
+  const stock = parseStockSignal(text);
   const supplier = inferSupplierProfile(lines, platform);
   const missing = [
     title ? "" : "product title",
@@ -976,7 +1169,7 @@ function parseSourcingOfferDetailPage(
 
   const offerId = input.offerId ?? `${platform === "1688" ? "live_1688" : "live_taobao"}_${hashText(page.url).slice(0, 12)}`;
   const supplierRiskNotes = [
-    ...(hasSingleDimensionSignal(page.text_excerpt)
+    ...(hasSingleDimensionSignal(text)
       ? ["Dimension field showed one value under 长x宽x高; interpreted as equal length/width/height and requires supplier confirmation."]
       : []),
     ...(stock.exact ? [] : ["Visible in-stock signal was present, but exact stock quantity was not visible; confirm with supplier."]),
@@ -987,22 +1180,22 @@ function parseSourcingOfferDetailPage(
     title,
     source_price_cny: price,
     currency: "CNY",
-    moq: parseMoq(page.text_excerpt) ?? 1,
+    moq: parseMoq(text) ?? 1,
     available_stock: stock.value,
     supplier_name: supplier.supplier_name,
     supplier_location: supplier.supplier_location,
-    domestic_dispatch_days: parseDispatchDays(page.text_excerpt) ?? 3,
+    domestic_dispatch_days: parseDispatchDays(text) ?? 3,
     source_url: page.url,
     evidence_label: `Chrome visible ${platform} detail: ${title} at CNY ${price.toFixed(2)}`,
     sku_options: parseSkuOptions(lines),
     package_weight_g: weight,
     package_dimensions_cm: dimensions,
-    price_ladder: [{ min_qty: parseMoq(page.text_excerpt) ?? 1, unit_price_cny: price }],
+    price_ladder: [{ min_qty: parseMoq(text) ?? 1, unit_price_cny: price }],
     supplier_stability: {
       supplier_name: supplier.supplier_name,
       supplier_location: supplier.supplier_location,
       stability_score: scoreDetailSupplier(stock.value, supplierRiskNotes.length),
-      supplier_years: parseSupplierYears(page.text_excerpt),
+      supplier_years: parseSupplierYears(text),
       dispute_or_risk_notes: supplierRiskNotes,
     },
     last_seen_stock: stock.value,
@@ -1284,7 +1477,15 @@ function assertNoAccessChallenge(text: string, url: string): void {
 }
 
 function isAccessChallenge(text: string): boolean {
-  return /滑块|验证|captcha|robot|人机|拖动.*验证|ensure normal access/i.test(text);
+  const trimmed = text.trim();
+  // Challenge interstitials are tiny pages. Real search pages are long and may legitimately
+  // contain words like "robot vacuum" or "已验证供应商" — never treat those as a wall.
+  const strong = /验证码|安全验证|人机验证|滑块|captcha|拖动.*验证|ensure normal access|unusual traffic/i;
+  const weak = /验证|robot|人机/i;
+  if (strong.test(trimmed)) {
+    return trimmed.length < 8_000;
+  }
+  return weak.test(trimmed) && trimmed.length < 1_500;
 }
 
 function visibleLines(text: string): string[] {

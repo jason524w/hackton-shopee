@@ -83,10 +83,16 @@ export function createSourcingTools(providers: AgentProviders): AgentTool[] {
     {
       name: "browser_extract_1688_search",
       description:
-        "Use the controlled browser retrieval provider to extract 1688 search offer signals when direct API access is unavailable.",
+        "Use the controlled browser retrieval provider to extract 1688 search offer signals when direct API access is unavailable. " +
+        "Each page is scanned incrementally while scrolling so lazy-loaded rows are not missed. " +
+        "Set pages (1-5, nullable, default 1) to scan and merge multiple result pages; rows are deduped across pages, " +
+        "verification walls on later pages keep already-collected rows, and page_snapshots carries one audit snapshot per page.",
+      // strict function schemas require every key in `required`; optionality is
+      // expressed via nullable types instead.
       parameters: makeObjectSchema({
         query: { type: "string" },
         limit: { type: "number", minimum: 1, maximum: 20 },
+        pages: { type: ["number", "null"], minimum: 1, maximum: 5 },
       }),
       execute(input: unknown) {
         return providers.browser.extract1688Search(input as Browser1688SearchInput);
@@ -95,10 +101,15 @@ export function createSourcingTools(providers: AgentProviders): AgentTool[] {
     {
       name: "browser_extract_taobao_search",
       description:
-        "Use a user-authorized controlled browser session to extract visible Taobao sourcing proxy rows when wholesale APIs or 1688 browser access are unavailable.",
+        "Use a user-authorized controlled browser session to extract visible Taobao sourcing proxy rows when wholesale APIs or 1688 browser access are unavailable. " +
+        "Each page is scanned incrementally while scrolling so lazy-loaded rows are not missed. " +
+        "Set pages (1-5, nullable, default 1) to scan and merge multiple result pages with cross-page dedupe.",
+      // strict function schemas require every key in `required`; optionality is
+      // expressed via nullable types instead.
       parameters: makeObjectSchema({
         query: { type: "string" },
         limit: { type: "number", minimum: 1, maximum: 20 },
+        pages: { type: ["number", "null"], minimum: 1, maximum: 5 },
       }),
       execute(input: unknown) {
         return providers.browser.extractTaobaoSearch(input as BrowserTaobaoSearchInput);
