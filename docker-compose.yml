@@ -1,7 +1,17 @@
 # Sea Launch AI — cloud-server deployment (API + frontend).
 #   cp .env.example .env.local   # fill OPENAI_API_KEY etc.
 #   docker compose up -d --build
-# API on :3000, frontend on :3001. Put nginx/caddy in front for TLS.
+# API on :3000, frontend on :3001.
+#
+# RECOMMENDED: put nginx/caddy in front so both apps share ONE origin (see
+# docs/DEPLOY.md §3). The frontend then talks to /api and /generated same-origin
+# and NEXT_PUBLIC_API_BASE_URL stays empty. This avoids CORS entirely and is the
+# only path that works once deployed remotely (the base URL is baked into the
+# client bundle at build time, so a hardcoded localhost would break for visitors).
+#
+# Split-port (no nginx) is dev-only: it needs cross-origin requests, which require
+# the API to set ALLOWED_ORIGIN (CORS middleware) AND for /generated images to be
+# reachable from the frontend origin. Prefer the nginx path.
 
 services:
   api:
@@ -17,8 +27,13 @@ services:
       - generated-images:/app/public/generated
     restart: unless-stopped
     healthcheck:
-      # /api/run without a key returns 503 by design; any HTTP response means the server is up.
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:3000/"]
+      # The API app has NO page routes, so "/" 404s — but a 404 still proves the
+      # server is up and accepting connections. `wget --spider` exits non-zero on
+      # 404, so we treat ANY HTTP response (incl. 404/503-by-design) as healthy by
+      # checking that the port answers. `-S` prints headers; `|| true`-style logic
+      # via the grep keeps us green on 404 but red when the server is down/refused.
+      test:
+        ["CMD-SHELL", "wget -q -S -O /dev/null http://localhost:3000/ 2>&1 | grep -q 'HTTP/'"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -28,9 +43,13 @@ services:
       context: .
       dockerfile: frontend/Dockerfile
       args:
-        # Browser-side base URL of the API app. Same host: keep the public origin,
-        # e.g. https://demo.example.com if nginx proxies /api/* to the api service.
-        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:3000}
+        # Browser-side base URL of the API app. Leave EMPTY for the recommended
+        # same-origin nginx setup (DEPLOY.md §3) — the frontend then calls /api
+        # and /generated on its own origin. Only set this for the split-port
+        # dev path, and only to an origin the browser can actually reach (never a
+        # bare localhost, which becomes the visitor's own machine in a remote
+        # deploy). Cross-origin also requires ALLOWED_ORIGIN set on the api service.
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-}
     ports:
       - "3001:3001"
     depends_on:

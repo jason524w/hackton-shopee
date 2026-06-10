@@ -4,11 +4,13 @@ import {
   applyAuditStatuses,
   toBoardSummary,
   toBrief,
+  toCommittee,
   toDepartments,
   toListing,
   toOpportunities,
   toPackaging,
   type BoardSummary,
+  type CommitteeView,
 } from "./adapters";
 import { fetchAuditSnapshots, newRunId, PipelineError, runPipeline } from "./api";
 import type { FlowKey } from "./flow";
@@ -45,6 +47,7 @@ interface AppState {
   departments: DepartmentResult[];
   opportunities: Opportunity[];
   boardSummary: BoardSummary | null;
+  committee: CommitteeView | null;
   selectedProductId: string | null;
   packaging: PackagingOutput | null;
   listing: ShopeeListing | null;
@@ -66,6 +69,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   departments: EMPTY_DEPARTMENTS,
   opportunities: [],
   boardSummary: null,
+  committee: null,
   selectedProductId: null,
   packaging: null,
   listing: null,
@@ -75,6 +79,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   loadDemoBrief: () => set({ brief: DEMO_BRIEF }),
 
   startRun: async () => {
+    // Guard against double-fire: a second click while a run is in flight would
+    // kick off a second paid pipeline (2-4 min of OpenAI + live image spend).
+    if (get().runStatus === "running") return;
     const brief = get().brief ?? DEMO_BRIEF;
     const runId = newRunId();
     set({
@@ -85,6 +92,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       departments: applyAuditStatuses(EMPTY_DEPARTMENTS, []),
       opportunities: [],
       boardSummary: null,
+      committee: null,
       packaging: null,
       listing: null,
       currentStep: "company",
@@ -108,6 +116,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         departments: toDepartments(result),
         opportunities: toOpportunities(result),
         boardSummary: toBoardSummary(result),
+        committee: toCommittee(result),
         selectedProductId: result.selected_listing.opportunity_id,
         packaging: toPackaging(result),
         listing: toListing(result),
@@ -146,6 +155,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       departments: EMPTY_DEPARTMENTS,
       opportunities: [],
       boardSummary: null,
+      committee: null,
       selectedProductId: null,
       packaging: null,
       listing: null,

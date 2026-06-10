@@ -2,13 +2,16 @@ import type { AgentKey, Brief, Committee, RunResult, SelectedListing } from "../
 import { createAuditRunId, type AuditSink } from "../agent-runtime/audit";
 import type { AgentRunMode } from "../agent-runtime/run-agent";
 import {
+  createChromeBrowserRetrievalProvider,
   createSeedBrowserRetrievalProvider,
   createSeedFxProvider,
   createSeedOpenAIImageProvider,
   createSeedShippingProvider,
   createSeedShopeeProvider,
   createSeedSourcing1688Provider,
+  createShippingProviderFromEnv,
 } from "../providers";
+import { createCdpChromeBrowserController } from "../providers/browser-retrieval";
 import { createOpenAIImageProvider } from "../providers/openai-image";
 import { makeCommitteeAgent } from "./committee";
 import { type Agent, type AgentContext, type AgentProviders, runPipeline } from "./contracts";
@@ -43,9 +46,26 @@ export function createSeedProviders(): AgentProviders {
   };
 }
 
+/**
+ * Provider selection is env-driven but SEED-DEFAULT so the demo is unchanged unless
+ * explicitly opted in (CLAUDE.md demo-safe constraint):
+ * - shipping honors LOGISTICS_PROVIDER but defaults to the seed provider.
+ * - browser retrieval uses the live Chrome pipeline ONLY when BROWSER_RETRIEVAL_MODE=live;
+ *   otherwise it stays seed-backed (no live scraping by default).
+ * - openaiImage stays live via imageMode (already gated upstream).
+ */
+function createBrowserProviderFromEnv() {
+  if (process.env.BROWSER_RETRIEVAL_MODE === "live") {
+    return createChromeBrowserRetrievalProvider(createCdpChromeBrowserController());
+  }
+  return createSeedBrowserRetrievalProvider();
+}
+
 export function createOrchestrationProviders(imageMode: "live" | "dry-run" = "dry-run"): AgentProviders {
   return {
     ...createSeedProviders(),
+    shipping: createShippingProviderFromEnv(),
+    browser: createBrowserProviderFromEnv(),
     openaiImage: createOpenAIImageProvider({ mode: imageMode }),
   };
 }

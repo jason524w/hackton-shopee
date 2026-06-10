@@ -5,11 +5,44 @@
 
 import type { AgentResult, Opportunity } from "../../../contract/result";
 import type { Agent } from "../contracts";
-import { BASE_ASSUMPTIONS, HIGH_ASSUMPTIONS, LOW_ASSUMPTIONS } from "./assumptions";
+import {
+  BASE_ASSUMPTIONS,
+  HIGH_ASSUMPTIONS,
+  LOW_ASSUMPTIONS,
+  type MarginAssumptions,
+} from "./assumptions";
 import { computeMargin } from "./calculator";
 
 function pickPrimary(opps: Opportunity[]): Opportunity | undefined {
   return opps.find((o) => o.is_primary) ?? opps[0];
+}
+
+/**
+ * Derive cost inputs from the upstream sourcing result carried on the opportunity,
+ * falling back to BASE_ASSUMPTIONS when a real value is missing.
+ *
+ * The opportunity only carries the SGD `source_price` (sourcing writes it via
+ * mergePrimaryOpportunity). Intl shipping and package weight live only inside the
+ * sourcing agent's internal output and are NOT propagated onto the opportunity, so
+ * they cannot be read here yet — those stay on the assumption bands until sourcing
+ * surfaces them on the contract Opportunity (sourcing/** is out of this scope).
+ *
+ * We override `source_price_cny` rather than the SGD value so each scenario keeps
+ * flexing the source cost through its own FX band: we back out the implied CNY unit
+ * price using the BASE FX rate, then let low/high re-apply their FX. This keeps the
+ * waterfall's "Source price" line consistent with the opportunity the user sees
+ * (no more 2.91 vs 3.58 on-screen contradiction) while preserving FX sensitivity.
+ */
+function withSourcingInputs(
+  base: MarginAssumptions,
+  scenario: MarginAssumptions,
+  opportunity: Opportunity,
+): MarginAssumptions {
+  const sourcePriceSgd = opportunity.source_price;
+  if (typeof sourcePriceSgd === "number" && sourcePriceSgd > 0 && base.fx_cny_sgd > 0) {
+    return { ...scenario, source_price_cny: sourcePriceSgd / base.fx_cny_sgd };
+  }
+  return scenario;
 }
 
 function pct(n: number): string {
@@ -31,11 +64,16 @@ export const marginAgent: Agent = async (ctx) => {
   }
 
   const target = ctx.brief.target_margin;
+  // Real sourcing output (source price) overrides the documented BASE_ASSUMPTIONS
+  // where available; otherwise the assumption bands stand in (see withSourcingInputs).
+  const base = withSourcingInputs(BASE_ASSUMPTIONS, BASE_ASSUMPTIONS, primary);
+  const low = withSourcingInputs(BASE_ASSUMPTIONS, LOW_ASSUMPTIONS, primary);
+  const high = withSourcingInputs(BASE_ASSUMPTIONS, HIGH_ASSUMPTIONS, primary);
   const { minimum_viable_price, ...marginDetail } = computeMargin({
     sellingPrice: primary.suggested_price,
-    base: BASE_ASSUMPTIONS,
-    low: LOW_ASSUMPTIONS,
-    high: HIGH_ASSUMPTIONS,
+    base,
+    low,
+    high,
     targetMargin: target,
   });
 

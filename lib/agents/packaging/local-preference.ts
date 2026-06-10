@@ -167,7 +167,12 @@ export function extractCompetitorStyle(input: PackagingInput): CompetitorStyleEx
       );
       evidenceItems.push(evidence);
       competitorEvidenceIds.push(evidence.id);
-      visualStyle.push(note);
+      // The raw note is kept as audit evidence above, but only its sanitized form
+      // may flow into visual_style → image prompts (prevents prompt injection).
+      const safeNote = sanitizeScrapedPhrase(note);
+      if (safeNote) {
+        visualStyle.push(safeNote);
+      }
       localSceneCues.push(...extractLocalSceneCues(note));
       buyerUseCases.push(...extractBuyerUseCases(note));
     }
@@ -454,10 +459,14 @@ function extractTitleTerms(value: string): string[] {
 }
 
 function extractLocalSceneCues(value: string): string[] {
+  // Scraped competitor titles/style notes flow from here into preferred_terms,
+  // lifestyle scene copy, and image prompts. Strip anything that isn't a plain
+  // product-attribute token BEFORE windowing, so URLs / scripts / prompt-injection
+  // instructions in scraped text cannot reach generated copy or image prompts.
   const originalTokens = value
     .replace(/[^A-Za-z0-9&\s]/g, " ")
     .split(/\s+/)
-    .filter(Boolean);
+    .filter(isSafeAttributeToken);
   const normalizedTokens = originalTokens.map(normalize);
   const cues: string[] = [];
 
@@ -476,6 +485,70 @@ function extractLocalSceneCues(value: string): string[] {
   }
 
   return uniqueList(cues.map(cleanCue)).filter((cue) => cue.length >= 3).slice(0, 6);
+}
+
+// Injection-like / instruction-like substrings that must never survive into copy or
+// image prompts even after the alnum strip (the strip removes punctuation but words
+// like "ignore"/"prompt"/"http" survive as plain tokens otherwise).
+const INJECTION_TOKEN_PATTERNS = [
+  /^https?$/i,
+  /^www$/i,
+  /script/i,
+  /javascript/i,
+  /\bignore\b/i,
+  /\boverride\b/i,
+  /\bprompt\b/i,
+  /\bsystem\b/i,
+  /\binstruction/i,
+  /\bassistant\b/i,
+];
+
+/**
+ * Allowlist guard for a single scraped token: alphanumeric (with optional single
+ * internal ampersand), length-bounded, and free of URL/script/instruction-like
+ * patterns. Anything failing is dropped so arbitrary scraped text can't inject
+ * marketing copy or image-prompt content.
+ */
+function isSafeAttributeToken(token: string): boolean {
+  if (token.length < 2 || token.length > 20) {
+    return false;
+  }
+  if (!/^[A-Za-z0-9]+(?:&[A-Za-z0-9]+)?$/.test(token)) {
+    return false;
+  }
+  return !INJECTION_TOKEN_PATTERNS.some((pattern) => pattern.test(token));
+}
+
+// Phrase-level patterns that mark a scraped note as unsafe to surface into copy or
+// image prompts (URLs, markup/script, or prompt-injection instructions). Legitimate
+// style notes ("Clean white-background hero image") contain none of these and pass
+// through verbatim (only length-bounded), so descriptive hyphenated phrasing is kept.
+const UNSAFE_PHRASE_PATTERNS = [
+  /https?:\/\//i,
+  /www\./i,
+  /<[^>]+>/, // any tag-like markup
+  /[{}[\]<>]/, // template / markup delimiters
+  /\b(ignore|disregard|override)\b.{0,30}\b(instruction|prompt|above|previous|system)\b/i,
+  /\b(system|assistant|developer)\s*[:：]/i,
+  /\bprompt\b/i,
+  /\bjavascript\b/i,
+];
+
+/**
+ * Validate a scraped free-text phrase (e.g. a competitor style note) before it is
+ * allowed to flow into copy or image prompts. Returns the trimmed, length-bounded
+ * phrase if it is safe, or "" if it looks like injection / contains markup / URLs so
+ * the caller can drop it. Descriptive product-style phrasing passes through unchanged.
+ */
+function sanitizeScrapedPhrase(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length > 120) {
+    return "";
+  }
+  if (UNSAFE_PHRASE_PATTERNS.some((pattern) => pattern.test(trimmed))) {
+    return "";
+  }
+  return trimmed;
 }
 
 function extractBuyerUseCases(value: string): string[] {

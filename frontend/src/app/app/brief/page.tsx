@@ -53,6 +53,8 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 export default function BriefPage() {
   const router = useRouter();
   const { loadDemoBrief, startRun, setBrief } = useAppStore();
+  const runStatus = useAppStore((s) => s.runStatus);
+  const isRunning = runStatus === "running";
   const [targetMarket, setTargetMarket] = useState(DEMO_BRIEF.targetMarket);
   const [keywords, setKeywords] = useState(DEMO_BRIEF.keywords);
   const [budgetRange, setBudgetRange] = useState(DEMO_BRIEF.budgetRange);
@@ -138,11 +140,16 @@ export default function BriefPage() {
       <div className="flex items-center justify-between border-t hairline px-14 py-5">
         <button
           onClick={start}
-          className="bg-ink px-6 py-2.5 font-display text-sm font-black text-white"
+          disabled={isRunning}
+          className="bg-ink px-6 py-2.5 font-display text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Start AI Company Run →
+          {isRunning ? "Run in progress…" : "Start AI Company Run →"}
         </button>
-        <button onClick={demo} className="font-mono text-[11px] text-ink-faint">
+        <button
+          onClick={demo}
+          disabled={isRunning}
+          className="font-mono text-[11px] text-ink-faint disabled:cursor-not-allowed disabled:opacity-50"
+        >
           _ Use demo: <span className="text-orange">Mini desk vacuum in Singapore</span>
         </button>
       </div>

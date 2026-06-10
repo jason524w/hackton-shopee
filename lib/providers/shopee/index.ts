@@ -1,4 +1,5 @@
 import { includesQuery, readSeedJson, roundMoney } from "../shared";
+import type { ProviderWarning } from "../shared";
 import type {
   ShopeeCategoryAttributesInput,
   ShopeeCategoryAttributesResult,
@@ -46,11 +47,21 @@ export function createSeedShopeeProvider(): ShopeeProvider {
   return {
     async searchProducts(input: ShopeeSearchProductsInput): Promise<ShopeeSearchProductsResult> {
       const seed = await readSeedJson<ShopeeSearchSeed>("seed/shopee/mini-desk-vacuum-search.json");
+      // Do NOT fabricate matches: when the query does not match the captured seed rows,
+      // return an empty result + explicit warning instead of passing off desk-vacuum data.
       const queryMatches = seed.products.filter((product) => includesQuery(product.title, input.query));
-      const products = queryMatches.length ? queryMatches : seed.products;
-      const limitedProducts = products.slice(0, input.limit ?? products.length);
+      const limitedProducts = queryMatches.slice(0, input.limit ?? queryMatches.length);
       const prices = limitedProducts.map((product) => product.price_sgd).sort((a, b) => a - b);
       const median = prices.length ? prices[Math.floor(prices.length / 2)] : 0;
+      const warnings: ProviderWarning[] = queryMatches.length
+        ? []
+        : [
+            {
+              code: "SEED_QUERY_MISMATCH",
+              severity: "warning",
+              message: `Seed Shopee data does not cover "${input.query}"; returning no products rather than fabricating unrelated rows. Enable a live Shopee provider for arbitrary queries.`,
+            },
+          ];
 
       return {
         source: {
@@ -64,12 +75,13 @@ export function createSeedShopeeProvider(): ShopeeProvider {
         market: input.market,
         category: input.category ?? seed.category,
         products: limitedProducts,
-        competitor_count: products.length,
+        competitor_count: limitedProducts.length,
         price_band: {
           low: prices[0] ?? 0,
           high: prices[prices.length - 1] ?? 0,
           median: roundMoney(median),
         },
+        warnings: warnings.length ? warnings : undefined,
       };
     },
 

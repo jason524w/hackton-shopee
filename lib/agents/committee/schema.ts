@@ -47,6 +47,7 @@ export interface CommitteeOutput {
 export const COMMITTEE_OUTPUT_SCHEMA: JsonSchema = makeObjectSchema({
   decisions: {
     type: "array",
+    minItems: 1, // at least one verdict; an empty decision set is always incomplete and wastes a call
     items: makeObjectSchema({
       id: { type: "string" },
       verdict: { type: "string", enum: ["Go", "Watch", "Reject"] },
@@ -54,7 +55,7 @@ export const COMMITTEE_OUTPUT_SCHEMA: JsonSchema = makeObjectSchema({
       key_reasons: { type: "array", items: { type: "string" } },
     }),
   },
-  ranked_ids: { type: "array", items: { type: "string" } },
+  ranked_ids: { type: "array", minItems: 1, items: { type: "string" } },
   tradeoffs: {
     type: "array",
     items: makeObjectSchema({

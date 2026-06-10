@@ -221,6 +221,11 @@ export function createLiveOpenAIImageProvider(options: CreateOpenAIImageProvider
       try {
         return await generateLiveImage(input, options);
       } catch (error) {
+        // 503-not-degrade philosophy: a live image failure should surface as a pipeline error by
+        // default, NOT silently ship a seed/canned image. Only fall back when explicitly opted in.
+        if (!imageFallbackEnabled()) {
+          throw error;
+        }
         const fallback = await fallbackProvider.generateProductImage(input);
         return {
           ...fallback,
@@ -408,6 +413,10 @@ function inferAssetType(prompt: string): ImageAssetType {
     return "feature";
   }
   return "hero";
+}
+
+function imageFallbackEnabled(): boolean {
+  return process.env.ALLOW_IMAGE_FALLBACK === "1";
 }
 
 function readDefaultMode(): OpenAIImageProviderMode {

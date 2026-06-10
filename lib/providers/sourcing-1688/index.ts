@@ -1,4 +1,5 @@
 import { includesQuery, readSeedJson } from "../shared";
+import type { ProviderWarning } from "../shared";
 import type {
   Sourcing1688Provider,
   SourcingOfferDetail,
@@ -19,8 +20,19 @@ export function createSeedSourcing1688Provider(): Sourcing1688Provider {
   return {
     async searchOffers(input: SourcingSearchOffersInput): Promise<SourcingSearchOffersResult> {
       const seed = await readSeedJson<SourcingSeed>("seed/sourcing-1688/mini-desk-vacuum-offers.json");
+      // Do NOT fabricate matches: an unmatched query returns an empty offer set + warning
+      // instead of passing off the desk-vacuum seed as if it were the requested product.
       const matched = seed.offers.filter((offer) => includesQuery(offer.title, input.query));
-      const offers = (matched.length ? matched : seed.offers).slice(0, input.limit ?? seed.offers.length);
+      const offers = matched.slice(0, input.limit ?? matched.length);
+      const warnings: ProviderWarning[] = matched.length
+        ? []
+        : [
+            {
+              code: "SEED_QUERY_MISMATCH",
+              severity: "warning",
+              message: `Seed 1688 data does not cover "${input.query}"; returning no offers rather than fabricating unrelated rows. Enable a live sourcing provider for arbitrary queries.`,
+            },
+          ];
 
       return {
         source: {
@@ -31,6 +43,7 @@ export function createSeedSourcing1688Provider(): Sourcing1688Provider {
         },
         query: input.query,
         offers: offers.map(toSummary),
+        warnings: warnings.length ? warnings : undefined,
       };
     },
 

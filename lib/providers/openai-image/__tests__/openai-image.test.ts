@@ -59,7 +59,9 @@ describe("openai image provider", () => {
     expect(bytes.toString()).toBe("fake-image");
   });
 
-  it("live failure falls back visibly and marks image for review", async () => {
+  it("live failure rethrows by default (503-not-degrade)", async () => {
+    const prior = process.env.ALLOW_IMAGE_FALLBACK;
+    delete process.env.ALLOW_IMAGE_FALLBACK;
     const client: OpenAIImageClient = {
       images: {
         generate: vi.fn(async () => {
@@ -69,16 +71,53 @@ describe("openai image provider", () => {
     };
     const provider = createLiveOpenAIImageProvider({ client });
 
-    const result = await provider.generateProductImage({
-      runId: "run_test",
-      prompt: "Mini desk vacuum feature image",
-      constraints: { asset_type: "feature" },
-    });
+    try {
+      await expect(
+        provider.generateProductImage({
+          runId: "run_test",
+          prompt: "Mini desk vacuum feature image",
+          constraints: { asset_type: "feature" },
+        }),
+      ).rejects.toThrow(/quota exhausted/);
+    } finally {
+      if (prior === undefined) {
+        delete process.env.ALLOW_IMAGE_FALLBACK;
+      } else {
+        process.env.ALLOW_IMAGE_FALLBACK = prior;
+      }
+    }
+  });
 
-    expect(result.image.url).toBe("/seed/images/desk-vacuum-feature.svg");
-    expect(result.image.compliance).toBe("needs_review");
-    expect(result.image.metadata.provider_mode).toBe("live-fallback");
-    expect(result.warnings?.some((warning) => warning.code === "live_image_fallback")).toBe(true);
+  it("live failure falls back visibly when ALLOW_IMAGE_FALLBACK=1", async () => {
+    const prior = process.env.ALLOW_IMAGE_FALLBACK;
+    process.env.ALLOW_IMAGE_FALLBACK = "1";
+    const client: OpenAIImageClient = {
+      images: {
+        generate: vi.fn(async () => {
+          throw new Error("quota exhausted");
+        }),
+      },
+    };
+    const provider = createLiveOpenAIImageProvider({ client });
+
+    try {
+      const result = await provider.generateProductImage({
+        runId: "run_test",
+        prompt: "Mini desk vacuum feature image",
+        constraints: { asset_type: "feature" },
+      });
+
+      expect(result.image.url).toBe("/seed/images/desk-vacuum-feature.svg");
+      expect(result.image.compliance).toBe("needs_review");
+      expect(result.image.metadata.provider_mode).toBe("live-fallback");
+      expect(result.warnings?.some((warning) => warning.code === "live_image_fallback")).toBe(true);
+    } finally {
+      if (prior === undefined) {
+        delete process.env.ALLOW_IMAGE_FALLBACK;
+      } else {
+        process.env.ALLOW_IMAGE_FALLBACK = prior;
+      }
+    }
   });
 
   it("edit requests do not place raw source image URLs into the generation prompt", async () => {

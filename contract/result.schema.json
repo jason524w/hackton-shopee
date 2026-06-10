@@ -127,12 +127,24 @@
         "resolution": { "type": "string" }
       }
     },
+    "committeeWeights": {
+      "type": "object",
+      "required": ["profit", "demand", "compliance", "fulfillment", "packaging"],
+      "additionalProperties": false,
+      "properties": {
+        "profit": { "type": "number" },
+        "demand": { "type": "number" },
+        "compliance": { "type": "number" },
+        "fulfillment": { "type": "number" },
+        "packaging": { "type": "number" }
+      }
+    },
     "committee": {
       "type": "object",
       "required": ["ranked_ids", "weights", "tradeoffs", "summary"],
       "properties": {
         "ranked_ids": { "type": "array", "items": { "type": "string" } },
-        "weights": { "type": "object" },
+        "weights": { "$ref": "#/$defs/committeeWeights" },
         "tradeoffs": { "type": "array", "items": { "$ref": "#/$defs/tradeoff" } },
         "summary": { "type": "string" }
       }
@@ -147,6 +159,24 @@
         "compliance": { "enum": ["ok", "needs_review", "rejected"] }
       }
     },
+    "shopeeVariation": {
+      "type": "object",
+      "required": ["name", "options"],
+      "properties": {
+        "name": { "type": "string" },
+        "options": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "shopeeLogistics": {
+      "type": "object",
+      "required": ["weight_g", "length_cm", "width_cm", "height_cm"],
+      "properties": {
+        "weight_g": { "type": "number" },
+        "length_cm": { "type": "number" },
+        "width_cm": { "type": "number" },
+        "height_cm": { "type": "number" }
+      }
+    },
     "shopeeListing": {
       "type": "object",
       "required": ["item_name", "category", "category_id", "brand", "condition", "price", "stock", "sku", "variations", "attributes", "description", "bullet_points", "logistics", "required_fields_total", "required_fields_filled", "missing_fields"],
@@ -159,14 +189,22 @@
         "price": { "type": "number" },
         "stock": { "type": "number" },
         "sku": { "type": "string" },
-        "variations": { "type": "array" },
+        "variations": { "type": "array", "items": { "$ref": "#/$defs/shopeeVariation" } },
         "attributes": { "type": "object" },
         "description": { "type": "string" },
         "bullet_points": { "type": "array", "items": { "type": "string" } },
-        "logistics": { "type": "object" },
+        "logistics": { "$ref": "#/$defs/shopeeLogistics" },
         "required_fields_total": { "type": "number" },
         "required_fields_filled": { "type": "number" },
         "missing_fields": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "listingCompliance": {
+      "type": "object",
+      "required": ["human_review_required", "warnings"],
+      "properties": {
+        "human_review_required": { "type": "boolean" },
+        "warnings": { "type": "array", "items": { "type": "string" } }
       }
     },
     "selectedListing": {
@@ -179,7 +217,7 @@
         "language": { "type": "string" },
         "shopee": { "$ref": "#/$defs/shopeeListing" },
         "images": { "type": "array", "items": { "$ref": "#/$defs/listingImage" } },
-        "compliance": { "type": "object" },
+        "compliance": { "$ref": "#/$defs/listingCompliance" },
         "editable_json_ready": { "type": "boolean" }
       }
     }

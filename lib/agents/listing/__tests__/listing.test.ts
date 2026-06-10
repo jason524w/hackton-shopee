@@ -71,7 +71,12 @@ describe("listing ranker agent", () => {
       result.selected_listing?.shopee.required_fields_total,
     );
     expect(result.selected_listing?.editable_json_ready).toBe(false);
-    expect(result.opportunities).toBeUndefined();
+    // H3: listing now writes its computed compliance score back onto each opportunity
+    // so Committee's compliance weight is not a dead zone. The slice carries the
+    // opportunities (with compliance populated) rather than being undefined.
+    expect(result.opportunities).toBeDefined();
+    const vacuum = result.opportunities?.find((o) => o.id === "opp_desk_vacuum");
+    expect(vacuum?.scores.compliance).toBeGreaterThan(0);
   });
 
   it("keeps Market-owned primary flags out of the Listing slice", async () => {
@@ -85,7 +90,11 @@ describe("listing ranker agent", () => {
     const slice = await runListingAgent(ctx, { mode: "fixture", runId: "run_listing_primary_boundary" });
 
     expect(slice.selected_listing?.opportunity_id).toBe("opp_desk_vacuum");
-    expect(slice.opportunities).toBeUndefined();
+    // H3: listing writes back compliance scores, but must NOT overwrite Market-owned
+    // flags (is_primary) or upstream margin — the write-back is surgical.
+    const sliceVacuum = slice.opportunities?.find((opportunity) => opportunity.id === "opp_desk_vacuum");
+    expect(sliceVacuum?.is_primary).toBe(true);
+    expect(sliceVacuum?.margin).not.toBeNull();
     expect(result.opportunities.find((opportunity) => opportunity.id === "opp_desk_vacuum")?.margin).not.toBeNull();
   });
 

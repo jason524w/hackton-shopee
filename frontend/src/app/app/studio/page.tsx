@@ -78,7 +78,15 @@ function ImageModule({
   return (
     <div className="grid gap-5 lg:grid-cols-[420px_1fr]">
       <div className="relative aspect-square overflow-hidden border border-hairline bg-ivory-deep">
-        <Image src={image} alt={label} fill className="object-cover" sizes="420px" />
+        {image ? (
+          <Image src={image} alt={label} fill className="object-cover" sizes="420px" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center">
+            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+              Image pending
+            </span>
+          </div>
+        )}
       </div>
       <div className="flex flex-col justify-end border-l-2 border-orange pl-5">
         <h3 className="font-display text-[28px] font-black text-ink">{label}</h3>
@@ -240,12 +248,20 @@ export default function StudioPage() {
         <StudioSection id="preview" label={tabMap.get("preview")?.label ?? "Listing Preview"}>
           <div className="grid max-w-5xl gap-6 lg:grid-cols-[360px_1fr]">
             <div className="relative aspect-square overflow-hidden border border-hairline bg-ivory-deep">
-              <Image
-                src={listing.preview.image || opportunity.galleryImages.main}
-                alt={listing.preview.title}
-                fill
-                className="object-contain p-3"
-              />
+              {(listing.preview.image || opportunity.galleryImages.main) ? (
+                <Image
+                  src={listing.preview.image || opportunity.galleryImages.main}
+                  alt={listing.preview.title}
+                  fill
+                  className="object-contain p-3"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center">
+                  <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+                    Image pending
+                  </span>
+                </div>
+              )}
             </div>
             <div className="flex flex-col justify-end">
               <h3 className="font-display text-[24px] font-semibold leading-snug text-ink">

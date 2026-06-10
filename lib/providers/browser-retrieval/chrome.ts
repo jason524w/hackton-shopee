@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import type {
   BrowserController,
   BrowserControllerSnapshot,
@@ -41,7 +41,10 @@ export function createCdpChromeBrowserController(
   const endpoint = (options.endpoint ?? process.env.CHROME_CDP_ENDPOINT ?? "http://127.0.0.1:9222").replace(/\/$/, "");
   const navigationTimeoutMs = options.navigationTimeoutMs ?? 20_000;
   const settleMs = options.settleMs ?? 1_500;
-  const screenshotDir = options.screenshotDir ?? join(process.cwd(), "public", "generated", "browser-snapshots");
+  // Screenshots may include logged-in Seller Centre views. Default to .runs/ (gitignored and
+  // NOT statically served) instead of public/, so they are not world-readable. Store relative
+  // paths in the snapshot so callers don't leak absolute filesystem layout.
+  const screenshotDir = options.screenshotDir ?? join(process.cwd(), ".runs", "browser-snapshots");
 
   return {
     async capture(input: {
@@ -51,7 +54,14 @@ export function createCdpChromeBrowserController(
     }): Promise<BrowserControllerSnapshot> {
       const startedAt = new Date().toISOString();
       const target = await createTarget(endpoint, "about:blank");
-      const client = await CdpClient.connect(target.webSocketDebuggerUrl);
+      let client: CdpClient;
+      try {
+        client = await CdpClient.connect(target.webSocketDebuggerUrl);
+      } catch (error) {
+        // connect failed after the tab was created — close it so we don't leak the target.
+        await closeTarget(endpoint, target.id).catch(() => undefined);
+        throw error;
+      }
 
       try {
         await client.send("Page.enable");
@@ -283,7 +293,9 @@ async function captureScreenshot(
   const fileName = `${purpose}-${targetId.slice(0, 8)}.png`;
   const outputPath = join(screenshotDir, fileName);
   await writeFile(outputPath, Buffer.from(data, "base64"));
-  return outputPath;
+  // Return a path relative to cwd so we don't leak the absolute filesystem layout into snapshots.
+  const relativePath = relative(process.cwd(), outputPath);
+  return relativePath.startsWith("..") ? outputPath : relativePath;
 }
 
 function sanitizeLinks(links: Array<{ label: string; url: string }>): Array<{ label: string; url: string }> {
@@ -309,18 +321,26 @@ function redactText(text: string): string {
     .replace(/\b(?:password|token|cookie|authorization)\s*[:=]\s*\S+/gi, "$1=[redacted]");
 }
 
+const DEFAULT_COMMAND_TIMEOUT_MS = 30_000;
+const DEFAULT_CONNECT_TIMEOUT_MS = 15_000;
+
 class CdpClient {
   private sequence = 0;
+  private closed = false;
   private readonly pending = new Map<
     number,
     {
       resolve: (value: unknown) => void;
       reject: (error: Error) => void;
+      timer: ReturnType<typeof setTimeout>;
     }
   >();
   private readonly eventWaiters = new Map<string, Array<(message: CdpResponse) => void>>();
 
-  private constructor(private readonly socket: WebSocket) {
+  private constructor(
+    private readonly socket: WebSocket,
+    private readonly commandTimeoutMs: number,
+  ) {
     this.socket.addEventListener("message", (event) => {
       const message = JSON.parse(String(event.data)) as CdpResponse;
       if (typeof message.id === "number") {
@@ -328,6 +348,7 @@ class CdpClient {
         if (!pending) {
           return;
         }
+        clearTimeout(pending.timer);
         this.pending.delete(message.id);
         if (message.error) {
           pending.reject(new Error(message.error.message ?? "Chrome CDP command failed"));
@@ -347,28 +368,81 @@ class CdpClient {
     });
 
     this.socket.addEventListener("error", () => {
-      for (const pending of this.pending.values()) {
-        pending.reject(new Error("Chrome CDP websocket error"));
-      }
-      this.pending.clear();
+      this.rejectAllPending(new Error("Chrome CDP websocket error"));
+    });
+
+    // Without a close handler, a dead Chrome process leaves pending promises that never settle,
+    // hanging the whole run until the pipeline-level timeout. Reject everything on close.
+    this.socket.addEventListener("close", () => {
+      this.closed = true;
+      this.rejectAllPending(new Error("Chrome CDP websocket closed before command completed"));
     });
   }
 
-  static async connect(webSocketUrl: string): Promise<CdpClient> {
+  private rejectAllPending(error: Error): void {
+    for (const pending of this.pending.values()) {
+      clearTimeout(pending.timer);
+      pending.reject(error);
+    }
+    this.pending.clear();
+  }
+
+  static async connect(
+    webSocketUrl: string,
+    options: { connectTimeoutMs?: number; commandTimeoutMs?: number } = {},
+  ): Promise<CdpClient> {
+    const connectTimeoutMs = options.connectTimeoutMs ?? DEFAULT_CONNECT_TIMEOUT_MS;
     const socket = new WebSocket(webSocketUrl);
     await new Promise<void>((resolve, reject) => {
-      socket.addEventListener("open", () => resolve(), { once: true });
-      socket.addEventListener("error", () => reject(new Error("Chrome CDP websocket failed to open")), { once: true });
+      let settled = false;
+      const finish = (fn: () => void) => {
+        if (settled) {
+          return;
+        }
+        settled = true;
+        clearTimeout(timer);
+        fn();
+      };
+      const timer = setTimeout(() => {
+        finish(() => {
+          try {
+            socket.close();
+          } catch {
+            // ignore
+          }
+          reject(new Error(`Chrome CDP websocket connect timed out after ${connectTimeoutMs}ms`));
+        });
+      }, connectTimeoutMs);
+      socket.addEventListener("open", () => finish(resolve), { once: true });
+      socket.addEventListener(
+        "error",
+        () => finish(() => reject(new Error("Chrome CDP websocket failed to open"))),
+        { once: true },
+      );
     });
-    return new CdpClient(socket);
+    return new CdpClient(socket, options.commandTimeoutMs ?? DEFAULT_COMMAND_TIMEOUT_MS);
   }
 
   send(method: string, params?: Record<string, unknown>): Promise<unknown> {
+    if (this.closed) {
+      return Promise.reject(new Error("Chrome CDP websocket is closed; cannot send command."));
+    }
     const id = ++this.sequence;
     const payload = JSON.stringify({ id, method, params });
     return new Promise((resolve, reject) => {
-      this.pending.set(id, { resolve, reject });
-      this.socket.send(payload);
+      // Per-command timeout: if Chrome never replies (e.g. process died), reject instead of hanging.
+      const timer = setTimeout(() => {
+        this.pending.delete(id);
+        reject(new Error(`Chrome CDP command ${method} timed out after ${this.commandTimeoutMs}ms`));
+      }, this.commandTimeoutMs);
+      this.pending.set(id, { resolve, reject, timer });
+      try {
+        this.socket.send(payload);
+      } catch (error) {
+        clearTimeout(timer);
+        this.pending.delete(id);
+        reject(error instanceof Error ? error : new Error(String(error)));
+      }
     });
   }
 

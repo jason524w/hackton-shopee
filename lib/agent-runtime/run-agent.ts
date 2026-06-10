@@ -8,6 +8,7 @@ import {
   type AuditSink,
 } from "./audit";
 import { AgentRuntimeError, toDiagnosticError, type DiagnosticError, type RuntimeAgentKey } from "./errors";
+import { OPENAI_TEXT_MODEL } from "../openai";
 import type { JsonSchema, SchemaValidationResult } from "./schemas";
 import { createResponseTextFormat, parseJsonObject, validateJsonSchema } from "./schemas";
 import type { AgentTool, ToolCallRequest } from "./tool-runner";
@@ -259,7 +260,9 @@ async function runLiveAttempt<Input, Output>(
   attempt: number,
   signal: AbortSignal,
 ): Promise<Output> {
-  const model = options.model ?? readEnv("OPENAI_TEXT_MODEL") ?? readEnv("OPENAI_MODEL") ?? "gpt-5.5";
+  // Single source of truth for the default text model is lib/openai.ts (OPENAI_TEXT_MODEL,
+  // which already reads OPENAI_TEXT_MODEL env). OPENAI_MODEL stays as a legacy override.
+  const model = options.model ?? readEnv("OPENAI_MODEL") ?? OPENAI_TEXT_MODEL;
   const client = options.client ?? new FetchOpenAIResponsesClient(options.apiKey ?? readRequiredOpenAIKey());
   const tools = options.tools ?? [];
   // 8 was too tight for live sourcing (offer details × N + supplier signals + fx).
@@ -320,17 +323,28 @@ async function runLiveAttempt<Input, Output>(
 
       for (const call of functionCalls) {
         toolCallCount += 1;
-        const toolResult = await executeAllowedTool(call, tools, {
-          runId,
-          agentKey: options.agentKey,
-          audit,
-          signal,
-          metadata: options.metadata,
-        });
+        // throwOnError:false so a hallucinated tool name / bad args / provider throw is
+        // fed back to the model as a structured error instead of killing the whole run.
+        // The audit still records the real (completed/failed) outcome inside executeAllowedTool.
+        const toolResult = await executeAllowedTool(
+          call,
+          tools,
+          {
+            runId,
+            agentKey: options.agentKey,
+            audit,
+            signal,
+            metadata: options.metadata,
+          },
+          { throwOnError: false },
+        );
+        const payload = toolResult.ok
+          ? { ok: true, data: toolResult.output }
+          : { ok: false, error: toolResult.error };
         inputItems.push({
           type: "function_call_output",
           call_id: call.call_id,
-          output: JSON.stringify({ ok: true, data: toolResult.output }),
+          output: clampToolOutput(payload),
         });
       }
       continue;
@@ -360,6 +374,26 @@ async function runLiveAttempt<Input, Output>(
 
     return parsed.value;
   }
+}
+
+// Tool outputs (esp. browser results carrying text_full up to ~150k chars) must not be
+// dumped untruncated into the model conversation — that blows the context window and
+// doubles token cost. We clamp the serialized payload to a sane char budget before
+// feeding it back to the model; the full payload is still recorded to audit untruncated
+// (executeAllowedTool persists the raw output independently of what we echo here).
+const TOOL_OUTPUT_CHAR_BUDGET = 12_000;
+
+function clampToolOutput(payload: unknown): string {
+  const serialized = JSON.stringify(payload);
+  if (serialized.length <= TOOL_OUTPUT_CHAR_BUDGET) {
+    return serialized;
+  }
+  const clamped = serialized.slice(0, TOOL_OUTPUT_CHAR_BUDGET);
+  return JSON.stringify({
+    truncated: true,
+    note: `Tool output exceeded ${TOOL_OUTPUT_CHAR_BUDGET} chars and was truncated; the full payload is preserved in the audit log.`,
+    output_preview: `${clamped}...[truncated]`,
+  });
 }
 
 function buildResponsesRequest<Input, Output>(
@@ -463,11 +497,29 @@ async function withTimeout<T>(
   attempt: number,
 ): Promise<T> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  let timer: ReturnType<typeof setTimeout> | undefined;
+
+  // Race the operation against a timer that REJECTS — aborting alone doesn't help when a
+  // tool/provider ignores the AbortSignal (it would otherwise hang until Vercel kills the
+  // whole function). We still pass the signal through so well-behaved providers can cancel.
+  const timeout = new Promise<never>((_resolve, reject) => {
+    timer = setTimeout(() => {
+      controller.abort();
+      reject(
+        new AgentRuntimeError("TIMEOUT", `Agent timed out after ${timeoutMs}ms`, {
+          runId,
+          agentKey,
+          attempt,
+          details: { timeout_ms: timeoutMs },
+        }),
+      );
+    }, timeoutMs);
+  });
+
   try {
-    return await fn(controller.signal);
+    return await Promise.race([fn(controller.signal), timeout]);
   } catch (error) {
-    if (controller.signal.aborted) {
+    if (controller.signal.aborted && !(error instanceof AgentRuntimeError && error.code === "TIMEOUT")) {
       throw new AgentRuntimeError("TIMEOUT", `Agent timed out after ${timeoutMs}ms`, {
         runId,
         agentKey,
@@ -478,7 +530,7 @@ async function withTimeout<T>(
     }
     throw error;
   } finally {
-    clearTimeout(timer);
+    if (timer) clearTimeout(timer);
   }
 }
 

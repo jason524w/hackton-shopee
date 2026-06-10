@@ -12,7 +12,13 @@ export default function OrgRoomPage() {
   const runStatus = useAppStore((s) => s.runStatus);
   const runError = useAppStore((s) => s.runError);
 
-  const completed = departments.filter((d) => d.status === "complete");
+  // Only stream departments that have actually reported content. During audit
+  // polling a department can be flagged "complete" before its real finding lands
+  // (that only arrives with the final POST result), which would render half-empty
+  // "· score: 0" rows.
+  const completed = departments.filter(
+    (d) => d.status === "complete" && (d.keyFinding || d.outputPreview.length > 0),
+  );
   const allDone = runStatus === "done";
 
   return (
@@ -88,8 +94,9 @@ export default function OrgRoomPage() {
               {d.keyFinding}
             </p>
             <p className="font-mono text-[11px] text-ink-faint mt-1">
-              {d.outputPreview.map((o) => `${o.label}: ${o.value}`).join(" · ")} · score:{" "}
-              {d.score}
+              {d.outputPreview.length > 0 &&
+                `${d.outputPreview.map((o) => `${o.label}: ${o.value}`).join(" · ")} · `}
+              score: {d.score}
             </p>
           </motion.div>
         ))}

@@ -10,7 +10,7 @@
 - **TASK-01 / RUNTIME-AUDIT / PROVIDERS / MARGIN-RISK / MARKET-SOURCING / LISTING /
   PACKAGING / COMMITTEE / API-INTEGRATION / FE 全部完成**(PR #51-#54):
   `/api/run` 单一 live 路径已端到端验证(HTTP 200,7 agent,吸尘器=Watch);
-  前端真实接入 + War Room 渐进点亮(audit 轮询)。
+  前端(`frontend/` 独立 Next 16 应用)真实接入 + War Room(org-room)渐进点亮(audit 轮询)。
 - **当前待办以 [NEXT-STEPS.md](NEXT-STEPS.md) 为准**(GAP-2 全量图像验证、GAP-3 彩排、GAP-7 部署)。
 
 ## 依赖与并行
@@ -32,7 +32,7 @@ TASK-PITCH 文案/录屏 ── 无依赖
 | Issue | 轨 | 独占路径 | 依赖 | 文档 |
 |---|---|---|---|---|
 | TASK-01 | 🟥 骨架 | 根配置 + `app/**`(占位)+ `lib/**`(空目录) | — | [spec](tasks/TASK-01-skeleton.md) |
-| TASK-FE | 🎨 前端 | `app/{brief,war-room,board,studio}/**` `components/**` | 01 | [spec](tasks/TASK-FE-frontend.md) |
+| TASK-FE | 🎨 前端 | `frontend/**`(独立 Next 16 应用:`src/app/app/{brief,org-room,board,studio,…}` + `src/components/**` + `src/lib/**`) | 01 | [spec](tasks/TASK-FE-frontend.md) |
 | TASK-DATA | 🗃️ 数据 | `seed/**` | 无 | [spec](tasks/TASK-DATA-seed.md) |
 | TASK-PITCH | 🎤 pitch | `docs/pitch/**` | 无 | [spec](tasks/TASK-PITCH.md) |
 | TASK-RUNTIME-AUDIT | 🧠 后端 | `lib/agent-runtime/**` | 01 | [ROADMAP §5/§10](IMPLEMENTATION-ROADMAP.md) |

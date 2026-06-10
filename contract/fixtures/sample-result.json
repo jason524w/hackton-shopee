@@ -181,7 +181,7 @@
           { "label": "Local delivery", "amount": -1.2, "type": "cost" },
           { "label": "Platform fee (8%)", "amount": -0.95, "type": "cost" },
           { "label": "Payment fee (2%)", "amount": -0.24, "type": "cost" },
-          { "label": "GST (9%)", "amount": -0.4, "type": "cost" },
+          { "label": "GST on net margin (9%)", "amount": -0.5, "type": "cost" },
           { "label": "Return reserve (5%)", "amount": -0.6, "type": "cost" },
           { "label": "Damage reserve (2%)", "amount": -0.24, "type": "cost" },
           { "label": "Packaging", "amount": -0.3, "type": "cost" },
@@ -290,9 +290,9 @@
       "missing_fields": []
     },
     "images": [
-      { "type": "hero", "url": "/seed/images/desk-vacuum-hero.png", "prompt": "white mini handheld USB desk vacuum on a clean wooden office desk, soft natural light, Singapore HDB home office, product-centered, e-commerce hero shot", "compliance": "ok" },
-      { "type": "lifestyle", "url": "/seed/images/desk-vacuum-lifestyle.png", "prompt": "person using mini desk vacuum to clean keyboard crumbs, compact apartment desk, cozy lifestyle, daytime", "compliance": "ok" },
-      { "type": "feature", "url": "/seed/images/desk-vacuum-feature.png", "prompt": "feature callouts: USB rechargeable, cordless, 180g, for desk & keyboard, clean infographic style", "compliance": "needs_review" }
+      { "type": "hero", "url": "/seed/images/desk-vacuum-hero.svg", "prompt": "white mini handheld USB desk vacuum on a clean wooden office desk, soft natural light, Singapore HDB home office, product-centered, e-commerce hero shot", "compliance": "ok" },
+      { "type": "lifestyle", "url": "/seed/images/desk-vacuum-lifestyle.svg", "prompt": "person using mini desk vacuum to clean keyboard crumbs, compact apartment desk, cozy lifestyle, daytime", "compliance": "ok" },
+      { "type": "feature", "url": "/seed/images/desk-vacuum-feature.svg", "prompt": "feature callouts: USB rechargeable, cordless, 180g, for desk & keyboard, clean infographic style", "compliance": "needs_review" }
     ],
     "compliance": {
       "human_review_required": true,

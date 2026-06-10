@@ -38,39 +38,52 @@
 
 ## 技术栈
 
-- **Next.js 14 (App Router) + TypeScript + Tailwind**,单仓单应用,Vercel 部署。
+- **两个 Next.js 应用,同一个 repo**(非单应用),Docker 部署(见 [DEPLOY.md](docs/DEPLOY.md)):
+  - **API 应用**(仓库根 `app/`,Next 14):只有 `/api/*`,**没有页面路由**,跑 7-agent 管道。
+  - **前端应用**(`frontend/`,Next 16 + React 19 + Tailwind v4 + Zustand):营销页 + `/app` 工作台。
+    类型从 `contract/result.ts` import(铁律 1),状态在 `frontend/src/lib/store.ts`(zustand)。
 - **OpenAI**:Responses API + **Structured Outputs**(强制 JSON)+ **Function Calling**
-  (查种子数据)。模型默认 `gpt-4o`。
+  (查种子数据)。文本模型默认见 `.env.example`(`OPENAI_TEXT_MODEL`)。
 - **7 个 agent** + ReAct runtime + provider 适配层 + audit(完整后端,见 [IMPLEMENTATION-ROADMAP](docs/IMPLEMENTATION-ROADMAP.md))。
-- 状态全在一次 `/api/run` 返回里(`RunResult`),前端无需复杂状态管理;audit 走 `audit_run_id`。
+- 一次 `/api/run` 返回完整 `RunResult`;前端把它喂进 store,各页从 store 读视图模型;audit 走 `audit_run_id` 轮询。
 
 ## 仓库结构
 
 ```
 contract/            ← 前后端数据契约(已就位,先读 contract/README.md)
-docs/                ← 架构 / ROADMAP / COMMITTEE / 范围 / 任务板 / PRD
-app/
+docs/                ← 架构 / ROADMAP / COMMITTEE / 范围 / 任务板 / PRD / DEPLOY
+app/                 ← API 应用(Next 14,无页面路由)
   api/run/route.ts   ← POST,返回 RunResult;live 唯一路径(?images=0 跳过图像生成)
   api/runs/[id]/audit/route.ts
-  (brief / war-room / board / studio 页面路由)
-components/          ← UI 组件
-lib/
+lib/                 ← API 后端逻辑
   openai.ts          ← OpenAI client
   agent-runtime/     ← ReAct loop + tool-runner + audit + replay
   providers/         ← shopee / sourcing-1688 / shipping / fx / openai-image 适配器
   agents/            ← 7 个 agent(market/sourcing/margin/risk/listing/packaging/committee),各目录化
 seed/                ← 手抓的真实种子数据(market/sourcing/rules/shipping/fx/images)
-public/generated/    ← live 生成的商品图(不入库)
+public/generated/    ← live 生成的商品图(由 API 应用从 /generated/* 提供,不入库)
+frontend/            ← 前端应用(Next 16 / React 19,独立 package.json)
+  src/app/           ← 营销页 + /app 工作台路由:
+                       brief / upload / org-room(+ [dept])/ board / studio /
+                       listing / committee / dashboard / history
+  src/components/    ← UI 组件
+  src/lib/           ← store(zustand)/ adapters(contract→视图)/ api(POST /api/run)/ types
+docker-compose.yml   ← api(:3000)+ frontend(:3001);推荐用 nginx 同源收敛(见 DEPLOY.md §3)
 ```
 
 ## 怎么跑
 
 ```bash
+# API 应用(仓库根)
 npm install
 cp .env.example .env.local   # 填 OPENAI_API_KEY
 npm run dev                  # http://localhost:3000
+
+# 前端应用(另开一个终端)
+cd frontend && npm install
+npm run dev                  # http://localhost:3001(同源调试请配 nginx,见 DEPLOY.md)
 ```
-> 骨架还没建时,以上命令尚不可用;建骨架是 [TASK-01](docs/TASKS.md)。
+> 默认 `NEXT_PUBLIC_API_BASE_URL` 留空走同源;拆端口跨源需在 API 侧设 `ALLOWED_ORIGIN`。
 
 ## 多电脑 / 多 agent 任务领取流程
 

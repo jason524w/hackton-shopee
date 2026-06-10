@@ -3,54 +3,63 @@
 import { CountUp } from "@/components/primitives/count-up";
 import { useAppStore } from "@/lib/store";
 
+// Illustrative panels — these are static examples of the kind of output the
+// platform produces, NOT derived from the live run. Labelled as such in the UI.
 const PANELS: [string, string[]][] = [
-  ["Workflow Summary", [
-    "Market · 1.1s · complete",
-    "Sourcing · 1.0s · complete",
-    "Margin · 1.3s · complete",
-    "Risk · 0.9s · complete",
-    "Listing · 1.0s · complete",
-    "Committee · 0.6s · complete",
-  ]],
-  ["Packaging Assets", [
-    "1 localized Shopee title",
-    "3 ranked selling points",
-    "3 image prompts",
-    "1 bundle + 1 gift strategy",
-  ]],
-  ["Export History", [
-    "launch-pack-mini-desk-vacuum.zip",
-    "listing-mini-desk-vacuum.json",
-    "listing-mini-desk-vacuum.csv",
-  ]],
   ["Reusable Templates", [
     "Desk-cleaning listing template",
     "USB gadget image-prompt set",
     "HDB lifestyle packaging skill",
+  ]],
+  ["Export Formats", [
+    "Launch-pack .zip (listing + assets)",
+    "Shopee listing .json",
+    "Shopee listing .csv",
   ]],
 ];
 
 export default function DashboardPage() {
   const summary = useAppStore((s) => s.boardSummary);
   const listing = useAppStore((s) => s.listing);
+  const runResult = useAppStore((s) => s.runResult);
+  const productName = runResult?.selected_listing.shopee.item_name;
+  const market = runResult?.brief.target_market;
   const METRICS = [
     { value: summary?.found ?? 0, label: "opportunities found" },
     { value: summary?.go ?? 0, label: "Go decisions" },
     { value: listing ? 1 : 0, label: "launch packs generated" },
     { value: summary?.riskFlags ?? 0, label: "risks blocked" },
-    { value: summary && summary.riskFlags > 0 ? 1 : 0, label: "human reviews required" },
-    { value: 6, label: "reusable templates" },
+    {
+      value: runResult?.selected_listing.compliance.human_review_required ? 1 : 0,
+      label: "human reviews required",
+    },
+    { value: runResult?.selected_listing.images.length ?? 0, label: "images generated" },
   ];
+  // Derive the "what was produced" panels from the live run where a real value
+  // exists; the static PANELS below are clearly labelled illustrative.
+  const packagingAssets = runResult
+    ? [
+        `${runResult.selected_listing.images.length} generated image(s)`,
+        `${runResult.selected_listing.shopee.bullet_points.length} selling point(s)`,
+        `${runResult.selected_listing.shopee.required_fields_filled}/${runResult.selected_listing.shopee.required_fields_total} Shopee fields filled`,
+      ]
+    : [];
+  const workflowSummary = runResult
+    ? runResult.agents.map((a) => `${a.name} · ${a.status}`)
+    : [];
+
   return (
     <div className="px-14 py-7">
       <h1 className="font-display text-[34px] font-black tracking-tight text-ink mb-1">
         What your AI company produced.
       </h1>
       <p className="font-display text-base font-light italic text-ink-soft mb-8">
-        One run · Shopee Singapore · Mini Desk Vacuum
+        {productName
+          ? `One run · Shopee ${market ?? ""} · ${productName}`
+          : "Run a brief — this dashboard fills with your live run output."}
       </p>
 
-      {/* Metrics */}
+      {/* Metrics — derived from the live run (0 before a run). */}
       <div className="grid grid-cols-6 border-y hairline">
         {METRICS.map((m) => (
           <div key={m.label} className="border-r hairline px-4 py-5 last:border-r-0">
@@ -64,20 +73,46 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* Panels */}
-      <div className="grid grid-cols-2 gap-x-12 gap-y-8 mt-10">
-        {PANELS.map(([title, rows]) => (
-          <div key={title}>
-            <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-orange mb-3">
-              {title}
-            </p>
-            {rows.map((r) => (
-              <div key={r} className="border-t hairline py-2 last:border-b">
-                <span className="text-[12px] text-ink-soft">{r}</span>
-              </div>
-            ))}
-          </div>
-        ))}
+      {/* Live panels — derived from the run. */}
+      {runResult && (
+        <div className="grid grid-cols-2 gap-x-12 gap-y-8 mt-10">
+          {([
+            ["Workflow Summary", workflowSummary],
+            ["Packaging Assets", packagingAssets],
+          ] as [string, string[]][]).map(([title, rows]) => (
+            <div key={title}>
+              <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-orange mb-3">
+                {title}
+              </p>
+              {rows.map((r) => (
+                <div key={r} className="border-t hairline py-2 last:border-b">
+                  <span className="text-[12px] text-ink-soft">{r}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Illustrative panels — static examples, not from this run. */}
+      <div className="mt-10">
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-faint mb-4">
+          Illustrative — examples only, not generated by this run
+        </p>
+        <div className="grid grid-cols-2 gap-x-12 gap-y-8">
+          {PANELS.map(([title, rows]) => (
+            <div key={title}>
+              <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-ink-soft mb-3">
+                {title}
+              </p>
+              {rows.map((r) => (
+                <div key={r} className="border-t hairline py-2 last:border-b">
+                  <span className="text-[12px] text-ink-faint">{r}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

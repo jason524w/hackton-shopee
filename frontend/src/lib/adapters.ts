@@ -242,6 +242,95 @@ export function applyAuditStatuses(
   });
 }
 
+// ---------- committee: contract → committee view ----------
+
+const WEIGHT_LABELS: Record<string, string> = {
+  profit: "Profit viability",
+  demand: "Market demand",
+  compliance: "Compliance risk",
+  fulfillment: "Fulfillment feasibility",
+  packaging: "Packaging / listing readiness",
+};
+
+export interface CommitteeView {
+  decision: Decision;
+  confidence: number; // 0..100, percentage points
+  summary: string;
+  recommendedAction: string;
+  weights: { dimension: string; weight: number; label: string }[]; // weight 0..1, label e.g. "30%"
+  tradeoffs: { product: string; conflict: string; resolution: string }[];
+  scoreMatrix: { name: string; score: number; finding: string; state: string }[];
+}
+
+export function toCommittee(run: RunResult): CommitteeView {
+  const committee = run.committee;
+  const committeeAgent = run.agents.find((a) => a.key === "committee");
+
+  // The headline verdict is for the opportunity the seller is actually reviewing:
+  // the flagged primary (== the selected listing). This is the demo climax — e.g.
+  // the desk vacuum lands on Watch, NOT Go. The committee's ranked order is a
+  // separate portfolio recommendation surfaced on the board, not the headline.
+  const primary =
+    run.opportunities.find((o) => o.id === run.selected_listing.opportunity_id) ??
+    run.opportunities.find((o) => o.is_primary) ??
+    run.opportunities.find((o) => committee.ranked_ids.includes(o.id)) ??
+    run.opportunities[0];
+
+  const decision: Decision = primary ? DECISION_MAP[primary.decision] : "watch";
+  // Prefer the committee agent's own confidence; fall back to the primary's overall score.
+  const confidence =
+    committeeAgent && typeof committeeAgent.confidence === "number"
+      ? Math.round(committeeAgent.confidence * 100)
+      : primary
+        ? Math.round(primary.scores.overall)
+        : 0;
+
+  const actionByDecision: Record<Decision, string> = {
+    go: "Select for Packaging Studio and launch.",
+    watch: "Hold for human review before launch — see tradeoffs below.",
+    reject: "Do not launch — committee blocked this direction.",
+  };
+
+  const weights = Object.entries(committee.weights).map(([dimension, weight]) => ({
+    dimension,
+    weight,
+    label: `${Math.round(weight * 100)}%`,
+  }));
+
+  const tradeoffs = committee.tradeoffs.map((t) => {
+    const opp = run.opportunities.find((o) => o.id === t.opportunity_id);
+    return {
+      product: opp?.name ?? t.opportunity_id,
+      conflict: t.conflict,
+      resolution: t.resolution,
+    };
+  });
+
+  const scoreMatrix = run.agents
+    .filter((a) => a.key !== "committee")
+    .map((a) => ({
+      name:
+        DEPARTMENT_META.find((m) => m.id === a.key)?.department ?? a.name,
+      score: a.score,
+      finding: a.key_judgment,
+      state: a.warnings.length > 0 ? "Warning" : a.key === "listing" ? "Ready" : "Positive",
+    }));
+
+  return {
+    decision,
+    confidence,
+    summary: committee.summary,
+    recommendedAction: actionByDecision[decision],
+    weights,
+    tradeoffs,
+    scoreMatrix,
+  };
+}
+
+export function weightLabel(dimension: string): string {
+  return WEIGHT_LABELS[dimension] ?? dimension;
+}
+
 // ---------- board summary ----------
 
 export interface BoardSummary {
