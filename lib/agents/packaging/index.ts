@@ -38,7 +38,27 @@ export async function runPackagingAgent(
   return {
     agents: [output.agent],
     selected_listing: selectedListing,
+    // Write the packaging score back onto the selected opportunity so Committee's
+    // 10% packaging weight is not a dead zone (scores.packaging was previously never
+    // populated in the live pipeline, leaving it at 0).
+    opportunities: writeBackPackagingScore(ctx, input.selected_listing.opportunity_id, output.agent.score),
   };
+}
+
+function writeBackPackagingScore(
+  ctx: AgentContext,
+  opportunityId: string,
+  packagingScore: number,
+): Opportunity[] | undefined {
+  const opportunities = ctx.results.opportunities;
+  if (!opportunities) {
+    return undefined;
+  }
+  const target = opportunities.find((candidate) => candidate.id === opportunityId);
+  if (!target) {
+    return undefined;
+  }
+  return [{ ...target, scores: { ...target.scores, packaging: packagingScore } }];
 }
 
 export async function runPackaging(input: PackagingInput, ctx: Pick<AgentContext, "providers" | "risk">): Promise<PackagingOutput> {

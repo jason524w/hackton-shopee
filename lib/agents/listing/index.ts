@@ -11,6 +11,7 @@ import { assertAgentSuccess, runAgent } from "../../agent-runtime/run-agent";
 import { validateJsonSchema } from "../../agent-runtime/schemas";
 import type { AuditSink } from "../../agent-runtime/audit";
 import type { AgentContext, RiskCheckpoint } from "../contracts";
+import { UNSUPPORTED_PRODUCT_CLAIMS } from "../../compliance/claims";
 import { listingSkill } from "./skill";
 import { buildSingaporeMarketContext, createListingTools } from "./tools";
 import {
@@ -39,7 +40,10 @@ export interface RunListingAgentOptions {
 }
 
 const DEFAULT_CATEGORY_ID = 100636;
-const BANNED_CLAIMS = ["super suction", "industrial grade", "certified safety", "guaranteed deep cleaning"];
+// Banned claims sourced from the single compliance list (lib/compliance/claims.ts).
+// A few listing-copy-specific phrasings ("certified safety", "guaranteed deep cleaning")
+// are kept here in addition; matching is hyphen/space-insensitive (see sanitizeText).
+const BANNED_CLAIMS = [...UNSUPPORTED_PRODUCT_CLAIMS, "certified safety", "guaranteed deep cleaning"];
 const BASE_REQUIRED_FIELDS = [
   "item_name",
   "category",
@@ -64,7 +68,31 @@ export async function runListingAgent(
   return {
     agents: [output.agent],
     selected_listing: output.selected_listing,
+    // Write the computed compliance score back onto each opportunity so Committee's
+    // 20% compliance weight is not a dead zone (it was previously never populated in
+    // the live pipeline, leaving scores.compliance at 0). Source the value from the
+    // deterministic feature vector that the ranker already computed.
+    opportunities: writeBackComplianceScores(input.opportunities, output),
   };
+}
+
+function writeBackComplianceScores(
+  opportunities: Opportunity[],
+  output: ListingOutput,
+): Opportunity[] {
+  const complianceById = new Map(
+    output.feature_vectors.map((vector) => [vector.opportunity_id, vector.compliance]),
+  );
+  return opportunities.map((opportunity) => {
+    const compliance = complianceById.get(opportunity.id);
+    if (compliance === undefined) {
+      return opportunity;
+    }
+    return {
+      ...opportunity,
+      scores: { ...opportunity.scores, compliance },
+    };
+  });
 }
 
 export async function runListing(
@@ -751,9 +779,16 @@ function buildSku(opportunity: Opportunity): string {
 function sanitizeText(value: string): string {
   let output = value;
   for (const claim of BANNED_CLAIMS) {
-    output = output.replace(new RegExp(escapeRegExp(claim), "gi"), "");
+    output = output.replace(bannedClaimPattern(claim), "");
   }
   return output.replace(/\s+/g, " ").replace(/\s+([,.;:])/g, "$1").trim();
+}
+
+// Match a banned claim case-insensitively, treating any space in the canonical term
+// as "one-or-more spaces/hyphens" so "industrial grade" also strips "industrial-grade".
+function bannedClaimPattern(claim: string): RegExp {
+  const escaped = escapeRegExp(claim).replace(/\\?\s+/g, "[-\\s]+");
+  return new RegExp(escaped, "gi");
 }
 
 function includesNormalized(value: string, term: string): boolean {

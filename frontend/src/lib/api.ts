@@ -5,6 +5,10 @@ import type { Brief, RunResult } from "../../../contract/result";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
+// The live pipeline can run 3-4 minutes (worst case ~6). Give it a generous
+// ceiling so the UI fails with a clear message instead of hanging forever.
+const RUN_TIMEOUT_MS = 8 * 60 * 1000;
+
 export class PipelineError extends Error {
   constructor(
     message: string,
@@ -21,11 +25,32 @@ export async function runPipeline(
   opts?: { images?: boolean; runId?: string },
 ): Promise<RunResult> {
   const params = opts?.images === false ? "?images=0" : "";
-  const response = await fetch(`${BASE_URL}/api/run${params}`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ brief, ...(opts?.runId ? { run_id: opts.runId } : {}) }),
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), RUN_TIMEOUT_MS);
+
+  let response: Response;
+  try {
+    response = await fetch(`${BASE_URL}/api/run${params}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ brief, ...(opts?.runId ? { run_id: opts.runId } : {}) }),
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new PipelineError(
+        `Pipeline timed out after ${Math.round(RUN_TIMEOUT_MS / 60000)} minutes. The backend may be overloaded or stuck — try again.`,
+        408,
+      );
+    }
+    throw new PipelineError(
+      "Could not reach the pipeline. Check that the backend is running and reachable.",
+      0,
+      error,
+    );
+  } finally {
+    clearTimeout(timeout);
+  }
 
   let payload: unknown;
   try {

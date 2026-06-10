@@ -56,6 +56,19 @@ export async function runCommitteeAgent(
   });
 
   if (result.ok && isComplete(result.output, opps)) {
+    // Hard red-line assertion (pure-A leaves red-lines as soft prompt constraints, but
+    // a live LLM can still return "Go" on a hard_block/banned candidate). Deterministically
+    // override such a verdict to the safe fallback so a model slip can't ship a Go on a
+    // banned/IP/prohibited item. See docs/COMMITTEE.md §3.3 + CODE-REVIEW #Medium.
+    const violatingId = findHardBlockGoViolation(result.output, input);
+    if (violatingId) {
+      const degraded: DiagnosticError = {
+        code: "SCHEMA_VALIDATION_FAILED",
+        message: `committee returned Go on hard-blocked candidate ${violatingId}; overriding to deterministic fallback`,
+        retryable: false,
+      };
+      return { output: deterministicOutput(opps, ctx), degraded };
+    }
     return { output: result.output, degraded: null };
   }
 
@@ -68,6 +81,16 @@ export async function runCommitteeAgent(
       }
     : result.error;
   return { output: deterministicOutput(opps, ctx), degraded };
+}
+
+/**
+ * Returns the id of any candidate that the LLM verdicted "Go" despite carrying a
+ * hard_block signal in the deterministic evidence, or undefined if none. Hard blocks
+ * (banned / IP-infringing / prohibited) must never be a Go regardless of the model.
+ */
+function findHardBlockGoViolation(output: CommitteeOutput, input: CommitteeAgentInput): string | undefined {
+  const hardBlocked = new Set(input.candidates.filter((c) => c.hard_block).map((c) => c.id));
+  return output.decisions.find((d) => d.verdict === "Go" && hardBlocked.has(d.id))?.id;
 }
 
 /**

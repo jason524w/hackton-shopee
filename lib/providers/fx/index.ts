@@ -1,5 +1,26 @@
 import { readSeedJson, roundMoney } from "../shared";
+import type { ProviderWarning } from "../shared";
 import type { FxConvertInput, FxConvertResult, FxProvider } from "./types";
+
+const FX_STALE_AFTER_DAYS = 30;
+
+function fxStalenessWarnings(capturedAt: string): ProviderWarning[] {
+  const captured = Date.parse(capturedAt);
+  if (Number.isNaN(captured)) {
+    return [];
+  }
+  const ageDays = (Date.now() - captured) / (1000 * 60 * 60 * 24);
+  if (ageDays <= FX_STALE_AFTER_DAYS) {
+    return [];
+  }
+  return [
+    {
+      code: "FX_RATE_STALE",
+      severity: "warning",
+      message: `Seed FX rate was captured ${Math.round(ageDays)} days ago (>${FX_STALE_AFTER_DAYS}d); refresh the seed or use a live FX source before relying on margins.`,
+    },
+  ];
+}
 
 interface FxSeed {
   fixture_id: string;
@@ -25,6 +46,8 @@ export function createSeedFxProvider(): FxProvider {
         throw new Error(`FX rate not found from=${input.from} to=${input.to}`);
       }
 
+      const warnings = fxStalenessWarnings(seed.captured_at);
+
       return {
         source: {
           provider: "fx",
@@ -38,6 +61,7 @@ export function createSeedFxProvider(): FxProvider {
         to: input.to.toUpperCase(),
         rate: rate.rate,
         converted_amount: roundMoney(input.amount * rate.rate),
+        warnings: warnings.length ? warnings : undefined,
       };
     },
   };

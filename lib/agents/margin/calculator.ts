@@ -38,8 +38,22 @@ function fixedCosts(a: MarginAssumptions): {
   return { source, intl, importGst, total };
 }
 
+/**
+ * Guard the calculator entry: a non-positive or non-finite selling price would make
+ * net_margin (netProfit/sellingPrice) NaN/Infinity and silently poison the contract
+ * until far-downstream schema validation. Fail loud and early instead.
+ */
+function assertValidPrice(sellingPrice: number): void {
+  if (!Number.isFinite(sellingPrice) || sellingPrice <= 0) {
+    throw new Error(
+      `margin calculator: sellingPrice must be a positive finite number, received ${sellingPrice}`,
+    );
+  }
+}
+
 /** Compute one scenario: net profit/margin + the cost-breakdown waterfall. */
 export function computeScenario(a: MarginAssumptions, sellingPrice: number): ScenarioResult {
+  assertValidPrice(sellingPrice);
   const fixed = fixedCosts(a);
 
   // Revenue + cost lines, each rounded to cents for display.

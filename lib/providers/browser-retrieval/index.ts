@@ -81,10 +81,19 @@ export interface ChromeBrowserRetrievalOptions {
   maxSteps?: number;
 }
 
+// SSRF guard: google.com is intentionally NOT in the allowlist — its open-redirect
+// (google.com/url?q=...) would let the server-side browser be steered to internal IPs
+// or cloud metadata. Web-trend therefore returns empty unless a specific source is added.
 const DEFAULT_ALLOWED_DOMAINS = [
   "shopee.sg",
   "seller.shopee.sg",
   "ads.shopee.sg",
+  "shopee.com.my",
+  "shopee.co.th",
+  "shopee.co.id",
+  "shopee.ph",
+  "shopee.vn",
+  "shopee.com.br",
   "1688.com",
   "detail.1688.com",
   "s.1688.com",
@@ -92,9 +101,30 @@ const DEFAULT_ALLOWED_DOMAINS = [
   "s.taobao.com",
   "tmall.com",
   "detail.tmall.com",
-  "google.com",
-  "www.google.com",
 ];
+
+// Map a target market to its Shopee storefront domain. Unknown markets fall back to shopee.sg.
+const SHOPEE_MARKET_DOMAINS: Record<string, string> = {
+  singapore: "shopee.sg",
+  sg: "shopee.sg",
+  malaysia: "shopee.com.my",
+  my: "shopee.com.my",
+  thailand: "shopee.co.th",
+  th: "shopee.co.th",
+  indonesia: "shopee.co.id",
+  id: "shopee.co.id",
+  philippines: "shopee.ph",
+  ph: "shopee.ph",
+  vietnam: "shopee.vn",
+  vn: "shopee.vn",
+  brazil: "shopee.com.br",
+  br: "shopee.com.br",
+};
+
+function shopeeDomainForMarket(market: string | undefined): string {
+  const key = (market ?? "").trim().toLowerCase();
+  return SHOPEE_MARKET_DOMAINS[key] ?? "shopee.sg";
+}
 
 export function createSeedBrowserRetrievalProvider(): BrowserRetrievalProvider {
   return {
@@ -134,8 +164,10 @@ export function createSeedBrowserRetrievalProvider(): BrowserRetrievalProvider {
       const seed = await readSeedJson<ShopeeSearchSeed>("seed/shopee/mini-desk-vacuum-search.json");
       const policy = resolvePolicy("market_shopee_search", input.policy);
       assertAllowedUrl(seed.source_url, policy);
+      // Do NOT fabricate matches: an unmatched query yields an empty product set + warning
+      // (Taobao seed path is the honest model) instead of returning desk-vacuum rows.
       const matched = seed.products.filter((product) => includesQuery(product.title, input.query));
-      const products = (matched.length ? matched : seed.products).slice(0, input.limit ?? seed.products.length);
+      const products = matched.slice(0, input.limit ?? matched.length);
       const prices = products.map((product) => product.price_sgd).sort((a, b) => a - b);
       const capturedAt = seed.captured_at;
       const snapshot = createSnapshot({
@@ -147,6 +179,15 @@ export function createSeedBrowserRetrievalProvider(): BrowserRetrievalProvider {
         selectorNotes: ["seed/shopee/mini-desk-vacuum-search.json"],
         warnings: ["Seed snapshot represents pre-captured Shopee SG search evidence."],
       });
+      const warnings: ProviderWarning[] = matched.length
+        ? []
+        : [
+            {
+              code: "SEED_QUERY_MISMATCH",
+              severity: "warning",
+              message: `Seed Shopee data does not cover "${input.query}"; returning no products rather than fabricating unrelated rows. Enable Chrome mode for arbitrary queries.`,
+            },
+          ];
 
       return {
         source: source("browser-retrieval", "seed", capturedAt, seed.source_url, snapshot, seed.fixture_id),
@@ -161,6 +202,7 @@ export function createSeedBrowserRetrievalProvider(): BrowserRetrievalProvider {
           median: roundMoney(prices.length ? prices[Math.floor(prices.length / 2)] : 0),
         },
         snapshot,
+        warnings: warnings.length ? warnings : undefined,
       };
     },
 
@@ -224,8 +266,10 @@ export function createSeedBrowserRetrievalProvider(): BrowserRetrievalProvider {
 
     async extract1688Search(input: Browser1688SearchInput): Promise<Browser1688SearchResult> {
       const seed = await readSeedJson<SourcingSeed>("seed/sourcing-1688/mini-desk-vacuum-offers.json");
+      // Do NOT fabricate matches: an unmatched query yields an empty offer set + warning
+      // instead of returning the desk-vacuum seed as if it were the requested product.
       const matched = seed.offers.filter((offer) => includesQuery(offer.title, input.query));
-      const offers = (matched.length ? matched : seed.offers).slice(0, input.limit ?? seed.offers.length);
+      const offers = matched.slice(0, input.limit ?? matched.length);
       const capturedAt = seed.captured_at;
       const snapshot = createSnapshot({
         url: offers[0]?.source_url ?? "https://www.1688.com/",
@@ -236,6 +280,15 @@ export function createSeedBrowserRetrievalProvider(): BrowserRetrievalProvider {
         selectorNotes: ["seed/sourcing-1688/mini-desk-vacuum-offers.json"],
         warnings: ["Seed snapshot represents pre-captured 1688 offer evidence."],
       });
+      const warnings: ProviderWarning[] = matched.length
+        ? []
+        : [
+            {
+              code: "SEED_QUERY_MISMATCH",
+              severity: "warning",
+              message: `Seed 1688 data does not cover "${input.query}"; returning no offers rather than fabricating unrelated rows. Enable Chrome mode for arbitrary queries.`,
+            },
+          ];
 
       return {
         source: source("browser-retrieval", "seed", capturedAt, snapshot.url, snapshot, seed.fixture_id),
@@ -254,6 +307,7 @@ export function createSeedBrowserRetrievalProvider(): BrowserRetrievalProvider {
           evidence_label: offer.evidence_label,
         })),
         snapshot,
+        warnings: warnings.length ? warnings : undefined,
       };
     },
 
@@ -403,12 +457,22 @@ export function createChromeBrowserRetrievalProvider(
       });
       assertAllowedUrl(input.url, policy);
       const captured = await controller.capture({ url: input.url, purpose: input.purpose, policy });
+      // SSRF guard: Chrome follows redirects, so the FINAL landing URL must also be on the
+      // allowlist. If a redirect escaped (e.g. open-redirect to an internal IP), discard the
+      // captured body and fail rather than trust off-allowlist content.
+      const finalUrl = captured.url || input.url;
+      if (!isAllowedUrl(finalUrl, policy.allowed_domains)) {
+        throw new Error(
+          `Browser retrieval followed a redirect to a disallowed URL ${finalUrl} (from ${input.url}); captured content was discarded.`,
+        );
+      }
       return toPageSnapshot(input.url, input.purpose, captured);
     },
 
     async extractShopeeSearch(input: BrowserShopeeSearchInput): Promise<BrowserShopeeSearchResult> {
       const limit = input.limit ?? 20;
-      const baseUrl = `https://shopee.sg/search?keyword=${encodeURIComponent(input.query)}`;
+      const domain = shopeeDomainForMarket(input.market);
+      const baseUrl = `https://${domain}/search?keyword=${encodeURIComponent(input.query)}`;
       const scan = await scanSearchPages<BrowserShopeeProductSignal>({
         retrieve: (url) =>
           this.retrievePageSnapshot({
@@ -484,21 +548,34 @@ export function createChromeBrowserRetrievalProvider(
     },
 
     async extractWebTrend(input: BrowserWebTrendInput): Promise<BrowserWebTrendResult> {
-      const url = `https://www.google.com/search?q=${encodeURIComponent(`${input.query} ${input.market} shopping trend`)}`;
-      const page = await this.retrievePageSnapshot({ url, purpose: "market_web_trend", policy: input.policy });
+      // SSRF guard: google.com was removed from the allowlist (open-redirect risk), so live
+      // web-trend has no permitted source in this MVP and returns empty + a warning rather
+      // than scraping an off-allowlist search engine.
+      const capturedAt = nowIso();
+      const url = `https://shopee.sg/search?keyword=${encodeURIComponent(input.query)}`;
+      const snapshot = createSnapshot({
+        url,
+        capturedAt,
+        text: `Live web trend disabled: no allowlisted trend source is configured for ${input.query}.`,
+        method: "manual_snapshot",
+        confidence: 0.2,
+        selectorNotes: ["web trend live search disabled in chrome mode (no allowlisted source)"],
+        warnings: ["No allowlisted web-trend source; google.com is intentionally not allowed."],
+      });
       return {
-        source: page.source,
+        source: source("browser-retrieval", "snapshot", capturedAt, url, snapshot),
         query: input.query,
         market: input.market,
-        articles: page.links.slice(0, input.limit ?? 5).map((link) => ({
-          title: link.label,
-          url: link.url,
-          source_label: hostname(link.url),
-          trend_keywords: keywordHints(page.text_excerpt),
-          evidence_label: `Chrome snapshot link: ${link.label}`,
-        })),
-        trend_keywords: keywordHints(page.text_excerpt),
-        snapshot: page.snapshot,
+        articles: [],
+        trend_keywords: [],
+        snapshot,
+        warnings: [
+          {
+            code: "WEB_TREND_NO_ALLOWLISTED_SOURCE",
+            severity: "info",
+            message: "Live web trend has no allowlisted source (google.com removed for SSRF safety); configure a specific trend domain to enable it.",
+          },
+        ],
       };
     },
 
@@ -858,12 +935,33 @@ function resolvePolicy(
   };
 }
 
-function assertAllowedUrl(url: string, policy: BrowserRetrievalPolicy): void {
-  const target = new URL(url);
-  const allowed = policy.allowed_domains.some(
+function isAllowedUrl(url: string, allowedDomains: string[]): boolean {
+  let target: URL;
+  try {
+    target = new URL(url);
+  } catch {
+    return false;
+  }
+  // SSRF guard: only https — block http/file/data/ftp/etc. that could reach internal services.
+  if (target.protocol !== "https:") {
+    return false;
+  }
+  return allowedDomains.some(
     (domain) => target.hostname === domain || target.hostname.endsWith(`.${domain}`),
   );
-  if (!allowed) {
+}
+
+function assertAllowedUrl(url: string, policy: BrowserRetrievalPolicy): void {
+  let target: URL;
+  try {
+    target = new URL(url);
+  } catch {
+    throw new Error(`Browser retrieval blocked for invalid URL: ${url}`);
+  }
+  if (target.protocol !== "https:") {
+    throw new Error(`Browser retrieval blocked for non-https URL ${url}; only https is allowed.`);
+  }
+  if (!isAllowedUrl(url, policy.allowed_domains)) {
     throw new Error(`Browser retrieval blocked for ${target.hostname}; allowed domains: ${policy.allowed_domains.join(", ")}`);
   }
   if (policy.max_steps < 1) {
@@ -990,26 +1088,57 @@ function parseShopeeProducts(text: string, limit: number): BrowserShopeeProductS
     seen.add(dedupeKey);
 
     const rating = findNextRating(lines, priceIndex + 1, 8);
-    const shopType = /mall/i.test(lines.slice(Math.max(0, index - 3), index + 8).join(" "))
-      ? "mall"
-      : /preferred/i.test(lines.slice(Math.max(0, index - 3), index + 8).join(" "))
-        ? "preferred"
-        : "marketplace";
+    const window = lines.slice(Math.max(0, index - 3), index + 8).join(" ");
+    const shopType = /mall/i.test(window) ? "mall" : /preferred/i.test(window) ? "preferred" : "marketplace";
+    // Shopee shows a "X sold" / "X.Yk sold" label rather than a raw review count. Parse it when
+    // visible; the explicit review count is NOT reliably scrapeable from the search grid, so we
+    // leave review_count at 0 and flag the limitation in the evidence label rather than inventing one.
+    const soldLabel = parseShopeeSoldLabel(lines, priceIndex + 1, 8);
+    const reviewCount = parseShopeeReviewCount(lines, priceIndex + 1, 8);
 
     products.push({
       item_id: `live_shopee_${hashText(`${title}:${price}`).slice(0, 12)}`,
       title,
       price_sgd: price,
       rating,
-      review_count: 0,
+      review_count: reviewCount,
+      sold_label: soldLabel,
       shop_type: shopType,
-      evidence_label: `Chrome visible Shopee row: ${title} at SGD ${price.toFixed(2)}`,
+      evidence_label:
+        `Chrome visible Shopee row: ${title} at SGD ${price.toFixed(2)}` +
+        (soldLabel ? ` (${soldLabel})` : "") +
+        (reviewCount > 0 ? "" : " — review count not visible in search grid"),
     });
 
     index = priceIndex;
   }
 
   return products;
+}
+
+/** Shopee search rows show a "X sold" / "1.2k sold" label; return it verbatim if visible. */
+function parseShopeeSoldLabel(lines: string[], start: number, windowSize: number): string | undefined {
+  for (let index = start; index < Math.min(lines.length, start + windowSize); index += 1) {
+    const match = lines[index].match(/(\d[\d.,]*\s*k?\+?)\s*sold/i);
+    if (match) {
+      return `${match[1].replace(/\s+/g, "")} sold`;
+    }
+  }
+  return undefined;
+}
+
+/** Parse an explicit review/rating-count like "(1.2k)" or "1234 ratings" when visible; else 0. */
+function parseShopeeReviewCount(lines: string[], start: number, windowSize: number): number {
+  for (let index = start; index < Math.min(lines.length, start + windowSize); index += 1) {
+    const match = lines[index].match(/(\d[\d.,]*)\s*(k)?\s*(?:ratings?|reviews?)/i);
+    if (match) {
+      const base = Number(match[1].replace(/,/g, ""));
+      if (Number.isFinite(base)) {
+        return Math.round(match[2] ? base * 1000 : base);
+      }
+    }
+  }
+  return 0;
 }
 
 function parse1688Offers(

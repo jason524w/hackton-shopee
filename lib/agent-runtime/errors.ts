@@ -111,7 +111,14 @@ export function ensureRuntimeError(
 }
 
 function defaultRetryable(code: AgentRuntimeErrorCode): boolean {
-  return code === "MODEL_REQUEST_FAILED" || code === "TIMEOUT" || code === "SCHEMA_VALIDATION_FAILED";
+  return (
+    code === "MODEL_REQUEST_FAILED" ||
+    code === "TIMEOUT" ||
+    code === "SCHEMA_VALIDATION_FAILED" ||
+    // A malformed-JSON model output is exactly what the retry-with-stricter-instruction
+    // path (run-agent buildSystemInstructions) was written to recover from.
+    code === "MODEL_OUTPUT_PARSE_FAILED"
+  );
 }
 
 function stringifyCause(cause: unknown): string | undefined {

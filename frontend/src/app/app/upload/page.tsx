@@ -11,7 +11,9 @@ const INPUT_TYPES = [
   ["Existing price", "Any price you already have"],
 ];
 
-const PARSED = [
+// Illustrative example of the kind of structured fields the team extracts from
+// uploaded signals. Static preview — not the output of a live parse.
+const PARSED_EXAMPLE = [
   ["Guessed name", "Mini Desk Vacuum Cleaner"],
   ["Guessed category", "Home Appliances › Vacuum Cleaners"],
   ["Visible attributes", "USB rechargeable · compact · white"],
@@ -57,10 +59,13 @@ export default function UploadPage() {
 
         {/* Parse */}
         <div className="bg-surface px-14 py-6">
-          <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-orange mb-4">
+          <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-orange mb-1">
             Parsed by AI
           </p>
-          {PARSED.map(([k, v]) => (
+          <p className="font-mono text-[10px] italic text-ink-faint mb-4">
+            Example only — preview of how uploaded signals get structured.
+          </p>
+          {PARSED_EXAMPLE.map(([k, v]) => (
             <div key={k} className="border-b hairline py-2.5">
               <p className="font-mono text-[11px] text-ink-faint mb-0.5">{k}</p>
               <p className="text-[12px] text-ink">{v}</p>

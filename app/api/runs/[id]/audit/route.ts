@@ -1,5 +1,5 @@
 import { readFile, readdir } from "node:fs/promises";
-import { join, resolve } from "node:path";
+import { join, resolve, sep } from "node:path";
 import { NextResponse } from "next/server";
 
 import type { AgentAuditSnapshot } from "../../../../../lib/agent-runtime/audit";
@@ -18,7 +18,9 @@ export async function GET(
   const auditRoot = resolveAuditRoot();
   const agentsDir = resolve(auditRoot, runId, "agents");
 
-  if (!isSafeAuditRunId(runId) || !agentsDir.startsWith(join(auditRoot, runId) + "/")) {
+  // Use the platform path separator (not a hardcoded "/") so the resolved-prefix guard
+  // doesn't 404 on Windows where path.resolve emits backslashes.
+  if (!isSafeAuditRunId(runId) || !agentsDir.startsWith(join(auditRoot, runId) + sep)) {
     return NextResponse.json(
       { status: "not_found", audit_run_id: runId, message: "No audit record for this run id" },
       { status: 404 },

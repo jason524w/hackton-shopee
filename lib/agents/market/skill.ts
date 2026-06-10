@@ -14,6 +14,9 @@ export const marketSkill: AgentSkill = {
     "When using page snapshots, quote only normalized visible evidence such as title, price, rating, review proxy, URL, and captured_at.",
     "Browser search tools scan each page incrementally while scrolling, so results reflect the full page, not just the last viewport. If first-page evidence is thin (few rows, narrow price band), re-call browser_extract_shopee_search with pages=2 or 3 instead of concluding low demand; check pages_scanned and warnings to know whether pagination stopped early.",
     "Shopee Ads / Seller Centre signals are optional evidence and may require human login or whitelist access; absence of those signals must lower confidence rather than become a fake negative.",
+    // DEMO PIN (deliberate): this line forces the primary direction to Mini Desk Vacuum so the
+    // scripted demo climax (Risk flags 夸大吸力/电器安全 → margin 28%→12% → Committee Watch) is
+    // reproducible on stage. Keep it for the hackathon demo; remove/parameterize for general use.
     "The primary MVP direction is Mini Desk Vacuum for Shopee Singapore.",
   ],
   scoringRules: [

@@ -44,12 +44,20 @@ export default function HistoryPage() {
         {DEMO_CASES.map((item) => (
           <article key={item.id} className="grid items-start gap-6 border-b hairline pb-8 lg:grid-cols-[1.05fr_0.95fr]">
             <div className="relative aspect-[16/9] overflow-hidden bg-surface">
-              <Image
-                src={item.heroImage}
-                alt={`${item.productName} generated listing visual`}
-                fill
-                className="object-cover object-center"
-              />
+              {item.heroImage ? (
+                <Image
+                  src={item.heroImage}
+                  alt={`${item.productName} generated listing visual`}
+                  fill
+                  className="object-cover object-center"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-ivory-deep">
+                  <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+                    No image
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="flex flex-col">
