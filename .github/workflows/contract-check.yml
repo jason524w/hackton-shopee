@@ -16,6 +16,11 @@ jobs:
           cache: npm
       - name: Install root dependencies
         run: npm ci
+      - name: Install frontend dependencies
+        # Root vitest also collects frontend/src/lib/*.test.ts, which import
+        # frontend deps (zustand) resolved from frontend/node_modules.
+        run: npm ci
+        working-directory: frontend
       - name: Validate contract (fixtures/sample-result.json vs schema)
         run: node scripts/check-contract.mjs
       - name: Typecheck (root app)
