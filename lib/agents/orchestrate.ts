@@ -34,6 +34,12 @@ export interface OrchestrationOptions {
   currency?: string;
   createdAt?: string;
   providers?: AgentProviders;
+  /**
+   * Fired just before each agent runs, with its canonical key. Lets the async runner
+   * persist run progress (current_agent) without coupling orchestration to the RunStore.
+   * Errors thrown by the callback are swallowed so progress reporting can't fail a run.
+   */
+  onAgentStart?: (agentKey: AgentKey) => void;
 }
 
 export function createSeedProviders(): AgentProviders {
@@ -152,9 +158,21 @@ export async function runOrchestration(brief: Brief, opts: OrchestrationOptions 
     ["risk", riskAgent],
   ];
 
-  const agents = keyedAgents.map(([key, agent]) =>
-    opts.audit ? withAuditEnvelope(key, agent, runId, opts.audit, textMode) : agent,
-  );
+  const agents = keyedAgents.map(([key, agent]) => {
+    const audited = opts.audit ? withAuditEnvelope(key, agent, runId, opts.audit, textMode) : agent;
+    if (!opts.onAgentStart) {
+      return audited;
+    }
+    // Report progress before the agent runs; never let a progress-callback error fail the run.
+    return (agentCtx: AgentContext) => {
+      try {
+        opts.onAgentStart?.(key);
+      } catch {
+        // ignore progress reporting failures
+      }
+      return audited(agentCtx);
+    };
+  });
 
   const { results } = await runPipeline(agents, ctx);
 
