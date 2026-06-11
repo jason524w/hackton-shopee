@@ -1,3 +1,4 @@
+import { join } from "node:path";
 import type { AgentKey, Brief, Committee, RunResult, SelectedListing } from "../../contract/result";
 import { createAuditRunId, type AuditSink } from "../agent-runtime/audit";
 import type { AgentRunMode } from "../agent-runtime/run-agent";
@@ -14,6 +15,9 @@ import {
 } from "../providers";
 import { createCdpChromeBrowserController } from "../providers/browser-retrieval";
 import { createOpenAIImageProvider } from "../providers/openai-image";
+import { FilesystemScrapeCache } from "../scrape/cache";
+import { createCachedBrowserController } from "../scrape/cached-controller";
+import { resolveAuditRoot } from "./audit-root";
 import { makeCommitteeAgent } from "./committee";
 import { type Agent, type AgentContext, type AgentProviders, runPipeline } from "./contracts";
 import { runListingAgent } from "./listing";
@@ -24,7 +28,7 @@ import { createRiskSupervisor, riskAgent } from "./risk";
 import { primaryOpportunityToDirection, runSourcingAgent, toSourcingRunResultSlice } from "./sourcing";
 import { assertValidRunResult, CANONICAL_AGENT_ORDER } from "./validate-run-result";
 
-export { resolveAuditRoot } from "./audit-root";
+export { resolveAuditRoot };
 
 export interface OrchestrationOptions {
   textMode?: AgentRunMode;
@@ -58,12 +62,19 @@ export function createSeedProviders(): AgentProviders {
  * explicitly opted in (CLAUDE.md demo-safe constraint):
  * - shipping honors LOGISTICS_PROVIDER but defaults to the seed provider.
  * - browser retrieval uses the live Chrome pipeline ONLY when BROWSER_RETRIEVAL_MODE=live;
- *   otherwise it stays seed-backed (no live scraping by default).
+ *   otherwise it stays seed-backed (no live scraping by default). In live mode the Chrome
+ *   controller is wrapped in a scrape cache (unless SCRAPE_CACHE=off) so repeated/identical
+ *   captures across a run are reused — cutting cost, latency, and anti-bot exposure.
  * - openaiImage stays live via imageMode (already gated upstream).
  */
 function createBrowserProviderFromEnv() {
   if (process.env.BROWSER_RETRIEVAL_MODE === "live") {
-    return createChromeBrowserRetrievalProvider(createCdpChromeBrowserController());
+    let controller = createCdpChromeBrowserController();
+    if (process.env.SCRAPE_CACHE !== "off") {
+      const cache = new FilesystemScrapeCache(join(resolveAuditRoot(), "scrape-cache"));
+      controller = createCachedBrowserController(controller, cache);
+    }
+    return createChromeBrowserRetrievalProvider(controller);
   }
   return createSeedBrowserRetrievalProvider();
 }
