@@ -1,13 +1,14 @@
-// Client for the live pipeline API. The backend Next app (repo root) serves
-// POST /api/run; when the two apps are deployed separately set
-// NEXT_PUBLIC_API_BASE_URL to the backend origin (e.g. https://api.sealaunch.ai).
+// Client for the live pipeline API. The backend Next app (repo root) serves the
+// ASYNC run endpoints: POST /api/runs (enqueue) + GET /api/runs/:id (status/result).
+// When the two apps are deployed separately set NEXT_PUBLIC_API_BASE_URL to the
+// backend origin (e.g. https://api.sealaunch.ai).
 import type { Brief, RunResult } from "../../../contract/result";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
-// The live pipeline can run 3-4 minutes (worst case ~6). Give it a generous
-// ceiling so the UI fails with a clear message instead of hanging forever.
-const RUN_TIMEOUT_MS = 8 * 60 * 1000;
+// Per-request network timeout. Individual calls are short now (submit returns
+// immediately, status is a quick poll) — the long pipeline runs server-side.
+const REQUEST_TIMEOUT_MS = 20 * 1000;
 
 export class PipelineError extends Error {
   constructor(
@@ -20,54 +21,79 @@ export class PipelineError extends Error {
   }
 }
 
-export async function runPipeline(
-  brief: Brief,
-  opts?: { images?: boolean; runId?: string },
-): Promise<RunResult> {
-  const params = opts?.images === false ? "?images=0" : "";
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), RUN_TIMEOUT_MS);
+export type RunPhase = "queued" | "running" | "completed" | "failed";
 
+export interface RunStatusResponse {
+  run_id: string;
+  status: RunPhase;
+  current_agent?: string;
+  created_at?: string;
+  started_at?: string;
+  finished_at?: string;
+  result?: RunResult;
+  error?: { message: string; kind: string };
+}
+
+async function fetchJson(
+  path: string,
+  init?: RequestInit,
+): Promise<{ ok: boolean; status: number; payload: unknown }> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   let response: Response;
   try {
-    response = await fetch(`${BASE_URL}/api/run${params}`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ brief, ...(opts?.runId ? { run_id: opts.runId } : {}) }),
-      signal: controller.signal,
-    });
+    response = await fetch(`${BASE_URL}${path}`, { ...init, signal: controller.signal });
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") {
-      throw new PipelineError(
-        `Pipeline timed out after ${Math.round(RUN_TIMEOUT_MS / 60000)} minutes. The backend may be overloaded or stuck — try again.`,
-        408,
-      );
+      throw new PipelineError("Request to the backend timed out. It may be overloaded — try again.", 408);
     }
-    throw new PipelineError(
-      "Could not reach the pipeline. Check that the backend is running and reachable.",
-      0,
-      error,
-    );
+    throw new PipelineError("Could not reach the backend. Check that it is running and reachable.", 0, error);
   } finally {
     clearTimeout(timeout);
   }
-
   let payload: unknown;
   try {
     payload = await response.json();
   } catch {
-    throw new PipelineError(`Pipeline returned a non-JSON response (HTTP ${response.status})`, response.status);
+    throw new PipelineError(`Backend returned a non-JSON response (HTTP ${response.status})`, response.status);
   }
+  return { ok: response.ok, status: response.status, payload };
+}
 
-  if (!response.ok) {
-    const message =
-      payload && typeof payload === "object" && "message" in payload
-        ? String((payload as { message: unknown }).message)
-        : `Pipeline failed (HTTP ${response.status})`;
-    throw new PipelineError(message, response.status, payload);
+function messageOf(payload: unknown, fallback: string): string {
+  return payload && typeof payload === "object" && "message" in payload
+    ? String((payload as { message: unknown }).message)
+    : fallback;
+}
+
+// Enqueue a run; returns immediately with the run id (the pipeline runs server-side).
+export async function submitRun(
+  brief: Brief,
+  opts?: { images?: boolean; runId?: string },
+): Promise<{ runId: string }> {
+  const params = opts?.images === false ? "?images=0" : "";
+  const { ok, status, payload } = await fetchJson(`/api/runs${params}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ brief, ...(opts?.runId ? { run_id: opts.runId } : {}) }),
+  });
+  if (!ok) {
+    throw new PipelineError(messageOf(payload, `Failed to submit run (HTTP ${status})`), status, payload);
   }
+  const runId = (payload as { run_id?: string })?.run_id;
+  if (!runId) {
+    throw new PipelineError("Backend accepted the run but returned no run_id.", status, payload);
+  }
+  return { runId };
+}
 
-  return payload as RunResult;
+// Poll a run's status + (when complete) its result.
+export async function fetchRunStatus(runId: string): Promise<RunStatusResponse> {
+  const { ok, status, payload } = await fetchJson(`/api/runs/${encodeURIComponent(runId)}`);
+  if (!ok) {
+    throw new PipelineError(messageOf(payload, `Could not fetch run status (HTTP ${status})`), status, payload);
+  }
+  return payload as RunStatusResponse;
 }
 
 export function newRunId(): string {

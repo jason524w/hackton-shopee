@@ -20,7 +20,7 @@ GET  /api/runs/:id/audit  # 各 agent 渐进进度(原有,不变)
 - 轮询 `GET /api/runs/:id` 看状态/结果,`GET /api/runs/:id/audit` 看逐 agent 细节。
 - query 同同步端点:`?images=0|false|no` 跳过图像生成;body `run_id`(`run_*` 格式)可自带,重复则 409。
 
-> 同步端点 `POST /api/run` 保留(向后兼容,前端目前仍用它)。前端迁移到异步轮询是下一步(A 阶段或单独跟进)。
+> 同步端点 `POST /api/run` 保留(向后兼容,可 curl)。**前端已迁移到异步**:`startRun` 改为 `submitRun` + 轮询 `GET /api/runs/:id`,run id 持久化到 localStorage,刷新后 `resumeActiveRun()`(在 `app/app/layout.tsx` 挂载时调用)重新挂接在跑的 run。
 
 ## 架构接缝(可换 Postgres / Redis)
 
@@ -47,5 +47,5 @@ GET  /api/runs/:id/audit  # 各 agent 渐进进度(原有,不变)
 - **进程内队列需要常驻进程**:本仓库目标部署是自管 Docker `next start`(进程常驻),适用。若回 Vercel 等按请求冻结的平台,需换 Redis 实现(接口已就位)。
 - **对象存储(MinIO/S3)**:截图/生成图仍写文件系统;迁对象存储是 Phase 0 的 B2。
 - **Postgres 替换**:`RunStore` 接口已为此设计,多实例时落地。
-- **前端异步迁移**:前端改用 `POST /api/runs` + 轮询 `GET /api/runs/:id`(目前仍走同步 `/api/run`)。
-- **启动时自动 resume**:`resumeIncompleteRuns()` 已提供,接入 server 启动钩子(或一个 `/api/admin/resume`)是收尾项。
+- **前端异步迁移**:✅ 已完成 —— 前端走 `POST /api/runs` + 轮询 `GET /api/runs/:id`,localStorage 持久化 run id + 刷新恢复(`resumeActiveRun`)。
+- **服务端启动自动 resume**:`RunsService.resumeIncompleteRuns()` 已提供(重启后重新入队残留 queued/running),接入 server 启动钩子或 `/api/admin/resume` 是收尾项。
