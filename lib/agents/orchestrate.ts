@@ -17,6 +17,7 @@ import { createCdpChromeBrowserController } from "../providers/browser-retrieval
 import { createOpenAIImageProvider } from "../providers/openai-image";
 import { FilesystemScrapeCache } from "../scrape/cache";
 import { createCachedBrowserController } from "../scrape/cached-controller";
+import { createManagedControllerFromEnv } from "../scrape/from-env";
 import { resolveAuditRoot } from "./audit-root";
 import { makeCommitteeAgent } from "./committee";
 import { type Agent, type AgentContext, type AgentProviders, runPipeline } from "./contracts";
@@ -69,7 +70,12 @@ export function createSeedProviders(): AgentProviders {
  */
 function createBrowserProviderFromEnv() {
   if (process.env.BROWSER_RETRIEVAL_MODE === "live") {
-    let controller = createCdpChromeBrowserController();
+    // Engine: default CDP controller, or the managed Playwright stack (proxy pool / rate
+    // limiter / circuit breaker / session / handoff) when SCRAPE_ENGINE=playwright (A2).
+    let controller =
+      process.env.SCRAPE_ENGINE === "playwright"
+        ? createManagedControllerFromEnv()
+        : createCdpChromeBrowserController();
     if (process.env.SCRAPE_CACHE !== "off") {
       const cache = new FilesystemScrapeCache(join(resolveAuditRoot(), "scrape-cache"));
       controller = createCachedBrowserController(controller, cache);
