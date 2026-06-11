@@ -256,6 +256,8 @@ export interface BrowserControllerSnapshot {
   captured_at?: string;
   /** Incremental scan stats: how many scroll-capture steps ran and whether the page bottom was reached. */
   scan?: { steps: number; reached_end: boolean };
+  /** True when this snapshot was served from the scrape cache rather than a fresh capture. */
+  from_cache?: boolean;
 }
 
 export interface BrowserController {
