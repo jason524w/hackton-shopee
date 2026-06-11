@@ -3,6 +3,7 @@ import { FileAuditSink, createAuditRunId, type AuditSink } from "../agent-runtim
 import { resolveAuditRoot } from "../agents/audit-root";
 import { runOrchestration } from "../agents/orchestrate";
 import { ContractViolationError } from "../agents/validate-run-result";
+import { resumeRunsOnBoot } from "./boot";
 import { InProcessJobQueue, type JobQueue } from "./job-queue";
 import { FilesystemRunStore, type RunRecord, type RunStore } from "./run-store";
 
@@ -152,9 +153,19 @@ export function getRunsService(): RunsService {
   const g = globalThis as GlobalWithRuns;
   if (!g[SINGLETON_KEY]) {
     const concurrency = Number.parseInt(process.env.RUN_CONCURRENCY ?? "", 10);
-    g[SINGLETON_KEY] = new RunsService({
+    const service = new RunsService({
       store: new FilesystemRunStore(resolveAuditRoot()),
       concurrency: Number.isFinite(concurrency) && concurrency > 0 ? concurrency : undefined,
+    });
+    g[SINGLETON_KEY] = service;
+    // On first build of the singleton (effectively server startup / first request after a
+    // restart), re-enqueue runs left incomplete by a previous process. Fire-and-forget;
+    // resumeRunsOnBoot is idempotent and never throws.
+    void resumeRunsOnBoot({
+      hasKey: () => Boolean(process.env.OPENAI_API_KEY),
+      resume: () => service.resumeIncompleteRuns(),
+      log: (message) => console.log(message),
+      warn: (message, error) => console.error(message, error),
     });
   }
   return g[SINGLETON_KEY]!;

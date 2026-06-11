@@ -48,4 +48,4 @@ GET  /api/runs/:id/audit  # 各 agent 渐进进度(原有,不变)
 - **对象存储(MinIO/S3)**:截图/生成图仍写文件系统;迁对象存储是 Phase 0 的 B2。
 - **Postgres 替换**:`RunStore` 接口已为此设计,多实例时落地。
 - **前端异步迁移**:✅ 已完成 —— 前端走 `POST /api/runs` + 轮询 `GET /api/runs/:id`,localStorage 持久化 run id + 刷新恢复(`resumeActiveRun`)。
-- **服务端启动自动 resume**:`RunsService.resumeIncompleteRuns()` 已提供(重启后重新入队残留 queued/running),接入 server 启动钩子或 `/api/admin/resume` 是收尾项。
+- **服务端启动自动 resume**:✅ 已完成 —— `getRunsService()` 首次构建单例时(即重启后首个请求)触发 `resumeRunsOnBoot`(`lib/runtime/boot.ts`),把残留 queued/running 重新入队。幂等、不抛错;无 `OPENAI_API_KEY` 时跳过(记录留 queued 等配好 key 的下次启动)。<br>(放在单例懒构建而非 Next instrumentation,是因为 Next 14 的 instrumentation 会被 edge 打包、`node:fs/crypto` 报 UnhandledScheme;单例路径只在 Node 服务运行时被 API 路由 import,无此问题。)
